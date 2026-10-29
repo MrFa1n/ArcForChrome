@@ -45,3 +45,11 @@ Each commit body should state its rationale and the checks actually run. Publish
 22. Moved search into an about:blank iframe inside the outer modal. This removes page listeners from the keyboard event path, rather than relying on late propagation cancellation. Kept the mount function self-contained for scripting.executeScript.
 23. Deferred dismissal while keys are held so closing Enter/Escape keyup stays in the frame. Clear stale held-key state on browser focus loss. Preserved focus restoration and repeated-command dismissal.
 24. Expanded and passed the real Chrome regression for text, Space, arrows, Escape, Enter submission, tab activation, held-key dismissal and resumed page shortcuts. npm run check passes all 21 tests and JavaScript syntax checks; git diff --check passes. Updated docs and version to 0.3.1. Full extension/site-specific manual checks remain pending; Crapper, Dryer and Mutator remain unavailable.
+
+## Local suggestions v0.4.0
+
+25. User requested URL/title suggestions from browser history/bookmarks and highest priority for open tabs. Reviewed official Chrome history/bookmarks APIs. Added tests first and observed the missing-module failure.
+26. Added read-only source queries and pure ranking: tabs first, then bookmarks, then history; shared URLs merge without duplicate tab creation, including matches through saved title aliases. Exclude bookmark folders and unsafe saved URL schemes. No external service or persistent browsing database added.
+27. Added a validated suggestion message, 150 ms input debounce, stale-response protection, source labels, explicit raw-input navigation row and per-source error handling. Added history/bookmarks permissions and documented Chrome's update prompt.
+28. Expanded the real-Chrome regression to simulate delayed responses and verify Enter opens the newest selected saved URL while page shortcuts stay isolated. Browser regression passed; actual Chrome history/bookmark API and permission-prompt integration remain manual. Final unit/syntax results recorded below.
+29. Final validation: npm run check passes 32 tests and all JavaScript syntax checks; git diff --check passes. Crapper, Dryer and Mutator remain unavailable. Preserved the dependency-free runtime and existing iframe keyboard isolation.

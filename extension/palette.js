@@ -65,11 +65,18 @@ export function mountPalette(tabs, floating = false) {
     const footer = document.createElement('footer');footer.textContent = '↑ ↓ to select · Enter to open · Esc to return · Opens links in a new tab';
     dialog.append(header,input,results,error,footer); root.append(dialog);document.documentElement.append(host);
     let selected = 0;
+    let selectionMoved = false;
     let choices = [];
     let busy = false;
+    let queryRevision = 0;
+    let timer;
+    let suggestions = [];
+    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History'};
     const heldKeys = new Set();
     let closing = false;
     function close() {
+      clearTimeout(timer);
+      queryRevision++;
       if (heldKeys.size) { closing = true; return; }
       dismiss();
     }
@@ -91,7 +98,7 @@ export function mountPalette(tabs, floating = false) {
         const choice = choices[index];
         const response = await chrome.runtime.sendMessage(choice.id !== undefined
           ? {type:'palette:activate', tabId:choice.id}
-          : {type:'palette:navigate', query:input.value});
+          : {type:'palette:navigate', query:choice.kind === 'navigate' ? input.value : choice.url});
         if (!response?.ok) throw new Error(response?.error || 'Could not open result');
         close();
       } catch (failure) { error.textContent = failure.message; } finally { busy = false; }
@@ -103,30 +110,54 @@ export function mountPalette(tabs, floating = false) {
       else input.removeAttribute('aria-activedescendant');
     }
     function render() {
-      const query = input.value.trim().toLocaleLowerCase();
-      choices = tabs.filter(tab => !query || `${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(query)).slice(0,8);
-      // Explicit navigation is the default for typed text; existing tabs are one arrow away.
-      if (query) choices.unshift({ title: `Open ${input.value.trim()}`, url: 'New tab · URL or Google search' });
-      selected = 0;
+      const previous = choices[selected];
+      const previousKey = previous && `${previous.kind}:${previous.id ?? previous.url}`;
+      choices = suggestions.slice(0,8);
+      if (input.value.trim()) choices.push({kind:'navigate', title:`Open ${input.value.trim()}`, url:'New tab · URL or Google search'});
+      const retained = choices.findIndex(choice => `${choice.kind}:${choice.id ?? choice.url}` === previousKey);
+      selected = selectionMoved && retained >= 0 ? retained : 0;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
         row.setAttribute('role','option');row.tabIndex = -1;
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = choice.id === undefined ? '↗' : '▣';
+        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',navigate:'↗'})[choice.kind];
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = choice.url || '';
+        const url = document.createElement('span');url.className = 'url';url.textContent = choice.kind === 'navigate' ? choice.url
+          : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
         text.append(title,url);row.append(icon,text);
         row.addEventListener('click',() => activate(index));
-        row.addEventListener('mousemove',() => {selected = index;highlight();});
+        row.addEventListener('mousemove',() => {selected = index;selectionMoved = true;highlight();});
         return row;
       }));highlight();
     }
-    input.addEventListener('input',render);
+    function updateSuggestions() {
+      const revision = ++queryRevision;
+      clearTimeout(timer);
+      const query = input.value.trim();
+      const terms = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+      suggestions = tabs.filter(tab => terms.every(term => `${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
+        .slice(0,8).map(tab => ({...tab,kind:'tab',sources:['tab']}));
+      choices = []; selected = 0; selectionMoved = false; error.textContent = '';
+      render();
+      timer = setTimeout(async () => {
+        try {
+          const response = await chrome.runtime.sendMessage({type:'palette:suggest',query});
+          if (revision !== queryRevision || dismissed || closing || busy) return;
+          if (!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
+          suggestions = response.suggestions;
+          error.textContent = (response.warnings || []).join(' · ');
+          render();
+        } catch (failure) {
+          if (revision === queryRevision && !dismissed && !closing) error.textContent = failure.message;
+        }
+      },150);
+    }
+    input.addEventListener('input', updateSuggestions);
     dialog.addEventListener('keydown', event => {
       if (event.isComposing) return;
       if (event.key === 'Escape') {event.preventDefault();event.stopPropagation();close();}
       if (['ArrowDown','ArrowUp'].includes(event.key) && choices.length) {
-        event.preventDefault(); selected = (selected + (event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length;highlight();
+        event.preventDefault(); selectionMoved = true; selected = (selected + (event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length;highlight();
       }
       if (event.key === 'Enter') {event.preventDefault();activate(selected);}
       if (event.key === 'Tab') {event.preventDefault();input.focus();}
@@ -134,7 +165,7 @@ export function mountPalette(tabs, floating = false) {
     dialog.addEventListener('cancel', event => {event.preventDefault();close();});
     dialog.addEventListener('click',event => {if(event.target === dialog) close();});
     closeButton.addEventListener('click',close);
-    dialog.showModal(); render(); input.focus();
+    dialog.showModal(); updateSuggestions(); input.focus();
   }
   showPalette(frame.contentDocument);
 }

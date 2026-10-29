@@ -7,8 +7,8 @@ chrome.commands.onCommand.addListener(command => {
   action.catch(error => console.error('Keyboard command failed:', error));
 });
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!message || !['palette:activate','palette:navigate'].includes(message.type)) return;
-  paletteAction(chrome, message, sender).then(() => sendResponse({ok:true}),
+  if (!message || !['palette:activate','palette:navigate','palette:suggest'].includes(message.type)) return;
+  paletteAction(chrome, message, sender).then(result => sendResponse({ok:true,...result}),
     error => sendResponse({ok:false,error:error.message}));
   return true;
 });

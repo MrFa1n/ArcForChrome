@@ -50,3 +50,16 @@ Executed successfully in a separate real headless Chrome via `npm run check:brow
 - Request dismissal with a key held; the palette stays until keyup, then disappears without leaking the final event.
 
 This browser harness injects the real palette function with a stubbed runtime messaging API. Full extension loading, protected-page fallback and site-specific integration remain separate manual checks. Also verify with the user's video player: typing Space/f/k and arrow navigation should not pause, fullscreen, seek or alter volume while search is open.
+
+## Local suggestions v0.4.0
+
+Automated ranking/service tests cover title/URL matching, multiword queries, open-tab priority, URL deduplication, bookmark aliases for open tabs, invalid URLs/folders, limits, all-time history queries, source failure and window scoping. The real-Chrome harness also checks delayed suggestion responses: stale results must not replace a new query, and Enter must open the selected saved URL. Browser messaging is stubbed; actual permission prompts and Chrome history/bookmark API integration need the following manual checks:
+
+- Reload/re-enable the extension and accept history/bookmarks permissions if prompted.
+- Visit a known site, bookmark a different site with a custom name, and keep a third matching page open.
+- Search by domain fragments and custom title words. Verify open tabs first, then bookmarks, then history, with readable source labels.
+- Save a URL that is already open with a different bookmark name. Search that name; verify one result switches to the existing tab.
+- Enter on the first open result activates it without changing tab count; history/bookmark selection opens the actual saved URL in a new tab.
+- Select the final Open row to submit the raw input rather than a suggested result.
+- Type quickly, use arrows during loading, clear input and close/reopen. No old response should overwrite a newer query or change a manually selected surviving result.
+- Verify no history/bookmark results on empty input and no page/video hotkey regression.

@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.3.1.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.4.0.** Not affiliated with Arc or The Browser Company.
 
 ## Install locally
 
@@ -19,7 +19,7 @@ No build step, account or dependency installation is required.
 - Spaces backed by native Chrome tab groups. Existing groups appear automatically.
 - Inbox for ungrouped tabs, plus search across all spaces in the current window.
 - Create spaces and tabs; activate, pin, unpin or close tabs.
-- Search matches tab titles and URLs. Press Enter to open a web address or Google search in a new tab in the selected space; click a result to activate it.
+- Sidebar search matches tab titles and URLs. The command bar additionally suggests history and bookmarks; existing open tabs have highest priority.
 - Automatic light/dark appearance and a session-only theme toggle.
 
 Pinning a grouped tab removes it from its Chrome group. Unpinning returns it to Inbox. Space selection filters the sidebar; it does not hide other tabs in Chrome. Closing the last tab in a space removes its native group. Creating a space opens a new tab so the group can exist.
@@ -30,7 +30,7 @@ An extension cannot replace Chrome's native tab strip or browser frame. This pro
 
 ## Privacy and permissions
 
-`tabs` reads titles/URLs and manages tabs. `tabGroups` reads and manages spaces. `sidePanel` displays the interface. No host permissions, persistent content scripts, telemetry, remote code or backend. `activeTab` and `scripting` allow the command palette to be injected into the active page only after an explicit extension command. Chrome owns tab persistence; the extension keeps no separate browsing database. Submitting a search sends the entered query to Google; opening a URL contacts that site as normal.
+`tabs` reads titles/URLs and manages tabs. `tabGroups` reads and manages spaces. `sidePanel` displays the interface. No host permissions, persistent content scripts, telemetry, remote code or backend. `activeTab` and `scripting` allow the command palette to be injected into the active page only after an explicit extension command. `history` reads matching visited-page titles/URLs and `bookmarks` reads matching saved titles/URLs for local suggestions. These APIs are used only for reading; extension code does not edit/delete history or bookmarks. Chrome owns persistence; the extension keeps no separate browsing database. Submitting a search sends the entered query to Google; opening a URL contacts that site as normal.
 
 ## Development
 
@@ -75,11 +75,11 @@ Chrome reserves some browser/OS shortcuts, so Arc's Cmd+T command bar and Cmd+S 
 
 Press **Alt+Shift+K** (macOS: Option+Shift+K) on a webpage. A centered modal appears over the current page with automatic search focus, a dimmed backdrop and matching tabs from the current window. The current tab is never closed or navigated by opening search.
 
-- Type an address or query and press Enter to open it in a **new tab**. This is the first result for typed input.
-- Use Up/Down and Enter, or click a result, to activate an existing tab. Up to eight matching tabs are shown.
+- Type part of a title or address to see matching open tabs, bookmarks and history. Enter selects the highlighted result; matching open tabs appear first. The final **Open…** row opens the typed address/query in a new tab.
+- Use Up/Down and Enter, or click a result. Open tabs are activated without duplication; bookmark/history results open their saved URL in a new tab. Up to eight unique suggestions are shown, with source labels.
 - Escape, the esc button, an outside click, or invoking the shortcut again dismisses the overlay and restores the previous page focus.
 - On protected pages (`chrome://`, the Chrome Web Store and other pages where injection is denied), a separate small extension window provides the same search. Escape closes that window.
-- The command uses a snapshot of tabs when opened, without history/bookmark access or online autocomplete. Reopen to refresh results. New tabs open ungrouped in the source window.
+- Matching uses titles and URLs, ignoring case and supporting multiple words. Priority is open tabs → bookmarks → history; a URL shared by sources is shown once. Queries are debounced by 150 ms, with stale responses discarded. Empty input shows only tabs; history is searched across all dates with up to 50 matching history candidates. No online autocomplete requests are made. New tabs open ungrouped in the source window.
 
 Reload the extension and confirm new permissions if Chrome requests it. Check `chrome://extensions/shortcuts` for **Open Spotlight-style search** if the shortcut is missing or conflicts. Chrome permits only four suggested bindings: previous-tab remains available for manual assignment; an existing customized binding may be preserved by Chrome.
 
@@ -88,3 +88,7 @@ Reload the extension and confirm new permissions if Chrome requests it. Check `c
 The command bar now renders inside a dedicated iframe within the modal, so its keyboard events do not bubble or capture through the parent page (including video player shortcuts). Dismissal waits for held keys to be released before restoring page focus, preventing the final Enter/Escape keyup from reaching the page. Browser/OS reserved shortcuts remain controlled by Chrome/the OS.
 
 A dependency-free browser regression can be run with `npm run check:browser`. It launches a separate headless Chrome with a temporary profile and removes that profile afterward. It defaults to the standard macOS Chrome binary; elsewhere set `CHROME_BINARY` to your Chrome executable path. The check drives actual keyboard events through Chrome DevTools Protocol against pre-existing page capture listeners; it does not load the full extension or verify a particular video site.
+
+### Local suggestions permissions
+
+Version 0.4 adds `history` and `bookmarks` permissions. After reloading/updating, Chrome may ask you to re-enable the extension or accept these permissions. This allows local matching by saved/visited title and URL. A failing source is indicated in the command bar while the other suggestions remain usable. Queries and suggestions are not sent to any server; selecting the Google search row navigates to Google as before.

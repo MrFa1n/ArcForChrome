@@ -52,3 +52,11 @@ test('other extension pages cannot forge popup requests', async () => {
   await assert.rejects(()=>paletteAction(api,{type:'palette:navigate',query:'x'},
     {id:'test',url:'chrome-extension://other/palette.html?window=2'}));
 });
+test('suggestion requests use the validated source window', async () => {
+  const api=browser();let scoped;
+  api.tabs.query=async options=>{scoped=options;return [{id:8,title:'Saved page',url:'https://example.com'}];};
+  api.bookmarks={search:async()=>[]};api.history={search:async()=>[]};
+  const response=await paletteAction(api,{type:'palette:suggest',query:'saved'},sender);
+  assert.deepEqual(scoped,{windowId:2});
+  assert.equal(response.suggestions[0].id,8);
+});

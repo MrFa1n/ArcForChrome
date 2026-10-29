@@ -48,7 +48,7 @@ try {
   await evaluate(`document.body.innerHTML='<input id="page-input"><video></video>';document.querySelector('input').focus();
     globalThis.pageKeys=[];globalThis.messages=[];
     for(const type of ['keydown','keypress','keyup']) window.addEventListener(type,event=>pageKeys.push(type+':'+event.key),true);
-    globalThis.chrome={runtime:{sendMessage:async message=>{messages.push(message);return {ok:true};}}};`);
+    globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:[],warnings:[]};messages.push(message);return {ok:true};}}};`);
   await evaluate(`(${mountPalette.toString()})([{id:1,title:'Video',url:'https://video.example'}])`);
   await key('f','KeyF','f');
   await key(' ','Space',' ');
@@ -77,7 +77,22 @@ try {
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'k',code:'KeyK'});
   assert.equal(await evaluate("!!document.querySelector('[data-arc-command-palette]')"),false);
   assert.deepEqual(await evaluate('pageKeys'),[],'toggle dismissal must contain final keyup');
-  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter and focus restoration verified.');
+  await evaluate(`globalThis.chrome.runtime.sendMessage=async message=>{
+    if(message.type!=='palette:suggest'){messages.push(message);return {ok:true};}
+    await new Promise(resolve=>setTimeout(resolve,message.query==='a'?400:10));
+    return {ok:true,suggestions:message.query?[{kind:'bookmark',sources:['bookmark'],title:message.query+' saved',url:'https://saved.example/'+message.query}]:[],warnings:[]};
+  }`);
+  await evaluate(`(${mountPalette.toString()})([])`);
+  await key('a','KeyA','a');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,180))');
+  await key('b','KeyB','b');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,250))');
+  await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://saved.example/ab'},
+    'Enter must open the first suggestion URL; stale responses must not replace new results');
+  assert.deepEqual(await evaluate('pageKeys'),[],'suggestion interactions stay isolated');
+  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection and stale-response rejection verified.');
 } finally {
   socket?.close();
   if (processChrome.exitCode === null && processChrome.signalCode === null) {

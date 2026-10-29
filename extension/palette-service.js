@@ -1,4 +1,5 @@
 import { destination } from './model.js';
+import { findSuggestions } from './suggestions.js';
 
 export async function openPalette(api, mount) {
   const [tab] = await api.tabs.query({ active: true, currentWindow: true });
@@ -27,6 +28,7 @@ function sourceWindow(api, sender) {
 
 export async function paletteAction(api, message, sender) {
   const windowId = sourceWindow(api, sender);
+  if (message.type === 'palette:suggest') return findSuggestions(api, windowId, message.query);
   if (message.type === 'palette:activate') {
     if (!Number.isInteger(message.tabId)) throw new Error('Invalid tab');
     const tab = await api.tabs.get(message.tabId);

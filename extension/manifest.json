@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "A calm sidebar with vertical tabs, favorites and spaces powered by Chrome tab groups.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -9,7 +9,9 @@
     "tabs",
     "tabGroups",
     "activeTab",
-    "scripting"
+    "scripting",
+    "history",
+    "bookmarks"
   ],
   "background": {
     "service_worker": "worker.js",
