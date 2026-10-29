@@ -6,7 +6,7 @@ const root = new URL('../extension/', import.meta.url);
 test('manifest entry points exist and request only documented permissions', async () => {
   const manifest = JSON.parse(await readFile(new URL('manifest.json', root)));
   assert.equal(manifest.manifest_version, 3);
-  assert.deepEqual(manifest.permissions, ['sidePanel','tabs','tabGroups','activeTab','scripting','history','bookmarks']);
+  assert.deepEqual(manifest.permissions, ['sidePanel','tabs','tabGroups','activeTab','scripting','history','bookmarks','storage']);
   assert.equal(manifest.host_permissions, undefined);
   await Promise.all([manifest.background.service_worker, manifest.side_panel.default_path].map(path => access(new URL(path, root))));
 });

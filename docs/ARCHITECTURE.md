@@ -32,3 +32,11 @@ Pure ranking combines title and URL words case-insensitively, prioritizes tabs t
 The injected self-contained UI immediately filters its initial tabs snapshot, then debounces worker requests by 150 ms. A revision counter rejects stale responses after edits or dismissal. The first suggestion is selected unless the user has moved selection; a navigation row for the raw input is last. Selected history/bookmark URLs use the existing safe new-tab navigation action. The iframe keyboard boundary is unchanged.
 
 API references: https://developer.chrome.com/docs/extensions/reference/api/history and https://developer.chrome.com/docs/extensions/reference/api/bookmarks .
+
+## Most recently used (MRU) tabs
+
+`recent-tabs.js` is a single worker-owned writer for tab activation order. It serializes activation/cleanup events and commands through a recoverable promise queue. Per-window IDs and cycle metadata are stored in storage.session, not local or sync storage; no titles or URLs are copied. Closed windows are removed; closed/detached tabs are pruned. Each command reconciles state with live tabs, so moved or stale IDs cannot be activated in the wrong window.
+
+A command freezes the live MRU list for a 1200 ms repeated-command interval. Command-driven onActivated events update recency while retaining that snapshot; an unrelated activation cancels it. After the interval, a new snapshot begins with the active tab, making isolated presses toggle the most recent pair. A tab update must succeed before the new cycle is saved. Failure does not poison the queue. Startup seeds unknown tabs from available native lastAccessed timestamps; exact pre-install activation order is not claimed.
+
+The `recent-tab` command is distinct from existing positional previous/next commands. Native browser shortcuts are unchanged. No panel or injected UI is required for this command.

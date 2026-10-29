@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.4.0.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.5.0.** Not affiliated with Arc or The Browser Company.
 
 ## Install locally
 
@@ -30,7 +30,7 @@ An extension cannot replace Chrome's native tab strip or browser frame. This pro
 
 ## Privacy and permissions
 
-`tabs` reads titles/URLs and manages tabs. `tabGroups` reads and manages spaces. `sidePanel` displays the interface. No host permissions, persistent content scripts, telemetry, remote code or backend. `activeTab` and `scripting` allow the command palette to be injected into the active page only after an explicit extension command. `history` reads matching visited-page titles/URLs and `bookmarks` reads matching saved titles/URLs for local suggestions. These APIs are used only for reading; extension code does not edit/delete history or bookmarks. Chrome owns persistence; the extension keeps no separate browsing database. Submitting a search sends the entered query to Google; opening a URL contacts that site as normal.
+`tabs` reads titles/URLs and manages tabs. `tabGroups` reads and manages spaces. `sidePanel` displays the interface. No host permissions, persistent content scripts, telemetry, remote code or backend. `activeTab` and `scripting` allow the command palette to be injected into the active page only after an explicit extension command. `history` reads matching visited-page titles/URLs and `bookmarks` reads matching saved titles/URLs for local suggestions. These APIs are used only for reading; extension code does not edit/delete history or bookmarks. Chrome owns persistence; the extension keeps no separate browsing database. The `storage` permission keeps per-window tab IDs and a short MRU-cycle state in memory via `storage.session`, surviving service-worker suspension but cleared on browser restart or extension reload/update. No tab titles or URLs are stored there. Submitting a search sends the entered query to Google; opening a URL contacts that site as normal.
 
 ## Development
 
@@ -63,7 +63,8 @@ Commands work while Chrome is focused, including when the panel is closed:
 | Pin/unpin active tab | Alt+Shift+P |
 | Spotlight-style command bar | Alt+Shift+K |
 | Previous tab in current window | Assign manually in Chrome settings |
-| Next tab in current window | Alt+Shift+Right |
+| Recently active tabs (MRU) | Alt+Shift+Left |
+| Next tab by position | Assign manually in Chrome settings |
 
 Inside the focused sidebar: Cmd/Ctrl+K focuses and selects search; Up/Down move from search through tab buttons; Enter activates the focused tab (Enter in search opens a URL/search); Alt+Left/Right cycle spaces; Escape clears search and dismisses the space form. Search receives focus when a panel document first opens.
 
@@ -92,3 +93,13 @@ A dependency-free browser regression can be run with `npm run check:browser`. It
 ### Local suggestions permissions
 
 Version 0.4 adds `history` and `bookmarks` permissions. After reloading/updating, Chrome may ask you to re-enable the extension or accept these permissions. This allows local matching by saved/visited title and URL. A failing source is indicated in the command bar while the other suggestions remain usable. Queries and suggestions are not sent to any server; selecting the Google search row navigates to Google as before.
+
+## Switch between recently active tabs
+
+Press **Alt+Shift+Left** (macOS: **Option+Shift+Left**) to return to the previously active tab in the current window. This works with the sidebar closed, including when using Chrome's own vertical tabs.
+
+For example, with tabs arranged A–B–C, visiting A → C → B means the command switches from B to C, not A. Further presses within **1.2 seconds** step through the frozen recent list (then A, then B). After a pause, the next press returns to the last active tab; spaced presses toggle between the last two. Clicking a tab normally cancels a cycle and updates its recency. Closing or moving tabs prunes the tracked list.
+
+Recency is recorded from native tab-activation events separately per window. When first enabled or after browser/extension restart, existing tabs are seeded using Chrome's available `lastAccessed` values; tabs without a timestamp have no known previous order until activated. Session storage keeps state across background-worker suspension. This is a timed MRU cycle, not an Alt-Tab preview with selection committed on modifier release.
+
+Reload the extension, then check **Switch to recently active tabs (MRU)** at `chrome://extensions/shortcuts`. Existing customized bindings may be preserved and conflict with the suggestion. To keep Chrome's four-default limit, next-tab-by-position remains available for manual assignment. Chrome's native Ctrl+Tab is not remapped; use the extension command's assigned binding. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).

@@ -7,3 +7,5 @@ This extension reads tab titles and URLs locally. Changes that add remote calls,
 The command palette uses temporary activeTab access and scripting on explicit invocation. It renders tab titles/URLs in an isolated-world shadow DOM; no persistent content scripts or host permissions are requested.
 
 Version 0.4 requests history and bookmarks access for local suggestions. Although Chrome grants broader API capabilities, this code only searches those sources and never modifies them. Queries/results stay local until a user chooses to navigate to a result or Google search.
+
+Version 0.5 adds storage for MRU tab switching. Only tab IDs, per-window order and short cycle metadata are stored in in-memory storage.session. They are not synced or written to a browsing-history database.

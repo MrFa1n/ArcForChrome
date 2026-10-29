@@ -53,3 +53,10 @@ Each commit body should state its rationale and the checks actually run. Publish
 27. Added a validated suggestion message, 150 ms input debounce, stale-response protection, source labels, explicit raw-input navigation row and per-source error handling. Added history/bookmarks permissions and documented Chrome's update prompt.
 28. Expanded the real-Chrome regression to simulate delayed responses and verify Enter opens the newest selected saved URL while page shortcuts stay isolated. Browser regression passed; actual Chrome history/bookmark API and permission-prompt integration remain manual. Final unit/syntax results recorded below.
 29. Final validation: npm run check passes 32 tests and all JavaScript syntax checks; git diff --check passes. Crapper, Dryer and Mutator remain unavailable. Preserved the dependency-free runtime and existing iframe keyboard isolation.
+
+## Recently active tab switching v0.5.0
+
+30. User requested Arc-like switching by recent activity rather than tab position. Checked Chrome Commands and Storage APIs. Added failing behavior tests before the implementation.
+31. Implemented single-writer per-window activation tracking in storage.session, seeded by native lastAccessed data when available. Added frozen MRU traversal for quick repeats, last-active toggling after a 1.2-second pause, cleanup on tab/window removal or detach, worker-recreation continuity, and recovery after update failures.
+32. Registered native activation events and a dedicated recent-tab command on Alt+Shift+Left, usable without the sidebar. Kept positional navigation commands for manual assignment and respected Chrome's four-suggested-binding limit. Added storage permission and documented that Ctrl+Tab is unchanged, initial recency is seeded, and the cycle is timed rather than modifier-release-based.
+33. Final validation: npm run check passes 41 behavior tests and syntax checks; git diff --check passes. Real extension shortcut/storage lifecycle verification remains on the manual checklist. Crapper, Dryer and Mutator remain unavailable. No remote is configured for push.

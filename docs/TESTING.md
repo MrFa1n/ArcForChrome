@@ -63,3 +63,15 @@ Automated ranking/service tests cover title/URL matching, multiword queries, ope
 - Select the final Open row to submit the raw input rather than a suggested result.
 - Type quickly, use arrows during loading, clear input and close/reopen. No old response should overwrite a newer query or change a manually selected surviving result.
 - Verify no history/bookmark results on empty input and no page/video hotkey regression.
+
+## Recent-tab switching v0.5.0 (real extension check pending)
+
+Unit tests cover non-positional recency, frozen-list cycling/wrapping, pause-to-toggle, manual selection, worker recreation, window separation, closure, cleanup, concurrent activation events and update failure recovery.
+
+- Reload and verify the MRU shortcut assignment; clear any conflict with the older positional shortcut.
+- Open A–B–C in that positional order, activate A → C → B, then invoke MRU: expect C. Repeat quickly: A, then B.
+- Wait over 1.2 seconds, invoke again: expect the last active tab. Repeat with pauses: toggle the last two tabs.
+- During a cycle click another tab normally; the next MRU starts from that new history.
+- Close a candidate or move it to another window; verify it is never selected in the wrong window. A one-tab window is unchanged.
+- Stop the extension service worker in DevTools, then invoke the command; session recency should survive. Reloading/updating the extension resets session storage and seeds from native timestamps.
+- Verify the command with Chrome's vertical tabs, sidebar closed, and a video page focused. Confirm Ctrl+Tab retains native Chrome behavior.
