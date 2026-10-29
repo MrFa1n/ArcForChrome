@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.1.0.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.2.0.** Not affiliated with Arc or The Browser Company.
 
 ## Install locally
 
@@ -52,3 +52,20 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), [w
 4. Optional archive with explicit retention controls and recovery.
 
 MIT licensed. This project is not published to the Chrome Web Store.
+
+## Keyboard shortcuts
+
+Commands work while Chrome is focused, including when the panel is closed:
+
+| Action | Default (macOS: Alt = Option) |
+| --- | --- |
+| Open sidebar | Alt+Shift+A |
+| Pin/unpin active tab | Alt+Shift+P |
+| Previous tab in current window | Alt+Shift+Left |
+| Next tab in current window | Alt+Shift+Right |
+
+Inside the focused sidebar: Cmd/Ctrl+K focuses and selects search; Up/Down move from search through tab buttons; Enter activates the focused tab (Enter in search opens a URL/search); Alt+Left/Right cycle spaces; Escape clears search and dismisses the space form. Search receives focus when a panel document first opens.
+
+Expand **Keyboard shortcuts** in the sidebar to see actual registered bindings, including missing assignments, and click **Customize shortcuts** to open `chrome://extensions/shortcuts`. Reload the extension after updating. Existing user assignments are controlled by Chrome and may differ from defaults.
+
+Chrome reserves some browser/OS shortcuts, so Arc's Cmd+T command bar and Cmd+S sidebar behavior cannot be promised as direct replacements. Native Chrome shortcuts such as Cmd/Ctrl+T, W and Shift+T retain their normal behavior. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).

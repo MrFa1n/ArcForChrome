@@ -1,4 +1,5 @@
 import { visibleTabs, destination } from './model.js';
+import { cycleSpace } from './shortcuts.js';
 const $ = selector => document.querySelector(selector);
 let tabs = [];
 let space = -1;
@@ -86,8 +87,51 @@ async function createSpace(event) {
   } finally { button.disabled = false; }
 }
 
+function handleKeyboard(event) {
+  if (event.isComposing || event.defaultPrevented) return;
+  const primary = event.metaKey || event.ctrlKey;
+  if (primary && !event.altKey && !event.shiftKey && event.code === 'KeyK') {
+    event.preventDefault();
+    $('#search').focus();
+    $('#search').select();
+    return;
+  }
+  if (event.altKey && !primary && !event.shiftKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    event.preventDefault();
+    const ids = [...$('#space').options].map(option => Number(option.value));
+    space = cycleSpace(ids, space, event.key === 'ArrowRight' ? 1 : -1);
+    $('#space').value = String(space);
+    render();
+    return;
+  }
+  if (event.key === 'Escape') {
+    $('#space-form').hidden = true;
+    $('#search').value = '';
+    render();
+    $('#search').focus();
+    return;
+  }
+  if (primary || event.altKey || event.shiftKey || !['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+  const results = [...document.querySelectorAll('.activate')];
+  const index = results.indexOf(document.activeElement);
+  if (document.activeElement !== $('#search') && index < 0) return;
+  if (!results.length) return;
+  event.preventDefault();
+  const next = index < 0 ? (event.key === 'ArrowDown' ? 0 : results.length - 1)
+    : (index + (event.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length;
+  results[next].focus();
+}
+
 async function init() {
   windowId = (await chrome.windows.getCurrent()).id;
+  document.addEventListener('keydown', handleKeyboard);
+  $('#shortcut-settings').addEventListener('click', run(() => chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })));
+  const commands = await chrome.commands.getAll();
+  $('#shortcut-list').replaceChildren(...commands.map(command => {
+    const item = document.createElement('li');
+    item.textContent = `${command.description || 'Open sidebar'}: ${command.shortcut || 'Not assigned'}`;
+    return item;
+  }));
   $('#search').addEventListener('input', render);
   $('#search-form').addEventListener('submit', run(async event => {
     event.preventDefault();
@@ -110,5 +154,6 @@ async function init() {
     event.addListener(run(refresh));
   }
   await refresh();
+  $('#search').focus();
 }
 init().catch(report);

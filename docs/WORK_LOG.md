@@ -23,3 +23,10 @@ Each commit body should state its rationale and the checks actually run. Publish
 
 10. User enabled approval requests. Ordinary sandboxed Git writes still fail, but approved elevated Git commands work. Initialized the `main` branch and committed the preserved instructions separately from implementation and tests.
 11. Re-ran `npm run check`: all nine tests and syntax checks pass. Committed project documentation and this log as the final bootstrap unit. Real browser verification remains pending. No remote is configured, so no push was attempted.
+
+## Keyboard iteration v0.2.0
+
+12. Reviewed current commands and official Chrome Commands API limits. Kept four suggested bindings and added no permissions.
+13. Added failing behavior tests, then implemented active-tab pin toggling, bidirectional tab cycling and pure space cycling. Added a worker entry point to register commands synchronously.
+14. Added panel search focus, arrow-key result navigation, space cycling and Escape handling. Used physical KeyK to support alternate keyboard layouts. Added actual-assignment display and Chrome shortcut settings link.
+15. Updated installation/keyboard documentation and manual smoke checklist. `npm run check` passes 13 tests and syntax checks. Real Chrome keyboard and visual checks remain pending. Crapper, Dryer and Mutator remain unavailable.

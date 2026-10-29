@@ -1,1 +1,14 @@
-{"name":"arc-for-chrome","version":"0.1.0","private":true,"type":"module","scripts":{"test":"node --test","check":"node --check extension/background.js && node --check extension/panel.js && node --check extension/model.js && node --test"},"engines":{"node":">=22"},"license":"MIT"}
+{
+  "name": "arc-for-chrome",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check extension/worker.js && node --check extension/shortcuts.js && node --check extension/background.js && node --check extension/panel.js && node --check extension/model.js && node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}

@@ -12,3 +12,5 @@ Manifest V3, native ES modules, no bundled or remote dependencies.
 Browser events refresh snapshots scoped to the panel's host window. A monotonic revision discards stale reads. Titles/URLs enter the DOM only as text/attributes, never HTML. Navigation accepts HTTP(S) addresses; other input becomes an encoded search query. The browser CSP permits only local scripts.
 
 The sidebar is a projection of native state, not a separate tab manager database. Group names and pinned state survive extension reload through Chrome. Selected space and appearance reset when the panel document is recreated. Tab creation and grouping are separate Chrome operations: on API failure, a successfully created tab can remain in Inbox and the UI reports the error.
+
+`worker.js` registers browser commands at module evaluation and loads panel configuration. `shortcuts.js` owns testable browser command actions and pure space cycling. No new permissions are needed.
