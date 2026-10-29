@@ -1,11 +1,12 @@
 {
   "name": "arc-for-chrome",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --check extension/palette.js && node --check extension/palette-service.js && node --check extension/palette-page.js && node --check extension/worker.js && node --check extension/shortcuts.js && node --check extension/background.js && node --check extension/panel.js && node --check extension/model.js && node --test"
+    "check": "node --check extension/palette.js && node --check extension/palette-service.js && node --check extension/palette-page.js && node --check extension/worker.js && node --check extension/shortcuts.js && node --check extension/background.js && node --check extension/panel.js && node --check extension/model.js && node --test",
+    "check:browser": "node scripts/check-palette-keyboard.js"
   },
   "engines": {
     "node": ">=22"

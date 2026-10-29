@@ -37,3 +37,16 @@ Not yet executed in a real browser for v0.1.0.
 - Open from chrome://extensions and the Chrome Web Store; verify the fallback popup works, creates tabs in the original window, and closes on Escape/success. Check activation returns focus to the original window.
 - Close a matching tab while the palette is open; selecting it should display an error and leave search available.
 - Test dark/light appearance, small window widths, long titles/URLs and screen-reader combobox/listbox announcements.
+
+## Keyboard isolation regression v0.3.1
+
+Executed successfully in a separate real headless Chrome via `npm run check:browser`:
+
+- Install window capture listeners BEFORE mounting the palette to reproduce aggressive page/video shortcut handlers.
+- Type letters and Space, navigate with arrows, dismiss with Escape: no keydown/keypress/keyup reaches the page.
+- Verify focus restoration and that page keyboard listeners resume after dismissal.
+- Type and submit a query: navigation message contains the typed text, including when Enter closes the palette.
+- Select an existing tab with the keyboard and confirm the activation message.
+- Request dismissal with a key held; the palette stays until keyup, then disappears without leaking the final event.
+
+This browser harness injects the real palette function with a stubbed runtime messaging API. Full extension loading, protected-page fallback and site-specific integration remain separate manual checks. Also verify with the user's video player: typing Space/f/k and arrow navigation should not pause, fullscreen, seek or alter volume while search is open.

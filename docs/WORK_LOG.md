@@ -37,3 +37,11 @@ Each commit body should state its rationale and the checks actually run. Publish
 17. Wrote failing service behavior tests before implementation. Added isolated-world modal UI, search snapshot, arrow/Enter selection, dismissal/focus restoration, and a protected-page popup fallback.
 18. Added validated message actions for new-tab navigation and existing-tab activation. Confirmed source tabs are not updated or removed when opening search or submitting a query. Documented new activeTab/scripting permissions, fallback, result limits and four-binding default tradeoff.
 19. Ran npm run check: 21 tests and all JavaScript syntax checks pass. Browser visual/keyboard verification remains pending; no claim of completed real Chrome QA. Crapper, Dryer and Mutator remain unavailable.
+
+## Keyboard isolation fix v0.3.1
+
+20. User reported video-page shortcuts firing while search is open. Added a dependency-free real-Chrome/CDP regression with capture listeners registered before the palette. Observed the expected failure: parent window received keydown, keypress and keyup for letters, Space and arrows.
+21. A sandboxed Chrome launch failed; reran with approved elevated execution and a separate temporary profile. No user's browser profile was used.
+22. Moved search into an about:blank iframe inside the outer modal. This removes page listeners from the keyboard event path, rather than relying on late propagation cancellation. Kept the mount function self-contained for scripting.executeScript.
+23. Deferred dismissal while keys are held so closing Enter/Escape keyup stays in the frame. Clear stale held-key state on browser focus loss. Preserved focus restoration and repeated-command dismissal.
+24. Expanded and passed the real Chrome regression for text, Space, arrows, Escape, Enter submission, tab activation, held-key dismissal and resumed page shortcuts. npm run check passes all 21 tests and JavaScript syntax checks; git diff --check passes. Updated docs and version to 0.3.1. Full extension/site-specific manual checks remain pending; Crapper, Dryer and Mutator remain unavailable.

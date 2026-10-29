@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.3.0.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.3.1.** Not affiliated with Arc or The Browser Company.
 
 ## Install locally
 
@@ -82,3 +82,9 @@ Press **Alt+Shift+K** (macOS: Option+Shift+K) on a webpage. A centered modal app
 - The command uses a snapshot of tabs when opened, without history/bookmark access or online autocomplete. Reopen to refresh results. New tabs open ungrouped in the source window.
 
 Reload the extension and confirm new permissions if Chrome requests it. Check `chrome://extensions/shortcuts` for **Open Spotlight-style search** if the shortcut is missing or conflicts. Chrome permits only four suggested bindings: previous-tab remains available for manual assignment; an existing customized binding may be preserved by Chrome.
+
+### Keyboard isolation
+
+The command bar now renders inside a dedicated iframe within the modal, so its keyboard events do not bubble or capture through the parent page (including video player shortcuts). Dismissal waits for held keys to be released before restoring page focus, preventing the final Enter/Escape keyup from reaching the page. Browser/OS reserved shortcuts remain controlled by Chrome/the OS.
+
+A dependency-free browser regression can be run with `npm run check:browser`. It launches a separate headless Chrome with a temporary profile and removes that profile afterward. It defaults to the standard macOS Chrome binary; elsewhere set `CHROME_BINARY` to your Chrome executable path. The check drives actual keyboard events through Chrome DevTools Protocol against pre-existing page capture listeners; it does not load the full extension or verify a particular video site.
