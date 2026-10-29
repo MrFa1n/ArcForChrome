@@ -30,3 +30,10 @@ Each commit body should state its rationale and the checks actually run. Publish
 13. Added failing behavior tests, then implemented active-tab pin toggling, bidirectional tab cycling and pure space cycling. Added a worker entry point to register commands synchronously.
 14. Added panel search focus, arrow-key result navigation, space cycling and Escape handling. Used physical KeyK to support alternate keyboard layouts. Added actual-assignment display and Chrome shortcut settings link.
 15. Updated installation/keyboard documentation and manual smoke checklist. `npm run check` passes 13 tests and syntax checks. Real Chrome keyboard and visual checks remain pending. Crapper, Dryer and Mutator remain unavailable.
+
+## Spotlight-style search v0.3.0
+
+16. User requested a command bar over the current page without closing the tab. Reviewed Chrome activeTab/scripting guidance and used explicit-invocation injection rather than permanent site access.
+17. Wrote failing service behavior tests before implementation. Added isolated-world modal UI, search snapshot, arrow/Enter selection, dismissal/focus restoration, and a protected-page popup fallback.
+18. Added validated message actions for new-tab navigation and existing-tab activation. Confirmed source tabs are not updated or removed when opening search or submitting a query. Documented new activeTab/scripting permissions, fallback, result limits and four-binding default tradeoff.
+19. Ran npm run check: 21 tests and all JavaScript syntax checks pass. Browser visual/keyboard verification remains pending; no claim of completed real Chrome QA. Crapper, Dryer and Mutator remain unavailable.

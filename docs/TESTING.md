@@ -26,3 +26,14 @@ Not yet executed in a real browser for v0.1.0.
 - Alt+Left/Right cycles Inbox and spaces in both directions, including wraparound.
 - Escape dismisses space creation and clears the search. Verify normal text input and IME composition remain usable.
 - Remove a shortcut assignment in Chrome and reopen the panel; verify it displays Not assigned. Restore a custom binding and verify it executes.
+
+## Command palette v0.3.0 (manual verification pending)
+
+- Reload the extension, review any new permission prompt, and confirm Open Spotlight-style search is assigned in Chrome settings.
+- On an HTTPS page with focus in a text field, press Alt+Shift+K. Verify a centered modal, dimmed backdrop, focused search, and unchanged source tab URL/count.
+- Escape, outside click, esc button, and invoking the command a second time each dismiss the overlay and restore prior focus. Repeat opening to check no duplicate overlays or listeners remain.
+- Enter an address or plain text and press Enter. Verify a NEW tab opens and the source tab remains intact. Type HTML-like input and verify it stays text. Empty Enter may select the first existing tab but never creates a blank tab.
+- Search for another tab, use Down then Enter, and verify the existing tab activates without duplication. Test clicks, both arrow directions, wrapping, IME composition and focus containment with Tab/Shift+Tab.
+- Open from chrome://extensions and the Chrome Web Store; verify the fallback popup works, creates tabs in the original window, and closes on Escape/success. Check activation returns focus to the original window.
+- Close a matching tab while the palette is open; selecting it should display an error and leave search available.
+- Test dark/light appearance, small window widths, long titles/URLs and screen-reader combobox/listbox announcements.

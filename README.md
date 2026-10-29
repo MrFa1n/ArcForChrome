@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.2.0.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.3.0.** Not affiliated with Arc or The Browser Company.
 
 ## Install locally
 
@@ -30,7 +30,7 @@ An extension cannot replace Chrome's native tab strip or browser frame. This pro
 
 ## Privacy and permissions
 
-`tabs` reads titles/URLs and manages tabs. `tabGroups` reads and manages spaces. `sidePanel` displays the interface. No host permissions, content scripts, telemetry, remote code or backend. Chrome owns tab persistence; the extension keeps no separate browsing database. Submitting a search sends the entered query to Google; opening a URL contacts that site as normal.
+`tabs` reads titles/URLs and manages tabs. `tabGroups` reads and manages spaces. `sidePanel` displays the interface. No host permissions, persistent content scripts, telemetry, remote code or backend. `activeTab` and `scripting` allow the command palette to be injected into the active page only after an explicit extension command. Chrome owns tab persistence; the extension keeps no separate browsing database. Submitting a search sends the entered query to Google; opening a URL contacts that site as normal.
 
 ## Development
 
@@ -61,7 +61,8 @@ Commands work while Chrome is focused, including when the panel is closed:
 | --- | --- |
 | Open sidebar | Alt+Shift+A |
 | Pin/unpin active tab | Alt+Shift+P |
-| Previous tab in current window | Alt+Shift+Left |
+| Spotlight-style command bar | Alt+Shift+K |
+| Previous tab in current window | Assign manually in Chrome settings |
 | Next tab in current window | Alt+Shift+Right |
 
 Inside the focused sidebar: Cmd/Ctrl+K focuses and selects search; Up/Down move from search through tab buttons; Enter activates the focused tab (Enter in search opens a URL/search); Alt+Left/Right cycle spaces; Escape clears search and dismisses the space form. Search receives focus when a panel document first opens.
@@ -69,3 +70,15 @@ Inside the focused sidebar: Cmd/Ctrl+K focuses and selects search; Up/Down move 
 Expand **Keyboard shortcuts** in the sidebar to see actual registered bindings, including missing assignments, and click **Customize shortcuts** to open `chrome://extensions/shortcuts`. Reload the extension after updating. Existing user assignments are controlled by Chrome and may differ from defaults.
 
 Chrome reserves some browser/OS shortcuts, so Arc's Cmd+T command bar and Cmd+S sidebar behavior cannot be promised as direct replacements. Native Chrome shortcuts such as Cmd/Ctrl+T, W and Shift+T retain their normal behavior. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).
+
+## Spotlight-style command bar
+
+Press **Alt+Shift+K** (macOS: Option+Shift+K) on a webpage. A centered modal appears over the current page with automatic search focus, a dimmed backdrop and matching tabs from the current window. The current tab is never closed or navigated by opening search.
+
+- Type an address or query and press Enter to open it in a **new tab**. This is the first result for typed input.
+- Use Up/Down and Enter, or click a result, to activate an existing tab. Up to eight matching tabs are shown.
+- Escape, the esc button, an outside click, or invoking the shortcut again dismisses the overlay and restores the previous page focus.
+- On protected pages (`chrome://`, the Chrome Web Store and other pages where injection is denied), a separate small extension window provides the same search. Escape closes that window.
+- The command uses a snapshot of tabs when opened, without history/bookmark access or online autocomplete. Reopen to refresh results. New tabs open ungrouped in the source window.
+
+Reload the extension and confirm new permissions if Chrome requests it. Check `chrome://extensions/shortcuts` for **Open Spotlight-style search** if the shortcut is missing or conflicts. Chrome permits only four suggested bindings: previous-tab remains available for manual assignment; an existing customized binding may be preserved by Chrome.
