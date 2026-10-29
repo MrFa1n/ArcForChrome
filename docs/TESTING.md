@@ -75,3 +75,11 @@ Unit tests cover non-positional recency, frozen-list cycling/wrapping, pause-to-
 - Close a candidate or move it to another window; verify it is never selected in the wrong window. A one-tab window is unchanged.
 - Stop the extension service worker in DevTools, then invoke the command; session recency should survive. Reloading/updating the extension resets session storage and seeds from native timestamps.
 - Verify the command with Chrome's vertical tabs, sidebar closed, and a video page focused. Confirm Ctrl+Tab retains native Chrome behavior.
+
+## Numbered pinned tabs v0.6.0
+
+- Pin at least three tabs, reorder them, assign Activate pinned tab 1..3 and confirm selection follows native pin order in the focused window with the extension sidebar closed.
+- With nine pins plus regular tabs, verify pinned-tab-9 selects the ninth pin, not the final regular tab.
+- Invoke an unfilled slot: no navigation, tab creation or regular-tab activation.
+- Confirm activation updates the existing MRU history.
+- Optional macOS profile: configure all emitted bindings before enabling Karabiner rules. Verify Cmd+T, Control+Tab and Cmd+1..9 only change behavior in Chrome stable. Disable each rule and verify normal behavior returns. Actual Karabiner/OS integration remains unverified.

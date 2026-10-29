@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A calm sidebar with vertical tabs, favorites and spaces powered by Chrome tab groups.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -58,6 +58,33 @@
         "mac": "Alt+Shift+Left"
       },
       "description": "Switch to recently active tabs (MRU)"
+    },
+    "pinned-tab-1": {
+      "description": "Activate pinned tab 1"
+    },
+    "pinned-tab-2": {
+      "description": "Activate pinned tab 2"
+    },
+    "pinned-tab-3": {
+      "description": "Activate pinned tab 3"
+    },
+    "pinned-tab-4": {
+      "description": "Activate pinned tab 4"
+    },
+    "pinned-tab-5": {
+      "description": "Activate pinned tab 5"
+    },
+    "pinned-tab-6": {
+      "description": "Activate pinned tab 6"
+    },
+    "pinned-tab-7": {
+      "description": "Activate pinned tab 7"
+    },
+    "pinned-tab-8": {
+      "description": "Activate pinned tab 8"
+    },
+    "pinned-tab-9": {
+      "description": "Activate pinned tab 9"
     }
   },
   "content_security_policy": {

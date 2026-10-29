@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.5.0.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.6.0.** Not affiliated with Arc or The Browser Company.
 
 ## Install locally
 
@@ -103,3 +103,11 @@ For example, with tabs arranged A–B–C, visiting A → C → B means the comm
 Recency is recorded from native tab-activation events separately per window. When first enabled or after browser/extension restart, existing tabs are seeded using Chrome's available `lastAccessed` values; tabs without a timestamp have no known previous order until activated. Session storage keeps state across background-worker suspension. This is a timed MRU cycle, not an Alt-Tab preview with selection committed on modifier release.
 
 Reload the extension, then check **Switch to recently active tabs (MRU)** at `chrome://extensions/shortcuts`. Existing customized bindings may be preserved and conflict with the suggestion. To keep Chrome's four-default limit, next-tab-by-position remains available for manual assignment. Chrome's native Ctrl+Tab is not remapped; use the extension command's assigned binding. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).
+
+## Pinned tabs by number
+
+Pin/unpin the active tab using **Option+Shift+P** (or Chrome's tab context menu). Drag pinned tabs to choose their order. Chrome's native Cmd+1 through Cmd+8 select positions 1–8, which normally correspond to the first eight pinned tabs. Cmd+9 is different: Chrome selects the final tab, not pinned tab nine. Native positional shortcuts may select regular tabs if there are fewer pins.
+
+This extension also declares **Activate pinned tab 1** through **Activate pinned tab 9** at `chrome://extensions/shortcuts`. Assign free bindings such as **Option+Shift+1..9**. These commands select only pinned tabs in the current window, in native tab order. A missing slot does nothing. They do not create/reopen tabs or require the sidebar. No additional permissions are needed. All nine start unassigned because Chrome limits suggested defaults to four.
+
+For familiar Arc-style physical keys, see the optional [macOS keyboard mapping guide](docs/KEYBOARD_REMAPPING.md). The extension itself cannot provide a universal remapper for every browser/OS shortcut.

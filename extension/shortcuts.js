@@ -1,4 +1,11 @@
 export async function executeCommand(api, command) {
+  const favorite = /^pinned-tab-([1-9])$/.exec(command);
+  if (favorite) {
+    const tabs = (await api.tabs.query({currentWindow:true,pinned:true})).sort((a,b) => a.index - b.index);
+    const tab = tabs[Number(favorite[1]) - 1];
+    if (tab) await api.tabs.update(tab.id,{active:true});
+    return;
+  }
   if (command === 'toggle-pin') {
     const [tab] = await api.tabs.query({ active: true, currentWindow: true });
     if (tab) await api.tabs.update(tab.id, { pinned: !tab.pinned });

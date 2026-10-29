@@ -36,3 +36,19 @@ test('worker handles configuration failures without an unhandled rejection', asy
   assert.equal(errors.length, 1);
   assert.equal(errors[0][1].message, 'Unavailable');
 });
+test('all nine pin commands exist without exceeding Chrome default-binding limits', async () => {
+  const manifest=JSON.parse(await readFile(new URL('manifest.json',root)));
+  for(let slot=1;slot<=9;slot++) assert.ok(manifest.commands[`pinned-tab-${slot}`]);
+  assert.ok(Object.values(manifest.commands).filter(command=>command.suggested_key).length<=4);
+});
+test('optional remapping is Chrome-scoped and maps to declared pin commands', async () => {
+  const profile=JSON.parse(await readFile(new URL('../integrations/karabiner/arc-for-chrome.json',root)));
+  assert.equal(profile.rules.length,3);
+  const mappings=profile.rules.flatMap(rule=>rule.manipulators);
+  assert.equal(mappings.length,11);
+  for(const mapping of mappings) {
+    assert.equal(mapping.type,'basic');
+    assert.deepEqual(mapping.conditions,[{type:'frontmost_application_if',bundle_identifiers:['^com\\.google\\.Chrome$']}]);
+    assert.deepEqual(mapping.to[0].modifiers,['left_option','left_shift']);
+  }
+});

@@ -28,3 +28,23 @@ test('space navigation wraps through Inbox and available groups', () => {
   assert.equal(cycleSpace([-1,4,8],8,1),-1);
   assert.equal(cycleSpace([-1],-1,1),-1);
 });
+test('numbered favorites select pinned tabs in native order, not query order', async () => {
+  const updates=[];let scope;
+  const api={tabs:{query:async options=>{scope=options;return [{id:30,index:2},{id:10,index:0},{id:20,index:1}];},
+    update:async(...args)=>updates.push(args)}};
+  await executeCommand(api,'pinned-tab-2');
+  assert.deepEqual(scope,{currentWindow:true,pinned:true});
+  assert.deepEqual(updates,[[20,{active:true}]]);
+});
+test('favorite 9 activates the ninth pinned tab rather than the final tab', async () => {
+  const updates=[];
+  const api={tabs:{query:async()=>Array.from({length:12},(_,index)=>({id:index+10,index})),
+    update:async(...args)=>updates.push(args)}};
+  await executeCommand(api,'pinned-tab-9');
+  assert.deepEqual(updates,[[18,{active:true}]]);
+});
+test('missing favorite slots never activate a regular tab or create a tab', async () => {
+  const api=browser([]);
+  await executeCommand(api,'pinned-tab-1');await executeCommand(api,'pinned-tab-9');
+  assert.deepEqual(api.updates,[]);
+});
