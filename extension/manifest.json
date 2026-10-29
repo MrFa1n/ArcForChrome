@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Arc for Chrome",
+  "version": "0.1.0",
+  "description": "A calm sidebar with vertical tabs, favorites and spaces powered by Chrome tab groups.",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel", "tabs", "tabGroups"],
+  "background": {"service_worker": "background.js", "type": "module"},
+  "side_panel": {"default_path": "panel.html"},
+  "action": {"default_title": "Open Arc for Chrome"},
+  "commands": {"_execute_action": {"suggested_key": {"default": "Alt+Shift+A", "mac": "Alt+Shift+A"}, "description": "Open the sidebar"}},
+  "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'"}
+}
