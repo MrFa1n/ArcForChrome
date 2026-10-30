@@ -79,3 +79,7 @@ The original frosted-aperture mark—a blue optical orbit and focus bead on a so
 - Corrected results are labeled **Keyboard layout match** or **Similar spelling**. Tab still lets you inspect/edit their URL before opening it.
 
 Native history/bookmark search is queried with the original and alternate-layout text. If no candidate matches a query of 4–128 characters, the extension checks at most 100 recently added bookmarks and 100 recent history records for spelling matches. This is bounded local matching, not exhaustive fuzzy search over all saved pages, semantic AI or online autocomplete. Longer queries use literal matching without typo/layout expansion. No extra permissions, network services or stored index are introduced.
+
+## Arc comparison and next steps
+
+The [Command Bar audit](docs/ARC_COMMAND_BAR_AUDIT.md) compares this search-only extension with documented Arc behavior, distinguishes confirmed gaps from proposals requiring live validation, and defines a prioritized migration plan. The extension is not a complete Arc Command Bar replacement yet.
