@@ -101,3 +101,8 @@ Each commit body should state its rationale and the checks actually run. Publish
 54. User requested a polished extension icon. Created an original geometric search mark with a white magnifier, mint glint and blue/violet tile. Used a deterministic Pillow asset generator as the editable source; no new runtime dependencies or permissions.
 55. Generated transparent PNGs at 16/32/48/128 px, visually inspected actual-size previews on light/dark backgrounds, and connected all sizes to manifest icons/action.default_icon. Added a favicon to the fallback search page.
 56. Validated PNG format/dimensions/transparency and manifest paths. npm run check passes 29 tests and syntax checks; git diff --check passes. Actual Chrome icon cache refresh remains user-verifiable on extension reload. Crapper, Dryer and Mutator remain unavailable; no remote configured for push.
+
+## Original Apple-inspired icon v0.9.2
+
+57. User requested a more original Apple-inspired icon. Replaced the generic magnifier/glint with an original open optical orbit and detached focus bead, using a soft light superellipse tile, subtle material shading and a blue/indigo symbol. No Apple or Arc logo is copied.
+58. Updated the editable deterministic generator and regenerated 16/32/48/128 px assets. Inspected an actual-size light/dark preview, including the 16 px mark. Verified all manifest paths, PNG sizes and transparent corners. npm run check passes 29 tests and syntax checks; git diff --check passes. No permissions or runtime behavior changed.

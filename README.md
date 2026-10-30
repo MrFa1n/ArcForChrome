@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.9.1. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.9.2. Not affiliated with Arc or The Browser Company.
 
 ## Install
 
@@ -69,4 +69,4 @@ The browser regression emulates live light/dark changes and changes the iframe's
 
 ## Extension icon
 
-The custom search mark is bundled at 16, 32, 48 and 128 px for Chrome's toolbar and extension manager. Regenerate it with `python3 scripts/generate-icons.py` (development only; requires Pillow). The deterministic generator is the editable source; Pillow is not a runtime dependency. The mark is independent of Arc's official branding.
+The original frosted-aperture mark—a blue optical orbit and focus bead on a softly shaded light squircle—is bundled at 16, 32, 48 and 128 px for Chrome's toolbar and extension manager. Regenerate it with `python3 scripts/generate-icons.py` (development only; requires Pillow). The deterministic generator is the editable source; Pillow is not a runtime dependency. The mark is independent of Arc's official branding.
