@@ -25,11 +25,11 @@ test('empty search returns only tabs; history API is not read', async () => {
   assert.equal(response.suggestions[0].id,1);
 });
 test('history searches all time and partial source failures preserve available results', async () => {
-  let parameters;
+  const parameters=[];
   const api={tabs:{query:async()=>[tab]},bookmarks:{search:async()=>{throw Error('Denied');}},
-    history:{search:async options=>{parameters=options;return [{title:'Design notes',url:'https://notes.example'}];}}};
+    history:{search:async options=>{parameters.push(options);return [{title:'Design notes',url:'https://notes.example'}];}}};
   const response=await findSuggestions(api,2,'design');
-  assert.equal(parameters.startTime,0);assert.equal(parameters.text,'design');
+  assert.equal(parameters[0].startTime,0);assert.equal(parameters[0].text,'design');
   assert.deepEqual(response.suggestions.map(row=>row.kind),['tab','history']);
   assert.ok(response.warnings.includes('Bookmarks unavailable'));
 });
@@ -67,4 +67,25 @@ test('empty input and already suggested homepages add no duplicate domain action
   const api={tabs:{query:async()=>[{id:1,title:'Home',url:'https://example.com/'}]},bookmarks:{search:async()=>[]},history:{search:async()=>[]}};
   assert.deepEqual((await findSuggestions(api,2,'')).domains,[]);
   assert.deepEqual((await findSuggestions(api,2,'example')).domains,[]);
+});
+test('native history/bookmark queries include the corrected keyboard layout', async () => {
+  const queries=[];
+  const api={tabs:{query:async()=>[]},bookmarks:{search:async query=>{queries.push(query);return query==='github'?[{title:'GitHub',url:'https://github.com/'}]:[];}},
+    history:{search:async()=>[]}};
+  const result=await findSuggestions(api,2,'пшерги');
+  assert.ok(queries.includes('github'));
+  assert.equal(result.suggestions[0].match,'layout');
+});
+test('a typo with no native matches searches bounded recent records', async () => {
+  const limits=[];
+  const api={tabs:{query:async()=>[]},bookmarks:{search:async()=>[],getRecent:async limit=>{limits.push(limit);return [{title:'GitHub',url:'https://github.com/'}];}},
+    history:{search:async options=>{if(!options.text)limits.push(options.maxResults);return [];}}};
+  const result=await findSuggestions(api,2,'githbu');
+  assert.equal(result.suggestions[0].match,'typo');
+  assert.deepEqual(limits,[100,100]);
+});
+test('exact and corrected suggestions stay local and never trigger navigation', async () => {
+  const api={tabs:{query:async()=>[{id:1,title:'GitHub',url:'https://github.com/'}]},bookmarks:{search:async()=>[]},history:{search:async()=>[]}};
+  const result=await findSuggestions(api,2,'githbu');
+  assert.equal(result.suggestions[0].id,1);assert.equal(result.suggestions[0].kind,'tab');
 });

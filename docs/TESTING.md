@@ -46,3 +46,9 @@ Manual integration:
 - Change Chrome's default font size and sans-serif font. Verify text size/family on the next open and, where Chrome applies renderer preference updates immediately, while open. Check narrow-window overflow at large sizes and browser zoom.
 - Test increased contrast, forced colors and keyboard focus visibility where supported.
 - Confirm arbitrary installed-theme colors/backgrounds are not presented as synchronized; only rendering preferences are consumed.
+
+## Local matching intelligence v0.10.0
+
+Unit tests cover layout conversion in both directions, single edits/transpositions, short-query rejection, accents/multiple words, exact-domain ranking, native source variant queries and bounded recent fallback. Existing open-tab priority, domain actions and source validation tests continue to pass.
+
+Manual checks: search GitHub with `пшерги` and `githbu`; search a Russian-titled page using the wrong English layout. Confirm correction labels, exact-result ranking, title aliases and preserved raw input. Inspect and edit a corrected suggestion through Tab; the raw Open row must still use the original text. Try unrelated short queries to check for noisy suggestions. Old typo-matching pages outside the recent fallback sample are not guaranteed to appear.

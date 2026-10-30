@@ -42,3 +42,9 @@ Plain Tab copies the selected result URL into the search input, places the caret
 Palette CSS uses Canvas, CanvasText, GrayText and Highlight instead of the former fixed lavender palette. Each frame explicitly opts into light/dark color-scheme and uses a medium root font with generic sans-serif; labels and input scale through rem. CSS preferences update without listeners, polling, storage or appearance permissions. More-contrast/forced-colors rules strengthen borders and selection contrast. The site is isolated from palette typography by the dedicated frame.
 
 This follows the rendering preferences Chrome exposes to web content. It does not query a browser-theme API, Chrome profile color or wallpaper. User settings for a different generic font family need not affect sans-serif text. The application remains search-only and retains all keyboard and request-boundary behavior.
+
+## Local query intelligence
+
+`search-match.js` owns query normalization, Russian/English physical-key variants and bounded one-edit/adjacent-transposition word matching. Candidate text may include alternate bookmark/history titles already merged with a live tab. Exact hostname matches and hostname/title prefixes receive larger scores; source tiers remain the primary ordering key. Correction metadata is exposed as a UI label. Navigation parsing remains independent and retains the user's original query.
+
+`suggestions.js` issues original/alternate-layout native source queries concurrently, tolerating partial failures. When no match exists for a 4–128-character query it adds at most 100 recently added bookmarks and 100 recent history records, then ranks again. This bounds fallback work without a persistent index. It does not claim to find every old misspelled bookmark or historical page. No new permissions or external intelligence services are used.

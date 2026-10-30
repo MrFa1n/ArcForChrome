@@ -106,3 +106,10 @@ Each commit body should state its rationale and the checks actually run. Publish
 
 57. User requested a more original Apple-inspired icon. Replaced the generic magnifier/glint with an original open optical orbit and detached focus bead, using a soft light superellipse tile, subtle material shading and a blue/indigo symbol. No Apple or Arc logo is copied.
 58. Updated the editable deterministic generator and regenerated 16/32/48/128 px assets. Inspected an actual-size light/dark preview, including the 16 px mark. Verified all manifest paths, PNG sizes and transparent corners. npm run check passes 29 tests and syntax checks; git diff --check passes. No permissions or runtime behavior changed.
+
+## Smarter local matching v0.10.0
+
+59. User asked to make search smarter. Chose local query quality improvements without adding services/permissions. Added failing tests before the matcher implementation; verified official bookmark/history APIs for bounded recent candidate retrieval.
+60. Added Russian/English keyboard-layout variants, accent normalization, one-edit/adjacent-transposition matching for longer words, and exact-domain/title-prefix ranking. Preserved open-tab source priority, merged aliases, original input and navigation behavior.
+61. Expanded native queries to alternate-layout text. Only after no matches, use a bounded sample of 100 recently added bookmarks/100 recent history entries for typo candidates. Mark corrected suggestions explicitly and document that this is not exhaustive semantic search or a persistent index. Final checks follow.
+62. Validation: 38 behavior tests and syntax checks pass; targeted matcher/source tests also pass after bounding typo expansion to short queries. Separate real-Chrome regression passes existing appearance, keyboard isolation, Tab completion and homepage behavior. git diff --check passes. Real profile retrieval/ranking remains manually verifiable; fuzzy recovery is limited to retrieved/recent candidates. Crapper, Dryer and Mutator remain unavailable; no remote configured for push.

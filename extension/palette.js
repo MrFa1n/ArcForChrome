@@ -137,6 +137,7 @@ export function mountPalette(tabs, floating = false) {
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
         const url = document.createElement('span');url.className = 'url';url.textContent = choice.kind === 'navigate' ? choice.url
           : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
+        if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title,url);row.append(icon,text);
         if (choice.kind !== 'navigate') {
           const hint = document.createElement('span');hint.className = 'hint';hint.textContent = 'Tab ↹';row.append(hint);

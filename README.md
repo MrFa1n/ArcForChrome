@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.9.2. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.10.0. Not affiliated with Arc or The Browser Company.
 
 ## Install
 
@@ -70,3 +70,12 @@ The browser regression emulates live light/dark changes and changes the iframe's
 ## Extension icon
 
 The original frosted-aperture mark—a blue optical orbit and focus bead on a softly shaded light squircle—is bundled at 16, 32, 48 and 128 px for Chrome's toolbar and extension manager. Regenerate it with `python3 scripts/generate-icons.py` (development only; requires Pillow). The deterministic generator is the editable source; Pillow is not a runtime dependency. The mark is independent of Arc's official branding.
+
+## Smarter local matching
+
+- Russian/English keyboard-layout variants are considered for text queries, e.g. `пшерги` → GitHub and `ghbdtn` → a page titled “Привет”. The typed input and raw-input navigation row are never silently rewritten.
+- Words of at least four characters tolerate one insertion, deletion, substitution or adjacent transposition, e.g. `githbu` → GitHub. Short words require literal matches to limit noise. Accent marks are ignored when comparing retrieved candidates.
+- Within each source tier, exact domain and domain-prefix matches rank above title prefixes and incidental URL/text mentions. Open tabs still come first, followed by bookmarks and history; equivalent matches prefer newer history entries.
+- Corrected results are labeled **Keyboard layout match** or **Similar spelling**. Tab still lets you inspect/edit their URL before opening it.
+
+Native history/bookmark search is queried with the original and alternate-layout text. If no candidate matches a query of 4–128 characters, the extension checks at most 100 recently added bookmarks and 100 recent history records for spelling matches. This is bounded local matching, not exhaustive fuzzy search over all saved pages, semantic AI or online autocomplete. Longer queries use literal matching without typo/layout expansion. No extra permissions, network services or stored index are introduced.
