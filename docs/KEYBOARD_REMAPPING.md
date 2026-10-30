@@ -1,35 +1,34 @@
-# Optional macOS keyboard mapping
+# Arc-style keys using Chrome settings
 
-The extension exposes actions; a system remapper can translate familiar physical keys into their Chrome extension bindings before Chrome handles them. No system configuration is changed by this repository.
+No additional software is needed. The user verified that assigning Cmd+T directly to our Spotlight command is accepted and works in their Chrome version. Version 0.6.1 suggests the following macOS defaults for supported extension actions:
 
-## Prepared Karabiner-Elements profile
-
-`integrations/karabiner/arc-for-chrome.json` contains three independently enabled rules, restricted to Google Chrome stable (`com.google.Chrome`):
-
-| Physical keys | Emitted extension binding | Action |
+| Chrome command label | macOS target | Setup |
 | --- | --- | --- |
-| Cmd+T | Option+Shift+K | Spotlight command bar |
-| Control+Tab | Option+Shift+Left | Timed MRU switching |
-| Cmd+1..9 | Option+Shift+1..9 | Pinned tab slots 1..9 |
+| Activate the extension | Cmd+S | Suggested default; toggles our side panel |
+| Pin or unpin current tab | Cmd+D | Suggested default |
+| Open Spotlight-style search | Cmd+T | Suggested default; user verified direct assignment |
+| Activate pinned tab 1..9 | Cmd+1..9 | Assign individually in Chrome |
+| Switch to recently active tabs (MRU) | Option+Shift+Left | Available fallback; Ctrl+Tab is not supported by documented Commands API keys |
 
-First reload the extension and open `chrome://extensions/shortcuts`. Confirm Spotlight and MRU assignments match the table. Assign each **Activate pinned tab N** to **Option+Shift+N** before enabling the numeric rule. Chrome may report conflicts; clear/reassign them deliberately. Missing slots do nothing instead of selecting a regular tab.
+Reload the extension, then open `chrome://extensions/shortcuts`. For each command, click the pencil and press its target keys. Keep scope **In Chrome**. Chrome may preserve existing assignments when an extension's manifest changes, so check the displayed values rather than assuming a reload changes them. There is no supported commands.update API for an extension to set user bindings.
 
-Install Karabiner-Elements from its official site if you choose to use it, and follow its setup/permission prompts. Copy the supplied JSON file into `~/.config/karabiner/assets/complex_modifications/`, then enable the desired rules in Karabiner's Complex Modifications section. For other Chrome channels, use EventViewer to determine the actual bundle identifier and adjust the application condition. Other applications are excluded. Disable a rule there to restore the physical shortcut's native behavior.
+Chrome allows at most four suggested defaults. All nine pinned-slot actions are declared but cannot all receive automatic defaults; they need individual assignment in this screen. A missing pinned slot does nothing. Native Cmd+9 selects the final tab, so binding our ninth-slot command is required for actual ninth-pin behavior.
 
-The MRU action is the existing 1.2-second timed cycle. Holding Control does not create an Alt-Tab preview or commit on modifier release. Control+Shift+Tab is not remapped by this profile. More elaborate native-style switching needs a separate implementation. OS-reserved/system-secure combinations can still take priority; this profile is not a guarantee for every key or input source.
+Ctrl+Tab and Ctrl+Shift+Tab are Arc's recent-tab keys, but Tab is absent from the documented Chrome extension command key set. Do not promise those bindings or emit an invalid manifest. Keep the working MRU fallback unless the actual Chrome shortcut UI accepts and successfully executes an alternative. Our MRU action remains a timed 1.2-second cycle, not a modifier-release preview.
 
-The JSON format and application restriction follow official Karabiner documentation. Automated checks validate the prepared file's structure and target action declarations; Karabiner itself and macOS key routing have not been tested on this machine. This is optional configuration, not an installed component or a dependency of the extension.
+Cmd+W, Cmd+Shift+T, Cmd+R, Cmd+F and other native actions can retain Chrome behavior. Unsupported Arc features such as Little Arc and the browser's own sidebar replacement are not mapped to unrelated actions. Cmd+S here toggles only the extension side panel, not Chrome's native vertical tabs.
 
-## Other ways to remap
+## Verification status
 
-Chrome's `chrome://extensions/shortcuts` configures extension commands, not a complete editor for all Chrome keyboard actions. Some Chrome/OS shortcuts have priority. Assigning a colliding binding must be checked on the actual Chrome/macOS version; do not assume all browser shortcuts are unchangeable, or that all are replaceable.
+- Direct Cmd+T: confirmed working by the user in their Chrome.
+- Manifest defaults: automated configuration checks.
+- Cmd+D, Cmd+S and Cmd+1..9 assignments: require actual-profile verification.
+- Agent UI application: blocked because Computer Use access to Google Chrome was not approved. No Chrome profile files or system preferences were edited.
 
-macOS System Settings → Keyboard → Keyboard Shortcuts → App Shortcuts can assign shortcuts to existing menu items by their exact displayed title. This helps with menu actions, but does not directly invoke an arbitrary extension command. A Chrome-scoped system remapper is the broader option for our Spotlight/MRU/pin actions.
+The older Karabiner JSON in `integrations/karabiner/` is a historical optional artifact; it is not required or used by this setup. Do not enable it alongside direct bindings without reviewing its old emitted shortcuts.
 
 Official references:
 
 - https://developer.chrome.com/docs/extensions/reference/api/commands
 - https://support.google.com/chrome/answer/157179?co=GENIE.Platform%3DDesktop&hl=en
-- https://support.apple.com/guide/mac-help/create-keyboard-shortcuts-for-apps-mchlp2271/mac
-- https://karabiner-elements.pqrs.org/docs/json/complex-modifications-manipulator-definition/conditions/frontmost-application/
-- https://karabiner-elements.pqrs.org/docs/manual/configuration/add-your-own-complex-modifications/
+- https://start.arc.net/command-bar-actions

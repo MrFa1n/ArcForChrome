@@ -52,3 +52,10 @@ test('optional remapping is Chrome-scoped and maps to declared pin commands', as
     assert.deepEqual(mapping.to[0].modifiers,['left_option','left_shift']);
   }
 });
+test('macOS defaults use Arc keys for implemented search, pin and sidebar actions', async () => {
+  const {commands}=JSON.parse(await readFile(new URL('manifest.json',root)));
+  assert.equal(commands['open-search'].suggested_key.mac,'Command+T');
+  assert.equal(commands['toggle-pin'].suggested_key.mac,'Command+D');
+  assert.equal(commands._execute_action.suggested_key.mac,'Command+S');
+  assert.ok(Object.values(commands).filter(command=>command.suggested_key).length<=4);
+});

@@ -83,3 +83,12 @@ Unit tests cover non-positional recency, frozen-list cycling/wrapping, pause-to-
 - Invoke an unfilled slot: no navigation, tab creation or regular-tab activation.
 - Confirm activation updates the existing MRU history.
 - Optional macOS profile: configure all emitted bindings before enabling Karabiner rules. Verify Cmd+T, Control+Tab and Cmd+1..9 only change behavior in Chrome stable. Disable each rule and verify normal behavior returns. Actual Karabiner/OS integration remains unverified.
+
+## Arc-style macOS defaults v0.6.1
+
+- Reload the extension, check actual assignments, and manually replace preserved legacy Option+Shift shortcuts with Cmd+T, Cmd+D and Cmd+S.
+- Verify Spotlight opens with Cmd+T without creating a new blank tab (already confirmed by the user before this iteration).
+- Verify Cmd+D toggles native pin state; Cmd+S toggles only the extension side panel.
+- Assign Activate pinned tab 1..9 to Cmd+1..9 and test each existing slot, especially nine with regular tabs after it.
+- Keep MRU on the working fallback; Ctrl+Tab remains unverified/unsupported by documented API keys.
+- Full-profile application remains blocked until Chrome Computer Use access is approved or the user assigns keys manually.

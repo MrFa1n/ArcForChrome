@@ -1,13 +1,13 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.6.0.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.6.1.** Not affiliated with Arc or The Browser Company.
 
 ## Install locally
 
 1. Use Chrome 116 or newer.
 2. Open `chrome://extensions`, enable **Developer mode**.
 3. Click **Load unpacked** and select this repository's `extension` folder.
-4. Pin the extension's toolbar action and click it to open the sidebar. The suggested shortcut is **Alt+Shift+A**; customize it at `chrome://extensions/shortcuts` if unavailable.
+4. Pin the extension's toolbar action and click it to open the sidebar. The suggested shortcut is **Cmd+S on macOS**, **Alt+Shift+A elsewhere**; customize it at `chrome://extensions/shortcuts` if unavailable.
 5. For an Arc-like placement, choose the left side in Chrome's side panel settings (location varies by Chrome version).
 
 No build step, account or dependency installation is required.
@@ -57,24 +57,24 @@ MIT licensed. This project is not published to the Chrome Web Store.
 
 Commands work while Chrome is focused, including when the panel is closed:
 
-| Action | Default (macOS: Alt = Option) |
-| --- | --- |
-| Open sidebar | Alt+Shift+A |
-| Pin/unpin active tab | Alt+Shift+P |
-| Spotlight-style command bar | Alt+Shift+K |
-| Previous tab in current window | Assign manually in Chrome settings |
-| Recently active tabs (MRU) | Alt+Shift+Left |
-| Next tab by position | Assign manually in Chrome settings |
+| Action | macOS default / target | Windows/Linux default |
+| --- | --- | --- |
+| Toggle extension sidebar | Cmd+S | Alt+Shift+A |
+| Pin/unpin active tab | Cmd+D | Alt+Shift+P |
+| Spotlight-style command bar | Cmd+T | Alt+Shift+K |
+| Pinned tabs 1–9 | Assign Cmd+1..9 manually | Assign manually |
+| Recently active tabs (MRU) | Option+Shift+Left (fallback) | Alt+Shift+Left |
+| Previous/next tab by position | Assign manually | Assign manually |
 
 Inside the focused sidebar: Cmd/Ctrl+K focuses and selects search; Up/Down move from search through tab buttons; Enter activates the focused tab (Enter in search opens a URL/search); Alt+Left/Right cycle spaces; Escape clears search and dismisses the space form. Search receives focus when a panel document first opens.
 
 Expand **Keyboard shortcuts** in the sidebar to see actual registered bindings, including missing assignments, and click **Customize shortcuts** to open `chrome://extensions/shortcuts`. Reload the extension after updating. Existing user assignments are controlled by Chrome and may differ from defaults.
 
-Chrome reserves some browser/OS shortcuts, so Arc's Cmd+T command bar and Cmd+S sidebar behavior cannot be promised as direct replacements. Native Chrome shortcuts such as Cmd/Ctrl+T, W and Shift+T retain their normal behavior. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).
+The user confirmed direct Cmd+T assignment works in their Chrome version. Version 0.6.1 now suggests Cmd+T, Cmd+D and Cmd+S on macOS for implemented Arc-style actions. Existing assignments may survive reload/update: verify actual values in Chrome settings. Commands API does not offer an API to overwrite those assignments, and some OS/browser combinations may still conflict. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).
 
 ## Spotlight-style command bar
 
-Press **Alt+Shift+K** (macOS: Option+Shift+K) on a webpage. A centered modal appears over the current page with automatic search focus, a dimmed backdrop and matching tabs from the current window. The current tab is never closed or navigated by opening search.
+Press **Cmd+T on macOS** (**Alt+Shift+K** elsewhere) on a webpage. A centered modal appears over the current page with automatic search focus, a dimmed backdrop and matching tabs from the current window. The current tab is never closed or navigated by opening search.
 
 - Type part of a title or address to see matching open tabs, bookmarks and history. Enter selects the highlighted result; matching open tabs appear first. The final **Open…** row opens the typed address/query in a new tab.
 - Use Up/Down and Enter, or click a result. Open tabs are activated without duplication; bookmark/history results open their saved URL in a new tab. Up to eight unique suggestions are shown, with source labels.
@@ -106,8 +106,8 @@ Reload the extension, then check **Switch to recently active tabs (MRU)** at `ch
 
 ## Pinned tabs by number
 
-Pin/unpin the active tab using **Option+Shift+P** (or Chrome's tab context menu). Drag pinned tabs to choose their order. Chrome's native Cmd+1 through Cmd+8 select positions 1–8, which normally correspond to the first eight pinned tabs. Cmd+9 is different: Chrome selects the final tab, not pinned tab nine. Native positional shortcuts may select regular tabs if there are fewer pins.
+Pin/unpin the active tab using **Cmd+D on macOS** (**Alt+Shift+P** elsewhere) (or Chrome's tab context menu). Drag pinned tabs to choose their order. Chrome's native Cmd+1 through Cmd+8 select positions 1–8, which normally correspond to the first eight pinned tabs. Cmd+9 is different: Chrome selects the final tab, not pinned tab nine. Native positional shortcuts may select regular tabs if there are fewer pins.
 
-This extension also declares **Activate pinned tab 1** through **Activate pinned tab 9** at `chrome://extensions/shortcuts`. Assign free bindings such as **Option+Shift+1..9**. These commands select only pinned tabs in the current window, in native tab order. A missing slot does nothing. They do not create/reopen tabs or require the sidebar. No additional permissions are needed. All nine start unassigned because Chrome limits suggested defaults to four.
+This extension also declares **Activate pinned tab 1** through **Activate pinned tab 9** at `chrome://extensions/shortcuts`. On macOS assign **Cmd+1..9** directly in Chrome, matching the Arc-style layout; check each actual binding after assignment. These commands select only pinned tabs in the current window, in native tab order. A missing slot does nothing. They do not create/reopen tabs or require the sidebar. No additional permissions are needed. All nine start unassigned because Chrome limits suggested defaults to four.
 
-For familiar Arc-style physical keys, see the optional [macOS keyboard mapping guide](docs/KEYBOARD_REMAPPING.md). The extension itself cannot provide a universal remapper for every browser/OS shortcut.
+See the [built-in Chrome shortcut setup guide](docs/KEYBOARD_REMAPPING.md). No extra application is required.

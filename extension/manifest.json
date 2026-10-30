@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A calm sidebar with vertical tabs, favorites and spaces powered by Chrome tab groups.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -28,14 +28,14 @@
     "_execute_action": {
       "suggested_key": {
         "default": "Alt+Shift+A",
-        "mac": "Alt+Shift+A"
+        "mac": "Command+S"
       },
       "description": "Open the sidebar"
     },
     "toggle-pin": {
       "suggested_key": {
         "default": "Alt+Shift+P",
-        "mac": "Alt+Shift+P"
+        "mac": "Command+D"
       },
       "description": "Pin or unpin current tab"
     },
@@ -48,7 +48,7 @@
     "open-search": {
       "suggested_key": {
         "default": "Alt+Shift+K",
-        "mac": "Alt+Shift+K"
+        "mac": "Command+T"
       },
       "description": "Open Spotlight-style search"
     },
