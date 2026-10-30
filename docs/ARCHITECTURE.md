@@ -1,50 +1,38 @@
-# Search architecture
+# Command Bar architecture
 
-Manifest V3, native ES modules, no runtime dependencies. Chrome is the source of truth for tabs, history and bookmarks. There is no extension-owned persistence or tab-management layer.
+Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bookmarks/sessions. Only custom Site Search definitions are stored by the extension.
 
 ## Components
 
-- `worker.js` registers search on service-worker evaluation.
-- `search-controller.js` handles toolbar clicks, the open-search command and three validated message actions: suggestions, tab activation and new-tab navigation. There are no tab-activation trackers or background state writers.
-- `palette-service.js` queries the source window and injects the self-contained palette function on explicit invocation. Protected pages fall back to a separate extension popup.
-- `palette.js` builds a native outer modal in a closed shadow root with an about:blank iframe containing the search UI. Frame key events cannot traverse parent-page capture/bubble listeners. Dismissal waits for held keys to be released, then restores page focus. Text is inserted with textContent. This is a UI boundary, not a defense against malicious pages removing DOM.
-- `palette-page.js` hosts the same UI in the protected-page popup.
-- `suggestions.js` searches and ranks local sources.
-- `model.js` parses HTTP(S) addresses and encodes other input as a Google query.
+- `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts six typed message actions: suggest, activate, navigate, site, command and restore.
+- `palette-service.js` validates sender and source context, queries tabs/settings, and injects the self-contained `mountPalette` function. Protected pages use `palette-page.js` with the original window/tab IDs in the popup URL. Source tab identity is taken from the browser sender or the validated extension popup URL, never an arbitrary message field.
+- `model.js` distinguishes HTTP(S) URLs from search text. It does not construct a provider-specific search URL. `chrome.search.query` handles text against a newly created or explicitly selected source tab.
+- `site-search.js` validates defaults/custom keywords, names and HTTP(S) templates. Queries are encoded once, replacing exactly one `%s`. `options.js` saves validated definitions to storage.local. No browsing history or choice log is persisted.
+- `command-catalog.js` is a small whitelist with labels and aliases. Matching a word in normal Search never executes it. Sessions API results are separate restore actions, not history URL navigation.
+- `suggestions.js`/`search-match.js` retain bounded local ranking, layout correction, typo tolerance, source warnings, URL deduplication and homepage actions.
 
-## Suggestions
+## Modes and selection
 
-Tabs are scoped to the validated source window. Nonempty queries search bookmarks and history (all-time, 50 history candidates) concurrently. Promise.allSettled preserves available sources when another fails. Empty queries search only tabs. Ranking matches title/URL words case-insensitively, puts tabs before bookmarks before history, and deduplicates canonical URLs. An already open URL retains its tab-activation action even if the bookmark title supplied the match. At most eight results are returned. Folders and non-HTTP(S) saved/visited URLs are excluded.
+Search, Edit, Commands, Recently closed and explicit site scopes are visible in the dropdown. Empty Search+Tab enters Commands; an exact site keyword+Tab enters Site Search; a highlighted URL+Tab completes its address. Escape returns a scoped mode to Search, then closes. Backspace on empty site input restores its keyword.
 
-The UI filters its opening tab snapshot immediately, debounces worker requests by 150 ms and rejects stale replies using a revision counter. A surviving manually selected result stays selected; otherwise the first suggestion is selected. A final raw-input navigation row remains available.
+Raw navigation is last in Search, first in Edit and first after explicit Tab completion. Open tab results otherwise retain priority. Enter waits for the current debounced suggestion promise; edits, mode changes and dismissal increment the revision to cancel stale commits. Busy operations reject further input/selection; controls are reenabled on failure. A Tab-completed deep link cannot be displaced by an asynchronous homepage action.
 
-## Boundaries and behavior
+Foreground/background/current targets are validated server-side. Current navigation checks the original tab's window; an unchanged source URL reloads. Primary-modifier Enter forces a new tab; Shift targets background; Alt targets current (Alt wins over Shift). Commands/restores do not use navigation modifiers.
 
-The worker validates extension senders, popup URL protocol/host/path, source window, query type/length and target tab ownership. No window.postMessage bridge, remote script, web-accessible resource or permanent host access is used. Navigation creates a new tab and never navigates or closes the source tab. Search result activation is the only tab-switching behavior.
+## UI isolation and accessibility
 
-## Glossary
+The palette is a native outer modal in a closed shadow root with a dedicated about:blank iframe containing the actual dialog. Keyboard events do not traverse the host page's capture/bubble listeners. Held-key tracking keeps the closing keyup in the frame; focus returns to the previous page element. Tab can reach mode/settings/close controls. The UI uses textContent, native color-scheme/system colors, rem typography and contrast/forced-colors rules.
 
-- **Palette / command bar**: the temporary Spotlight-style search UI.
-- **Suggestion**: a unique URL with a title, explicit source tags and an activation/navigation action.
-- **Open tab**: a native tab in the source window; highest suggestion priority.
-- **Source window**: the native Chrome window from which search was invoked.
+The page can still remove DOM; this is not a security boundary against hostile sites. No persistent content script, web-accessible resource, window.postMessage bridge, arbitrary HTML template or remote code is used. The mount function has no imported closure dependencies because scripting.executeScript serializes it.
 
-The removed sidebar, groups/spaces UI, pin commands, MRU cycle and session storage can be found in Git history. They are not part of the current product.
+## Commands and restoration
 
-## Homepage actions and address completion
+Only whitelisted actions execute. Source operations reload/duplicate/copy the browser-validated original tab. History/downloads use fixed Chrome URLs; Settings opens this extension's options. Copy returns source text for the palette to write using clipboardWrite without reading the clipboard.
 
-The worker derives up to three unique HTTP(S) origin URLs from the eight matched page suggestions when input is nonempty. These are separate domain actions with an explicit Open host title and Homepage/New tab label. Origins preserve scheme, subdomain and port and remove credentials, path, query and fragment. Already suggested homepages are not repeated. Open tab suggestions stay first, then domain actions, then saved/visited page results, and finally raw-input navigation.
+Recently closed mode lists tab sessions from the 25 latest session entries and returns up to eight matching tabs; whole-window entries are excluded. Restore rechecks the session ID against current recent sessions, invokes the native restore and focuses its resulting window. It preserves the original browser session instead of creating a tab from its URL. This can restore into another window.
 
-Plain Tab copies the selected result URL into the search input, places the caret at its end and starts a fresh debounced query without navigation. Shift+Tab moves between input and close. Enter on the close control closes instead of opening a result. No special Tab shortcut leaves the iframe or affects the host page. The self-contained mount function remains serializable for executeScript.
+## Limits and checks
 
-## Browser-driven appearance
+No exact Arc ranking/modifier parity is claimed. History candidate/fuzzy fallback bounds remain documented. Cross-profile tab search, native browser-shell replacement and unsupported Arc subsystems are out of scope. A provider failure may leave a blank tab created for the query.
 
-Palette CSS uses Canvas, CanvasText, GrayText and Highlight instead of the former fixed lavender palette. Each frame explicitly opts into light/dark color-scheme and uses a medium root font with generic sans-serif; labels and input scale through rem. CSS preferences update without listeners, polling, storage or appearance permissions. More-contrast/forced-colors rules strengthen borders and selection contrast. The site is isolated from palette typography by the dedicated frame.
-
-This follows the rendering preferences Chrome exposes to web content. It does not query a browser-theme API, Chrome profile color or wallpaper. User settings for a different generic font family need not affect sans-serif text. The application remains search-only and retains all keyboard and request-boundary behavior.
-
-## Local query intelligence
-
-`search-match.js` owns query normalization, Russian/English physical-key variants and bounded one-edit/adjacent-transposition word matching. Candidate text may include alternate bookmark/history titles already merged with a live tab. Exact hostname matches and hostname/title prefixes receive larger scores; source tiers remain the primary ordering key. Correction metadata is exposed as a UI label. Navigation parsing remains independent and retains the user's original query.
-
-`suggestions.js` issues original/alternate-layout native source queries concurrently, tolerating partial failures. When no match exists for a 4–128-character query it adds at most 100 recently added bookmarks and 100 recent history records, then ranks again. This bounds fallback work without a persistent index. It does not claim to find every old misspelled bookmark or historical page. No new permissions or external intelligence services are used.
+Unit tests exercise APIs through fakes; real headless Chrome exercises DOM, keyboard, modes, stale/early replies, settings validation and native CSS appearance with API stubs. Actual extension/provider/session/clipboard integration and Chrome shortcut registration remain manual checks.

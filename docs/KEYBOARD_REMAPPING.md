@@ -1,16 +1,25 @@
-# Search shortcut
+# Command Bar keyboard guide
 
-Only **Open Spotlight-style search** is declared as a keyboard command:
+No additional application is needed. Suggested commands:
 
-| Platform | Suggested default |
-| --- | --- |
-| macOS | Cmd+T |
-| Windows/Linux | Alt+Shift+K |
+| Action | macOS | Windows/Linux |
+| --- | --- | --- |
+| Open Search | Cmd+T | Alt+Shift+K |
+| Edit current URL | Cmd+L | Alt+Shift+L |
 
-The toolbar button opens the same search. Within search: Up/Down select results, Tab completes the selected address without navigating, Enter opens, Escape closes; normal typing and editing work in the input.
+The user confirmed direct Cmd+T assignment in their Chrome. Cmd+L registration still needs actual-profile verification; the Edit dropdown is always available. Chrome may preserve old bindings after update or reject collisions. Check `chrome://extensions/shortcuts` rather than assuming changed manifest suggestions overwrite user settings.
 
-The user confirmed direct Cmd+T assignment works in their Chrome version. Existing Chrome user assignments may be preserved on reload/update. If the shortcut differs, open `chrome://extensions/shortcuts` and change this single command. Keep scope **In Chrome**. Chrome handles conflicts; an extension has no supported API to overwrite user bindings.
+Inside the palette:
 
-Version 0.7 removes the earlier sidebar/pin/MRU commands and external remapping configuration. No additional applications are required. Native Chrome commands remain under Chrome's control. The implicit “Activate the extension” action, if Chrome shows it, invokes search through the toolbar handler and has no explicit suggested binding from this project.
+- Empty Search + Tab: Commands.
+- `yt` / `wiki` / `gh` (or a custom keyword) + Tab: Site Search.
+- Selected URL + Tab: insert its address for editing without navigating.
+- Up/Down: select a result. Tab/Shift+Tab also move between controls where not completing/entering a scope.
+- Enter: open/execute selected result. In Edit it replaces the source page.
+- Cmd/Ctrl+Enter: new foreground tab; Shift+Enter: new background tab; Alt/Option+Enter: source tab. These apply to URL/query navigation, not command/session results.
+- Escape: exit the current scope, then close from Search. Backspace on empty site input: return to keyword.
+- Repeating Search closes; repeating Edit while in Edit closes.
+
+Navigation modifiers are an explicit extension contract, not verified exact copies of every Arc variant. Native tab-management shortcuts, sidebar/pin commands and global MRU are not implemented here.
 
 Reference: https://developer.chrome.com/docs/extensions/reference/api/commands

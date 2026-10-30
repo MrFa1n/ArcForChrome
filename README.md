@@ -1,50 +1,90 @@
 # Arc for Chrome
 
-An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.10.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.11.0. Not affiliated with Arc or The Browser Company.
 
-## Install
+## Install / update
 
-1. Open `chrome://extensions` in Chrome 116+ and enable **Developer mode**.
-2. Choose **Load unpacked** and select this repository's `extension` directory.
-3. Click the extension's toolbar button, or press **Cmd+T on macOS** / **Alt+Shift+K on Windows and Linux**.
+1. Open `chrome://extensions`, enable **Developer mode**, then **Load unpacked** → this repository's `extension` directory (Chrome 116+).
+2. For an existing installation, click its reload button. Version 0.11 adds permissions for default-engine search, session restoration, saved site definitions and copying the URL; Chrome may require re-enabling the extension after permission review.
+3. Click the toolbar button or press **Cmd+T** on macOS (**Alt+Shift+K** elsewhere). **Cmd+L** opens URL editing (**Alt+Shift+L** elsewhere).
 
-No build, dependencies, additional applications or account required. Pin the toolbar button if you want it always visible.
+Chrome can preserve older assignments or reject conflicts. Check `chrome://extensions/shortcuts` if a suggested key is not active. The same modes are available from the dropdown in the palette, so they remain usable without remapping. No build, external helper, runtime dependencies or account required.
 
-## Search
+## Modes
 
-- Type part of a page title or URL. Matching open tabs in the current window appear first, followed by bookmarks and history. Shared URLs are merged.
-- Press **Tab** to copy the selected suggestion URL into the search field without navigating. Edit it or press Enter. Shift+Tab moves focus between the input and close button.
-- Matching saved/visited pages also offer explicit **Open example.com** homepage actions. These open the URL origin (no path, query or fragment), preserving scheme, subdomain and port. Existing open tabs remain first; homepage actions come before saved page suggestions.
-- Use Up/Down and Enter, or click a result. An existing tab is activated; a saved/visited URL opens in a new tab.
-- Choose the final **Open…** row to open the typed address or Google search in a new tab.
-- Escape, outside click or the esc button closes search and restores page focus. Repeating the shortcut toggles the overlay.
-- The page stays open while search is displayed. Keyboard events remain inside the search iframe, so page/video shortcuts do not receive them.
-- Empty input shows only open tabs. History is searched across all dates, up to 50 matching history candidates; up to eight unique page suggestions and three homepage actions are displayed. Duplicate homepage actions are merged, and a homepage already present as a page result is not repeated.
-- Local queries are debounced by 150 ms, and stale responses are ignored. If a source fails, the others remain usable with a warning.
-- On protected pages such as `chrome://` and the Chrome Web Store, a small separate search window is used when injection is prohibited.
+| Mode | How to enter | Behavior |
+| --- | --- | --- |
+| Search | Cmd+T / toolbar / dropdown | Search open tabs, bookmarks and history; open addresses and default-engine queries |
+| Edit current URL | Cmd+L / dropdown | Select the source URL for editing; Enter replaces that page, unchanged URL reloads |
+| Commands | Tab on empty Search input, `>` prefix, or dropdown | Search explicit browser actions; ordinary search text never executes a command |
+| Site Search | `yt`, `wiki` or `gh`, then Tab; or dropdown | Search YouTube, Wikipedia or GitHub directly |
+| Recently closed | Dropdown | Search and restore a recently closed tab with its original browser session |
 
-There is no online autocomplete. Google is contacted only when a user submits a Google search. New tabs open ungrouped in the source window.
+Escape returns from a scoped mode to Search; Escape in Search closes. Repeating Cmd+T closes the overlay; repeating the edit command in Edit mode closes it. Backspace on an empty site query returns to the site's keyword.
 
-## Updating from versions 0.1–0.6
+### Local suggestions
 
-Reload the extension in `chrome://extensions`. Version 0.7 removes the sidebar, spaces, tab cycling, MRU tracking, pin management, numbered-pin shortcuts and the optional external remapping integration. Native Chrome tabs, groups, pins, history and bookmarks are left intact. The toolbar button now opens search.
+Search titles and URLs. Open tabs in the source window come first, followed by explicit homepage actions, bookmarks and history. Shared URLs are merged; selected open tabs activate without a duplicate. An **Open example.com** row opens the origin of a matched deep link without its path, query or fragment. Up to eight page results and three unique homepage actions are shown.
 
-Only **Open Spotlight-style search** remains as an explicit keyboard command. Chrome may retain an older user assignment for this command: verify it at `chrome://extensions/shortcuts` if the default is not active. No profile files or OS settings are edited. [Shortcut details](docs/KEYBOARD_REMAPPING.md).
+Up/Down selects, **Tab completes a selected address without navigating**, and Enter opens it. A Tab-completed full address remains the primary action even after asynchronous suggestions arrive. Empty-input Tab deliberately enters Commands instead. Modified Tab and Shift+Tab can move focus among controls.
 
-## Privacy
+The final **Open…** row uses the typed address or Chrome's chosen default search provider. Queries are not forced to Google. Enter waits for the current suggestion request rather than submitting a provisional result. Escape cancels a pending selection.
 
-Everything is processed locally. No telemetry, backend, persistent browsing database, host permissions or persistent content scripts. Permissions:
+### Enter behavior
+
+| Input | Action for URL/search results |
+| --- | --- |
+| Enter in Search | Activate selected open tab, or open selected URL/query in a new foreground tab |
+| Cmd/Ctrl+Enter | Open in a new foreground tab, including a copy of a selected open tab |
+| Shift+Enter | Open in a new background tab |
+| Alt/Option+Enter | Replace the original source tab |
+| Enter in Edit mode | Replace the original source tab |
+| Cmd/Ctrl+Enter in Edit mode | Open a new tab instead |
+
+Commands and session restoration have their own explicit actions; navigation modifiers do not redefine them. This is the extension's documented contract, not a claim to reproduce every Arc modifier exactly.
+
+### Browser commands
+
+Commands mode includes **Reload current page**, **Duplicate current tab**, **Copy current URL**, **Open browser history**, **Open downloads**, **Reopen last closed tab**, **Search settings** and **New browser window**. English labels and Russian aliases are searchable. There are no bulk-close or archive actions.
+
+### Site Search settings
+
+Click **Settings** in the palette or the extension's options entry. Add up to 20 sites with a name, unique keyword and HTTP(S) search URL containing one `%s` query placeholder. For example:
+
+- keyword: `docs`
+- search URL: `https://example.com/search?q=%s`
+
+Then type `docs`, Tab, your query, Enter. Only the query is URL-encoded. Settings are stored locally; Chrome's own internal keyword-search templates are not imported. Reopen the palette after saving changes. The options page also links to Chrome's search-engine and keyboard settings.
+
+### Matching intelligence
+
+Russian/English physical keyboard variants can recover `пшерги` → GitHub or `ghbdtn` → “Привет”. Longer words tolerate one insertion/deletion/substitution or adjacent transposition (`githbu` → GitHub). Accents are ignored when comparing candidates. Corrected results are labeled; typed input is never silently rewritten.
+
+Within each source tier, exact domains and domain/title prefixes rank above incidental mentions; history recency breaks ties. Native history queries take up to 50 matches per layout variant. Only if no match exists, queries of 4–128 characters also check 100 recently added bookmarks and 100 recent history records. This is bounded local matching, not exhaustive fuzzy search or semantic AI.
+
+## Page behavior and appearance
+
+The source page stays open while searching. A dedicated modal iframe isolates its keyboard events from page/video shortcuts and restores page focus after dismissal. On protected pages where Chrome prohibits injection, a separate small search window uses the original source tab/window context.
+
+Native CSS colors follow effective light/dark rendering preferences, with rem-based typography and contrast support. Custom profile accents, theme wallpaper and arbitrary Chrome theme images are not read. The original frosted-aperture extension icon is generated by `python3 scripts/generate-icons.py` (development only: Pillow).
+
+## Privacy and permissions
+
+No telemetry, backend, online autocomplete, permanent host access or persistent content scripts. Typing suggestions is processed locally. Selecting a web search contacts the default provider; Site Search contacts the chosen site; opening a URL or restoring a session contacts its destination normally.
 
 | Permission | Purpose |
 | --- | --- |
-| `tabs` | Search titles/URLs in the current window; activate results and create new tabs |
-| `activeTab`, `scripting` | Show the overlay only after explicit invocation |
-| `history` | Read matching visited-page titles and URLs |
-| `bookmarks` | Read matching bookmark titles and URLs |
+| `tabs` | Read tab titles/URLs and perform explicit navigation/actions |
+| `activeTab`, `scripting` | Show search after explicit invocation |
+| `history`, `bookmarks` | Read local matching suggestions; never edit/delete these sources |
+| `search` | Execute queries through Chrome's selected provider |
+| `sessions` | List and restore recently closed tabs |
+| `storage` | Save only user-defined Site Search templates locally |
+| `clipboardWrite` | Explicit Copy current URL action; clipboard contents are not read |
 
-History and bookmarks are never edited or deleted. Search state lasts only while the overlay is open. The extension no longer requests `sidePanel`, `tabGroups` or `storage`.
+No sidebar, spaces UI, global tab cycling, MRU tracking or numbered pin commands. Native Chrome pins/groups/tabs are retained. Session restoration uses Chrome's original session destination, which can belong to a different window. A failed default-provider query can leave its newly created blank tab; the original page is unaffected.
 
-## Development
+## Development and verification
 
 Node.js 22+:
 
@@ -53,33 +93,8 @@ npm run check
 npm run check:browser
 ```
 
-The browser regression uses a separate headless Chrome and disposable profile. The default binary is standard macOS Chrome; set `CHROME_BINARY` elsewhere. It exercises the real palette UI with a stubbed runtime messaging API. Full extension loading and real history/bookmark integration have a [manual checklist](docs/TESTING.md).
+The browser regression launches a separate headless Chrome with a disposable profile. Default binary: standard macOS Chrome; set `CHROME_BINARY` elsewhere. It uses actual palette/options code with stubbed Chrome APIs, including a localhost-only static server for the settings form. Optional `PALETTE_SCREENSHOT_DIR` captures previews.
 
-See [architecture](docs/ARCHITECTURE.md), [contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md) and [work log](docs/WORK_LOG.md). Supplied engineering guidelines remain in [SKILL.md](SKILL.md) and [docs/ub-mode.md](docs/ub-mode.md).
+Actual installed-extension permissions, provider selection, session restoration, clipboard access and shortcut conflicts have a [manual checklist](docs/TESTING.md). See [architecture](docs/ARCHITECTURE.md), [shortcut guide](docs/KEYBOARD_REMAPPING.md), [historical Arc audit](docs/ARC_COMMAND_BAR_AUDIT.md), [work log](docs/WORK_LOG.md), [contribution guide](CONTRIBUTING.md) and [security policy](SECURITY.md).
 
-MIT licensed. Not published to the Chrome Web Store.
-
-## Appearance
-
-Search uses native CSS Canvas/CanvasText colors, a neutral Chrome-like surface and the browser's generic sans-serif font. It reacts to the effective light/dark color-scheme preference while open. Text uses rem units rooted at the browser's medium default, so browser base-font changes can scale the interface; browser zoom also applies normally. The iframe sets its own default typography instead of inheriting a site's font styling.
-
-High-contrast/forced-colors preferences are respected. No appearance preference is saved separately, no page font is copied and no additional permissions are requested. Arbitrary Chrome profile accent colors, theme images and wallpapers are not read or copied; this is not full synchronization of every Chrome Appearance setting.
-
-The browser regression emulates live light/dark changes and changes the iframe's base font size to check scaling. For optional screenshots, set `PALETTE_SCREENSHOT_DIR` to an existing directory before `npm run check:browser`. Actual Chrome settings UI changes remain a manual integration check.
-
-## Extension icon
-
-The original frosted-aperture mark—a blue optical orbit and focus bead on a softly shaded light squircle—is bundled at 16, 32, 48 and 128 px for Chrome's toolbar and extension manager. Regenerate it with `python3 scripts/generate-icons.py` (development only; requires Pillow). The deterministic generator is the editable source; Pillow is not a runtime dependency. The mark is independent of Arc's official branding.
-
-## Smarter local matching
-
-- Russian/English keyboard-layout variants are considered for text queries, e.g. `пшерги` → GitHub and `ghbdtn` → a page titled “Привет”. The typed input and raw-input navigation row are never silently rewritten.
-- Words of at least four characters tolerate one insertion, deletion, substitution or adjacent transposition, e.g. `githbu` → GitHub. Short words require literal matches to limit noise. Accent marks are ignored when comparing retrieved candidates.
-- Within each source tier, exact domain and domain-prefix matches rank above title prefixes and incidental URL/text mentions. Open tabs still come first, followed by bookmarks and history; equivalent matches prefer newer history entries.
-- Corrected results are labeled **Keyboard layout match** or **Similar spelling**. Tab still lets you inspect/edit their URL before opening it.
-
-Native history/bookmark search is queried with the original and alternate-layout text. If no candidate matches a query of 4–128 characters, the extension checks at most 100 recently added bookmarks and 100 recent history records for spelling matches. This is bounded local matching, not exhaustive fuzzy search over all saved pages, semantic AI or online autocomplete. Longer queries use literal matching without typo/layout expansion. No extra permissions, network services or stored index are introduced.
-
-## Arc comparison and next steps
-
-The [Command Bar audit](docs/ARC_COMMAND_BAR_AUDIT.md) compares this search-only extension with documented Arc behavior, distinguishes confirmed gaps from proposals requiring live validation, and defines a prioritized migration plan. The extension is not a complete Arc Command Bar replacement yet.
+MIT licensed. Not published to the Chrome Web Store. Supplied engineering guidelines are preserved in [SKILL.md](SKILL.md) and [docs/ub-mode.md](docs/ub-mode.md).
