@@ -206,6 +206,33 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://fast.example/'},'early Enter must wait for final suggestions, not provisional raw navigation');
   await mount([],context);await send('Input.insertText',{text:'reload'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'reload'},'ordinary searches must not execute commands');
+  // Optional documentation demo: real palette DOM, fictional tabs, disposable profile.
+  if (process.env.PALETTE_SCREENSHOT_DIR) {
+    await key('Escape','Escape');
+    await send('Emulation.setDeviceMetricsOverride',{width:1120,height:720,deviceScaleFactor:1,mobile:false});
+    await evaluate(`document.body.innerHTML='<main><small>DEMO WORKSPACE</small><h1>A little more focus.</h1><p>Your page stays right here while you find your next destination.</p><section><article>Reading list<br><span>Ideas worth coming back to</span></article><article>Current project<br><span>One good thing at a time</span></article></section></main>';document.body.style.cssText='margin:0;background:#edf1f7;color:#243048;font:16px system-ui';const style=document.createElement('style');style.textContent='main{max-width:900px;margin:80px auto}small{letter-spacing:.18em;color:#687892}h1{font-size:48px;letter-spacing:-2px;margin:18px 0}p{color:#687892}section{display:flex;gap:20px;margin-top:60px}article{background:#ffffffaa;border:1px solid #dbe2ed;border-radius:18px;padding:28px;width:40%;font-weight:600}article span{display:block;color:#7b879b;font-size:14px;font-weight:400;margin-top:12px}';document.head.append(style);
+      globalThis.chrome.runtime.sendMessage=async message=>{if(message.type!=='palette:suggest')return {ok:true};if(message.mode==='commands')return {ok:true,suggestions:commandRows,warnings:[]};return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};};`);
+    const demoTabs=[{id:101,title:'GitHub · Arc for Chrome',url:'https://github.com/example/arc-for-chrome'},{id:102,title:'Chrome Extensions · Documentation',url:'https://developer.chrome.com/docs/extensions'},{id:103,title:'YouTube · Design inspiration',url:'https://www.youtube.com/'}];
+    await mount(demoTabs,context);
+    await screenshot('demo-01');
+    await send('Input.insertText',{text:'github'});
+    await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
+    await screenshot('demo-02');
+    await key('Escape','Escape');await mount([],context);
+    await send('Input.insertText',{text:'yt'});await key('Tab','Tab');
+    await send('Input.insertText',{text:'minimal interface design'});
+    await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
+    await screenshot('demo-03');
+    await key('Escape','Escape');await key('Escape','Escape');
+    await mount(demoTabs,context);await key('Tab','Tab');
+    await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
+    await screenshot('demo-04');
+    await key('Escape','Escape');await key('Escape','Escape');
+    await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
+    await mount(demoTabs,context);await screenshot('demo-dark');
+    await key('Escape','Escape');
+    await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'light'}]});
+  }
   // Serve the actual settings files; only Chrome APIs are stubbed, not form logic.
   const allowed=new Set(['options.html','options.js','options.css','site-search.js','site-discovery.js','icons/icon-32.png','icons/icon-48.png']);
   server=createServer(async(request,response)=>{
