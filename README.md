@@ -1,36 +1,46 @@
 # Arc for Chrome
 
-An independent, Arc-inspired Chrome extension with a calm vertical tab sidebar. **Early MVP, v0.6.1.** Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.7.0. Not affiliated with Arc or The Browser Company.
 
-## Install locally
+## Install
 
-1. Use Chrome 116 or newer.
-2. Open `chrome://extensions`, enable **Developer mode**.
-3. Click **Load unpacked** and select this repository's `extension` folder.
-4. Pin the extension's toolbar action and click it to open the sidebar. The suggested shortcut is **Cmd+S on macOS**, **Alt+Shift+A elsewhere**; customize it at `chrome://extensions/shortcuts` if unavailable.
-5. For an Arc-like placement, choose the left side in Chrome's side panel settings (location varies by Chrome version).
+1. Open `chrome://extensions` in Chrome 116+ and enable **Developer mode**.
+2. Choose **Load unpacked** and select this repository's `extension` directory.
+3. Click the extension's toolbar button, or press **Cmd+T on macOS** / **Alt+Shift+K on Windows and Linux**.
 
-No build step, account or dependency installation is required.
+No build, dependencies, additional applications or account required. Pin the toolbar button if you want it always visible.
 
-## What works
+## Search
 
-- Vertical tabs scoped to the current window, active-tab indication and audio indicator.
-- Favorites backed by Chrome pinned tabs and visible in every space.
-- Spaces backed by native Chrome tab groups. Existing groups appear automatically.
-- Inbox for ungrouped tabs, plus search across all spaces in the current window.
-- Create spaces and tabs; activate, pin, unpin or close tabs.
-- Sidebar search matches tab titles and URLs. The command bar additionally suggests history and bookmarks; existing open tabs have highest priority.
-- Automatic light/dark appearance and a session-only theme toggle.
+- Type part of a page title or URL. Matching open tabs in the current window appear first, followed by bookmarks and history. Shared URLs are merged.
+- Use Up/Down and Enter, or click a result. An existing tab is activated; a saved/visited URL opens in a new tab.
+- Choose the final **Open…** row to open the typed address or Google search in a new tab.
+- Escape, outside click or the esc button closes search and restores page focus. Repeating the shortcut toggles the overlay.
+- The page stays open while search is displayed. Keyboard events remain inside the search iframe, so page/video shortcuts do not receive them.
+- Empty input shows only open tabs. History is searched across all dates, up to 50 matching history candidates; up to eight unique suggestions are displayed.
+- Local queries are debounced by 150 ms, and stale responses are ignored. If a source fails, the others remain usable with a warning.
+- On protected pages such as `chrome://` and the Chrome Web Store, a small separate search window is used when injection is prohibited.
 
-Pinning a grouped tab removes it from its Chrome group. Unpinning returns it to Inbox. Space selection filters the sidebar; it does not hide other tabs in Chrome. Closing the last tab in a space removes its native group. Creating a space opens a new tab so the group can exist.
+There is no online autocomplete. Google is contacted only when a user submits a Google search. New tabs open ungrouped in the source window.
 
-## Chrome limitations
+## Updating from versions 0.1–0.6
 
-An extension cannot replace Chrome's native tab strip or browser frame. This project uses the supported Side Panel API. No split view, Little Arc, automatic tab archive, profile isolation or Arc data import is implemented yet. Tabs have letter icons; external favicon services are not contacted.
+Reload the extension in `chrome://extensions`. Version 0.7 removes the sidebar, spaces, tab cycling, MRU tracking, pin management, numbered-pin shortcuts and the optional external remapping integration. Native Chrome tabs, groups, pins, history and bookmarks are left intact. The toolbar button now opens search.
 
-## Privacy and permissions
+Only **Open Spotlight-style search** remains as an explicit keyboard command. Chrome may retain an older user assignment for this command: verify it at `chrome://extensions/shortcuts` if the default is not active. No profile files or OS settings are edited. [Shortcut details](docs/KEYBOARD_REMAPPING.md).
 
-`tabs` reads titles/URLs and manages tabs. `tabGroups` reads and manages spaces. `sidePanel` displays the interface. No host permissions, persistent content scripts, telemetry, remote code or backend. `activeTab` and `scripting` allow the command palette to be injected into the active page only after an explicit extension command. `history` reads matching visited-page titles/URLs and `bookmarks` reads matching saved titles/URLs for local suggestions. These APIs are used only for reading; extension code does not edit/delete history or bookmarks. Chrome owns persistence; the extension keeps no separate browsing database. The `storage` permission keeps per-window tab IDs and a short MRU-cycle state in memory via `storage.session`, surviving service-worker suspension but cleared on browser restart or extension reload/update. No tab titles or URLs are stored there. Submitting a search sends the entered query to Google; opening a URL contacts that site as normal.
+## Privacy
+
+Everything is processed locally. No telemetry, backend, persistent browsing database, host permissions or persistent content scripts. Permissions:
+
+| Permission | Purpose |
+| --- | --- |
+| `tabs` | Search titles/URLs in the current window; activate results and create new tabs |
+| `activeTab`, `scripting` | Show the overlay only after explicit invocation |
+| `history` | Read matching visited-page titles and URLs |
+| `bookmarks` | Read matching bookmark titles and URLs |
+
+History and bookmarks are never edited or deleted. Search state lasts only while the overlay is open. The extension no longer requests `sidePanel`, `tabGroups` or `storage`.
 
 ## Development
 
@@ -38,76 +48,11 @@ Node.js 22+:
 
 ```sh
 npm run check
+npm run check:browser
 ```
 
-Load `extension/` unpacked, then reload it on the extensions page after edits. Automated checks cover domain behavior, manifest entry points and worker startup/error handling. Browser UI coverage is currently manual; follow [the smoke checklist](docs/TESTING.md).
+The browser regression uses a separate headless Chrome and disposable profile. The default binary is standard macOS Chrome; set `CHROME_BINARY` elsewhere. It exercises the real palette UI with a stubbed runtime messaging API. Full extension loading and real history/bookmark integration have a [manual checklist](docs/TESTING.md).
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), [architecture](docs/ARCHITECTURE.md), [work log](docs/WORK_LOG.md), and [security policy](SECURITY.md). Original supplied skill documentation is preserved in [docs/ub-mode.md](docs/ub-mode.md) and [SKILL.md](SKILL.md).
+See [architecture](docs/ARCHITECTURE.md), [contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md) and [work log](docs/WORK_LOG.md). Supplied engineering guidelines remain in [SKILL.md](SKILL.md) and [docs/ub-mode.md](docs/ub-mode.md).
 
-## Roadmap
-
-1. Verify and polish the MVP in real Chrome on macOS, Windows and Linux.
-2. Tab movement between spaces, reordering and keyboard navigation.
-3. Saved favorites and space appearance preferences.
-4. Optional archive with explicit retention controls and recovery.
-
-MIT licensed. This project is not published to the Chrome Web Store.
-
-## Keyboard shortcuts
-
-Commands work while Chrome is focused, including when the panel is closed:
-
-| Action | macOS default / target | Windows/Linux default |
-| --- | --- | --- |
-| Toggle extension sidebar | Cmd+S | Alt+Shift+A |
-| Pin/unpin active tab | Cmd+D | Alt+Shift+P |
-| Spotlight-style command bar | Cmd+T | Alt+Shift+K |
-| Pinned tabs 1–9 | Assign Cmd+1..9 manually | Assign manually |
-| Recently active tabs (MRU) | Option+Shift+Left (fallback) | Alt+Shift+Left |
-| Previous/next tab by position | Assign manually | Assign manually |
-
-Inside the focused sidebar: Cmd/Ctrl+K focuses and selects search; Up/Down move from search through tab buttons; Enter activates the focused tab (Enter in search opens a URL/search); Alt+Left/Right cycle spaces; Escape clears search and dismisses the space form. Search receives focus when a panel document first opens.
-
-Expand **Keyboard shortcuts** in the sidebar to see actual registered bindings, including missing assignments, and click **Customize shortcuts** to open `chrome://extensions/shortcuts`. Reload the extension after updating. Existing user assignments are controlled by Chrome and may differ from defaults.
-
-The user confirmed direct Cmd+T assignment works in their Chrome version. Version 0.6.1 now suggests Cmd+T, Cmd+D and Cmd+S on macOS for implemented Arc-style actions. Existing assignments may survive reload/update: verify actual values in Chrome settings. Commands API does not offer an API to overwrite those assignments, and some OS/browser combinations may still conflict. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).
-
-## Spotlight-style command bar
-
-Press **Cmd+T on macOS** (**Alt+Shift+K** elsewhere) on a webpage. A centered modal appears over the current page with automatic search focus, a dimmed backdrop and matching tabs from the current window. The current tab is never closed or navigated by opening search.
-
-- Type part of a title or address to see matching open tabs, bookmarks and history. Enter selects the highlighted result; matching open tabs appear first. The final **Open…** row opens the typed address/query in a new tab.
-- Use Up/Down and Enter, or click a result. Open tabs are activated without duplication; bookmark/history results open their saved URL in a new tab. Up to eight unique suggestions are shown, with source labels.
-- Escape, the esc button, an outside click, or invoking the shortcut again dismisses the overlay and restores the previous page focus.
-- On protected pages (`chrome://`, the Chrome Web Store and other pages where injection is denied), a separate small extension window provides the same search. Escape closes that window.
-- Matching uses titles and URLs, ignoring case and supporting multiple words. Priority is open tabs → bookmarks → history; a URL shared by sources is shown once. Queries are debounced by 150 ms, with stale responses discarded. Empty input shows only tabs; history is searched across all dates with up to 50 matching history candidates. No online autocomplete requests are made. New tabs open ungrouped in the source window.
-
-Reload the extension and confirm new permissions if Chrome requests it. Check `chrome://extensions/shortcuts` for **Open Spotlight-style search** if the shortcut is missing or conflicts. Chrome permits only four suggested bindings: previous-tab remains available for manual assignment; an existing customized binding may be preserved by Chrome.
-
-### Keyboard isolation
-
-The command bar now renders inside a dedicated iframe within the modal, so its keyboard events do not bubble or capture through the parent page (including video player shortcuts). Dismissal waits for held keys to be released before restoring page focus, preventing the final Enter/Escape keyup from reaching the page. Browser/OS reserved shortcuts remain controlled by Chrome/the OS.
-
-A dependency-free browser regression can be run with `npm run check:browser`. It launches a separate headless Chrome with a temporary profile and removes that profile afterward. It defaults to the standard macOS Chrome binary; elsewhere set `CHROME_BINARY` to your Chrome executable path. The check drives actual keyboard events through Chrome DevTools Protocol against pre-existing page capture listeners; it does not load the full extension or verify a particular video site.
-
-### Local suggestions permissions
-
-Version 0.4 adds `history` and `bookmarks` permissions. After reloading/updating, Chrome may ask you to re-enable the extension or accept these permissions. This allows local matching by saved/visited title and URL. A failing source is indicated in the command bar while the other suggestions remain usable. Queries and suggestions are not sent to any server; selecting the Google search row navigates to Google as before.
-
-## Switch between recently active tabs
-
-Press **Alt+Shift+Left** (macOS: **Option+Shift+Left**) to return to the previously active tab in the current window. This works with the sidebar closed, including when using Chrome's own vertical tabs.
-
-For example, with tabs arranged A–B–C, visiting A → C → B means the command switches from B to C, not A. Further presses within **1.2 seconds** step through the frozen recent list (then A, then B). After a pause, the next press returns to the last active tab; spaced presses toggle between the last two. Clicking a tab normally cancels a cycle and updates its recency. Closing or moving tabs prunes the tracked list.
-
-Recency is recorded from native tab-activation events separately per window. When first enabled or after browser/extension restart, existing tabs are seeded using Chrome's available `lastAccessed` values; tabs without a timestamp have no known previous order until activated. Session storage keeps state across background-worker suspension. This is a timed MRU cycle, not an Alt-Tab preview with selection committed on modifier release.
-
-Reload the extension, then check **Switch to recently active tabs (MRU)** at `chrome://extensions/shortcuts`. Existing customized bindings may be preserved and conflict with the suggestion. To keep Chrome's four-default limit, next-tab-by-position remains available for manual assignment. Chrome's native Ctrl+Tab is not remapped; use the extension command's assigned binding. See [Chrome Commands API](https://developer.chrome.com/docs/extensions/reference/api/commands).
-
-## Pinned tabs by number
-
-Pin/unpin the active tab using **Cmd+D on macOS** (**Alt+Shift+P** elsewhere) (or Chrome's tab context menu). Drag pinned tabs to choose their order. Chrome's native Cmd+1 through Cmd+8 select positions 1–8, which normally correspond to the first eight pinned tabs. Cmd+9 is different: Chrome selects the final tab, not pinned tab nine. Native positional shortcuts may select regular tabs if there are fewer pins.
-
-This extension also declares **Activate pinned tab 1** through **Activate pinned tab 9** at `chrome://extensions/shortcuts`. On macOS assign **Cmd+1..9** directly in Chrome, matching the Arc-style layout; check each actual binding after assignment. These commands select only pinned tabs in the current window, in native tab order. A missing slot does nothing. They do not create/reopen tabs or require the sidebar. No additional permissions are needed. All nine start unassigned because Chrome limits suggested defaults to four.
-
-See the [built-in Chrome shortcut setup guide](docs/KEYBOARD_REMAPPING.md). No extra application is required.
+MIT licensed. Not published to the Chrome Web Store.

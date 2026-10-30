@@ -1,10 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { visibleTabs, destination } from '../extension/model.js';
-const tabs = [{id:1,title:'Mail',url:'https://mail.example',pinned:true,groupId:-1},{id:2,title:'Design',url:'https://figma.com',pinned:false,groupId:4},{id:3,title:'Notes',url:'https://notes.example',pinned:false,groupId:-1}];
-test('favorites remain visible in every space', () => assert.deepEqual(visibleTabs(tabs,4,'').map(t=>t.id),[1,2]));
-test('inbox excludes grouped tabs', () => assert.deepEqual(visibleTabs(tabs,-1,'').map(t=>t.id),[1,3]));
-test('search matches titles and URLs across spaces', () => assert.deepEqual(visibleTabs(tabs,-1,'FIGMA').map(t=>t.id),[2]));
+import { destination } from '../extension/model.js';
 test('web addresses open directly', () => { assert.equal(destination('example.com'),'https://example.com/'); assert.equal(destination('http://localhost:3000'),'http://localhost:3000/'); });
 test('queries and unsafe schemes become search queries', () => { for (const q of ['hello world','javascript:alert(1)','file:///tmp/test']) assert.equal(destination(q),`https://www.google.com/search?q=${encodeURIComponent(q)}`); });
 test('empty input does not navigate', () => assert.equal(destination('   '),null));

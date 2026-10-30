@@ -1,11 +1,9 @@
 # Security policy
 
-Only the latest development version is maintained. Do not post secrets, browsing history or exploit details publicly. Until a private reporting channel is configured, open an issue requesting a private contact without including sensitive details. Never use an issue to report an actively exploitable vulnerability in detail.
+Only the latest development version is maintained. Do not post secrets, browsing history or exploit details publicly. Until a private reporting channel is configured, open an issue requesting a private contact without including sensitive details.
 
-This extension reads tab titles and URLs locally. Changes that add remote calls, host permissions, injected scripts or persistent browsing data need explicit documentation and review.
+The search extension reads matching tab, history and bookmark titles/URLs locally. History/bookmarks are never modified. The overlay is injected using temporary activeTab access after explicit invocation; no host permissions or persistent content scripts are requested. Chrome messages validate their sender and source window before navigation/activation.
 
-The command palette uses temporary activeTab access and scripting on explicit invocation. It renders tab titles/URLs in an isolated-world shadow DOM; no persistent content scripts or host permissions are requested.
+No telemetry, backend, remote code or persistent browsing database is present. Opening a URL contacts that site; choosing the Google-search row submits the entered query to Google. Changes adding remote calls, broader permissions or persistent browsing data need documentation and review.
 
-Version 0.4 requests history and bookmarks access for local suggestions. Although Chrome grants broader API capabilities, this code only searches those sources and never modifies them. Queries/results stay local until a user chooses to navigate to a result or Google search.
-
-Version 0.5 adds storage for MRU tab switching. Only tab IDs, per-window order and short cycle metadata are stored in in-memory storage.session. They are not synced or written to a browsing-history database.
+Version 0.7 removes sidePanel, tabGroups and storage permissions along with the tab-management features.

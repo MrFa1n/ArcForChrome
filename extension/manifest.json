@@ -1,90 +1,30 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.6.1",
-  "description": "A calm sidebar with vertical tabs, favorites and spaces powered by Chrome tab groups.",
+  "version": "0.7.0",
+  "description": "Spotlight-style search for open tabs, bookmarks, history and the web.",
   "minimum_chrome_version": "116",
   "permissions": [
-    "sidePanel",
     "tabs",
-    "tabGroups",
     "activeTab",
     "scripting",
     "history",
-    "bookmarks",
-    "storage"
+    "bookmarks"
   ],
   "background": {
     "service_worker": "worker.js",
     "type": "module"
   },
-  "side_panel": {
-    "default_path": "panel.html"
-  },
   "action": {
-    "default_title": "Open Arc for Chrome"
+    "default_title": "Open Arc Search"
   },
   "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Alt+Shift+A",
-        "mac": "Command+S"
-      },
-      "description": "Open the sidebar"
-    },
-    "toggle-pin": {
-      "suggested_key": {
-        "default": "Alt+Shift+P",
-        "mac": "Command+D"
-      },
-      "description": "Pin or unpin current tab"
-    },
-    "previous-tab": {
-      "description": "Previous tab"
-    },
-    "next-tab": {
-      "description": "Next tab"
-    },
     "open-search": {
       "suggested_key": {
         "default": "Alt+Shift+K",
         "mac": "Command+T"
       },
       "description": "Open Spotlight-style search"
-    },
-    "recent-tab": {
-      "suggested_key": {
-        "default": "Alt+Shift+Left",
-        "mac": "Alt+Shift+Left"
-      },
-      "description": "Switch to recently active tabs (MRU)"
-    },
-    "pinned-tab-1": {
-      "description": "Activate pinned tab 1"
-    },
-    "pinned-tab-2": {
-      "description": "Activate pinned tab 2"
-    },
-    "pinned-tab-3": {
-      "description": "Activate pinned tab 3"
-    },
-    "pinned-tab-4": {
-      "description": "Activate pinned tab 4"
-    },
-    "pinned-tab-5": {
-      "description": "Activate pinned tab 5"
-    },
-    "pinned-tab-6": {
-      "description": "Activate pinned tab 6"
-    },
-    "pinned-tab-7": {
-      "description": "Activate pinned tab 7"
-    },
-    "pinned-tab-8": {
-      "description": "Activate pinned tab 8"
-    },
-    "pinned-tab-9": {
-      "description": "Activate pinned tab 9"
     }
   },
   "content_security_policy": {
