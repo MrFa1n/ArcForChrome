@@ -36,3 +36,9 @@ The removed sidebar, groups/spaces UI, pin commands, MRU cycle and session stora
 The worker derives up to three unique HTTP(S) origin URLs from the eight matched page suggestions when input is nonempty. These are separate domain actions with an explicit Open host title and Homepage/New tab label. Origins preserve scheme, subdomain and port and remove credentials, path, query and fragment. Already suggested homepages are not repeated. Open tab suggestions stay first, then domain actions, then saved/visited page results, and finally raw-input navigation.
 
 Plain Tab copies the selected result URL into the search input, places the caret at its end and starts a fresh debounced query without navigation. Shift+Tab moves between input and close. Enter on the close control closes instead of opening a result. No special Tab shortcut leaves the iframe or affects the host page. The self-contained mount function remains serializable for executeScript.
+
+## Browser-driven appearance
+
+Palette CSS uses Canvas, CanvasText, GrayText and Highlight instead of the former fixed lavender palette. Each frame explicitly opts into light/dark color-scheme and uses a medium root font with generic sans-serif; labels and input scale through rem. CSS preferences update without listeners, polling, storage or appearance permissions. More-contrast/forced-colors rules strengthen borders and selection contrast. The site is isolated from palette typography by the dedicated frame.
+
+This follows the rendering preferences Chrome exposes to web content. It does not query a browser-theme API, Chrome profile color or wallpaper. User settings for a different generic font family need not affect sans-serif text. The application remains search-only and retains all keyboard and request-boundary behavior.

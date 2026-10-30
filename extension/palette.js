@@ -27,31 +27,43 @@ export function mountPalette(tabs, floating = false) {
   // Frame events never traverse the page's window/document capture listeners.
   // Keep the final keyup in the frame before returning focus to the page.
   function showPalette(document) {
+    // Keep Chrome's default font preferences rather than inheriting the website's typography.
+    document.documentElement.style.cssText = 'color-scheme:light dark;font-size:medium;font-family:sans-serif';
+    document.documentElement.lang = navigator.language;
     const host = document.createElement('div');
     host.setAttribute('data-arc-command-palette', '');
     const root = host.attachShadow({ mode: 'closed' });
     const style = document.createElement('style');
     style.textContent = `
-      :host{all:initial}*{box-sizing:border-box}dialog{--bg:#f7f5fb;--fg:#302b40;--muted:#82798e;--hover:#eae4f4;
-      color-scheme:light dark;border:1px solid #a99bb855;border-radius:20px;padding:0;width:min(620px,calc(100vw - 32px));
-      max-height:80vh;margin:12vh auto 0;background:var(--bg);color:var(--fg);box-shadow:0 24px 100px #0005;
-      font:14px/1.5 system-ui,sans-serif;overflow:hidden}dialog::backdrop{background:#15102055;backdrop-filter:blur(5px)}
-      @media(prefers-color-scheme:dark){dialog{--bg:#282432;--fg:#f5f0fc;--muted:#b7acc6;--hover:#3a3249}}
-      header{padding:20px 22px 0;display:flex;justify-content:space-between;color:var(--muted);font-size:11px;letter-spacing:1px}
-      input{font:inherit;font-size:21px;width:100%;padding:18px 22px;border:0;outline:none;color:var(--fg);background:transparent}
-      #results{padding:6px 10px;max-height:48vh;overflow:auto;border-top:1px solid #a99bb833}
+      :host{all:initial;color-scheme:light dark}*{box-sizing:border-box}
+      dialog{--bg:Canvas;--fg:CanvasText;--muted:GrayText;
+      --hover:color-mix(in srgb,Highlight 12%,Canvas);--line:color-mix(in srgb,CanvasText 18%,Canvas);
+      color-scheme:light dark;border:1px solid var(--line);border-radius:16px;padding:0;width:min(620px,calc(100vw - 32px));
+      max-height:80vh;margin:12vh auto 0;background:var(--bg);color:var(--fg);box-shadow:0 12px 40px #0004;
+      font:.875rem/1.5 sans-serif;overflow:hidden}
+      dialog::backdrop{background:#0005;backdrop-filter:blur(4px)}
+      header{padding:20px 22px 0;display:flex;justify-content:space-between;color:var(--muted);font-size:.6875rem;letter-spacing:.5px}
+      input{font:inherit;font-size:1.3125rem;width:100%;padding:18px 22px;border:0;outline:none;color:var(--fg);background:transparent}
+      #results{padding:6px 10px;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:12px;width:100%;border:0;
-      border-radius:10px;background:transparent;text-align:left;padding:12px}button.result[aria-selected=true]{background:var(--hover)}
+      border-radius:8px;background:transparent;text-align:left;padding:12px}button.result[aria-selected=true]{background:var(--hover)}
       .icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .hint{font-size:10px;color:var(--muted);flex-shrink:0} .url{font-size:11px;color:var(--muted)}footer{padding:12px 22px;color:var(--muted);font-size:11px;border-top:1px solid #a99bb833}
-      #error{color:#d05d71;padding:0 22px;font-size:12px}#close{border:0;background:transparent;color:inherit;border-radius:4px}
-      button:focus-visible{outline:2px solid #9b7bc8;outline-offset:-2px}`;
+      .url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
+      footer{padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
+      #error{color:#b3261e;padding:0 22px;font-size:.75rem}#close{border:0;background:transparent;color:inherit;border-radius:4px}
+      button:focus-visible{outline:2px solid Highlight;outline-offset:-2px}
+      @media(prefers-color-scheme:dark){#error{color:#f2b8b5}}
+      @media(prefers-contrast:more){dialog{--line:CanvasText}.url,.hint,header,footer{color:CanvasText}}
+      @media(forced-colors:active){button.result[aria-selected=true]{background:Highlight;color:HighlightText}
+        button.result[aria-selected=true] .url,button.result[aria-selected=true] .hint{color:HighlightText}}
+      @media(prefers-reduced-transparency:reduce){dialog::backdrop{backdrop-filter:none}}
+      `;
     root.append(style);
     const dialog = document.createElement('dialog');
     dialog.setAttribute('aria-label', 'Search tabs or the web');
     const header = document.createElement('header');
-    header.textContent = 'ARC · COMMAND BAR';
+    header.textContent = 'Search tabs and the web';
     const closeButton = document.createElement('button');
     closeButton.id = 'close'; closeButton.textContent = 'esc'; closeButton.setAttribute('aria-label','Close search');
     header.append(closeButton);

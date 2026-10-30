@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.8.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.9.0. Not affiliated with Arc or The Browser Company.
 
 ## Install
 
@@ -58,3 +58,11 @@ The browser regression uses a separate headless Chrome and disposable profile. T
 See [architecture](docs/ARCHITECTURE.md), [contribution guide](CONTRIBUTING.md), [security policy](SECURITY.md) and [work log](docs/WORK_LOG.md). Supplied engineering guidelines remain in [SKILL.md](SKILL.md) and [docs/ub-mode.md](docs/ub-mode.md).
 
 MIT licensed. Not published to the Chrome Web Store.
+
+## Appearance
+
+Search uses native CSS Canvas/CanvasText colors, a neutral Chrome-like surface and the browser's generic sans-serif font. It reacts to the effective light/dark color-scheme preference while open. Text uses rem units rooted at the browser's medium default, so browser base-font changes can scale the interface; browser zoom also applies normally. The iframe sets its own default typography instead of inheriting a site's font styling.
+
+High-contrast/forced-colors preferences are respected. No appearance preference is saved separately, no page font is copied and no additional permissions are requested. Arbitrary Chrome profile accent colors, theme images and wallpapers are not read or copied; this is not full synchronization of every Chrome Appearance setting.
+
+The browser regression emulates live light/dark changes and changes the iframe's base font size to check scaling. For optional screenshots, set `PALETTE_SCREENSHOT_DIR` to an existing directory before `npm run check:browser`. Actual Chrome settings UI changes remain a manual integration check.

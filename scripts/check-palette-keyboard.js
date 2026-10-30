@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { mountPalette } from '../extension/palette.js';
@@ -50,6 +50,48 @@ try {
     for(const type of ['keydown','keypress','keyup']) window.addEventListener(type,event=>pageKeys.push(type+':'+event.key),true);
     globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:[],warnings:[]};messages.push(message);return {ok:true};}}};`);
   await evaluate(`(${mountPalette.toString()})([{id:1,title:'Video',url:'https://video.example'}])`);
+  async function paletteStyles(rootSize) {
+    const tree = await send('DOM.getDocument',{depth:-1,pierce:true});
+    function find(node) {
+      if (node.nodeName === 'DIALOG' && node.attributes?.includes('Search tabs or the web')) return node;
+      for (const child of [...(node.children || []),...(node.shadowRoots || []),...(node.contentDocument ? [node.contentDocument] : [])]) {
+        const match = find(child); if (match) return match;
+      }
+    }
+    const node = find(tree.root);
+    assert.ok(node,'search dialog should exist in its frame');
+    const {object} = await send('DOM.resolveNode',{backendNodeId:node.backendNodeId});
+    const result = await send('Runtime.callFunctionOn',{objectId:object.objectId,returnByValue:true,
+      functionDeclaration:`function(rootSize) {
+        if(rootSize)this.ownerDocument.documentElement.style.fontSize=rootSize;
+        const probe=this.ownerDocument.createElement('span');
+        probe.style.cssText='background:Canvas;color:CanvasText;color-scheme:light dark';this.append(probe);
+        const view=this.ownerDocument.defaultView;
+        const theme={background:view.getComputedStyle(this).backgroundColor,color:view.getComputedStyle(this).color,
+          canvas:view.getComputedStyle(probe).backgroundColor,canvasText:view.getComputedStyle(probe).color,
+          fontSize:parseFloat(view.getComputedStyle(this).fontSize)};
+        probe.remove();return theme;
+      }`,arguments:[{value:rootSize}]});
+    return result.result.value;
+  }
+  async function screenshot(name) {
+    if (!process.env.PALETTE_SCREENSHOT_DIR) return;
+    const {data}=await send('Page.captureScreenshot',{format:'png'});
+    await writeFile(join(process.env.PALETTE_SCREENSHOT_DIR,`arc-spotlight-${name}.png`),Buffer.from(data,'base64'));
+  }
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'light'}]});
+  const light=await paletteStyles();
+  assert.equal(light.background,light.canvas,'palette should use native browser Canvas color');
+  assert.equal(light.color,light.canvasText);
+  await screenshot('light');
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
+  const dark=await paletteStyles();
+  assert.equal(dark.background,dark.canvas);assert.notEqual(dark.background,light.background,'open palette should react to theme changes');
+  await screenshot('dark');
+  const larger=await paletteStyles('24px');
+  assert.ok(larger.fontSize>dark.fontSize*1.4,'browser base-font changes should scale search text');
+  await paletteStyles('medium');
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'light'}]});
   await key('f','KeyF','f');
   await key(' ','Space',' ');
   await key('ArrowDown','ArrowDown');
@@ -115,7 +157,7 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/org/project'},
     'Tab must also complete the full saved page URL');
   assert.deepEqual(await evaluate('pageKeys'),[],'completion and homepage selection must stay isolated');
-  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion and homepage navigation verified.');
+  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling verified.');
 } finally {
   socket?.close();
   if (processChrome.exitCode === null && processChrome.signalCode === null) {

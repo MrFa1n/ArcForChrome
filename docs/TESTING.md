@@ -35,3 +35,14 @@ Full user-profile upgrade, real history/bookmark permission integration and site
 - The real-Chrome regression verifies Tab emits no navigation, then Enter opens exactly the completed homepage/full-page URL; host page key listeners stay isolated.
 - Manually search a known site with deep bookmark/history links. Verify Open host is clearly distinct from the saved page and open tabs stay above it. Test multiple same-origin results and saved root URLs.
 - Select either a homepage or saved path, press Tab, edit the address, then Enter. Test Shift+Tab and Enter on the close control; test IME without accidental completion.
+
+## Browser-native appearance v0.9.0
+
+The real-Chrome harness verifies palette background/text equal native Canvas/CanvasText colors, emulates light→dark→light while the palette stays open, and verifies a larger frame base font scales search text. Captured light/dark screenshots were visually inspected. Existing interaction regressions continue to pass.
+
+Manual integration:
+
+- Change the effective Chrome/OS light/dark preference while search is open; verify its surface/text update. Test both ordinary-page overlay and protected-page popup.
+- Change Chrome's default font size and sans-serif font. Verify text size/family on the next open and, where Chrome applies renderer preference updates immediately, while open. Check narrow-window overflow at large sizes and browser zoom.
+- Test increased contrast, forced colors and keyboard focus visibility where supported.
+- Confirm arbitrary installed-theme colors/backgrounds are not presented as synchronized; only rendering preferences are consumed.
