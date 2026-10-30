@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Spotlight-style search for open tabs, bookmarks, history and the web.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -9,7 +9,11 @@
     "activeTab",
     "scripting",
     "history",
-    "bookmarks"
+    "bookmarks",
+    "search",
+    "sessions",
+    "storage",
+    "clipboardWrite"
   ],
   "background": {
     "service_worker": "worker.js",
@@ -31,6 +35,13 @@
         "mac": "Command+T"
       },
       "description": "Open Spotlight-style search"
+    },
+    "edit-address": {
+      "suggested_key": {
+        "default": "Alt+Shift+L",
+        "mac": "Command+L"
+      },
+      "description": "Edit current URL in the command bar"
     }
   },
   "content_security_policy": {
@@ -41,5 +52,9 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   }
 }

@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import { registerSearch } from '../extension/search-controller.js';
 const root = new URL('../extension/', import.meta.url);
-test('search-only manifest declares only search permissions and entry points', async () => {
+test('command-bar manifest declares required permissions and entry points', async () => {
   const manifest = JSON.parse(await readFile(new URL('manifest.json', root)));
   assert.equal(manifest.manifest_version, 3);
-  assert.deepEqual(manifest.permissions, ['tabs','activeTab','scripting','history','bookmarks']);
+  assert.deepEqual(manifest.permissions, ['tabs','activeTab','scripting','history','bookmarks','search','sessions','storage','clipboardWrite']);
   assert.equal(manifest.side_panel, undefined);
   assert.equal(manifest.host_permissions, undefined);
-  assert.deepEqual(Object.keys(manifest.commands),['open-search']);
+  assert.deepEqual(Object.keys(manifest.commands),['open-search','edit-address']);
   assert.equal(manifest.commands['open-search'].suggested_key.mac,'Command+T');
-  await Promise.all([manifest.background.service_worker,'palette.html'].map(path => access(new URL(path, root))));
+  await Promise.all([manifest.background.service_worker,'palette.html',manifest.options_ui.page].map(path => access(new URL(path, root))));
 });
 function browser() {
   const listeners={};const injected=[];
@@ -42,4 +42,9 @@ test('invalid search messages return an error instead of an unhandled rejection'
   const api=browser();registerSearch(api,()=>{});
   const response=await new Promise(resolve=>api.listeners.message({type:'palette:suggest',query:''},{id:'foreign'},resolve));
   assert.equal(response.ok,false);assert.equal(response.error,'Unknown sender');
+});
+test('edit-address command injects explicit current-page context',async()=>{
+  const api=browser();registerSearch(api,()=>{});await api.listeners.command('edit-address');
+  assert.equal(api.injected[0].args[2].mode,'edit');
+  assert.equal(api.injected[0].args[2].sourceUrl,'https://example.com');
 });

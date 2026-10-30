@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { mountPalette } from '../extension/palette.js';
+import { DEFAULT_SITES } from '../extension/site-search.js';
+import { commandSuggestions } from '../extension/command-catalog.js';
 
 const profile = await mkdtemp(join(tmpdir(), 'arc-keyboard-'));
 const binary = process.env.CHROME_BINARY || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const processChrome = spawn(binary, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', 'about:blank']);
 let socket;
+let server;
 try {
   const endpoint = await new Promise((resolve,reject) => {
     const timeout = setTimeout(() => reject(new Error('Chrome startup timed out')), 15000);
@@ -41,16 +45,20 @@ try {
     if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
     return result.result.value;
   }
-  async function key(key,code,text) {
-    await send('Input.dispatchKeyEvent',{type:'keyDown',key,code,...(text ? {text} : {})});
-    await send('Input.dispatchKeyEvent',{type:'keyUp',key,code});
+  async function key(key,code,text,modifiers=0) {
+    await send('Input.dispatchKeyEvent',{type:'keyDown',key,code,modifiers,...(text ? {text} : {})});
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key,code,modifiers});
+    if(key==='Enter') await evaluate('new Promise(resolve=>setTimeout(resolve,450))');
+  }
+  async function mount(tabs,context={}) {
+    await evaluate(`globalThis.mockTabs=${JSON.stringify(tabs)};(${mountPalette.toString()})(${JSON.stringify(tabs)},false,${JSON.stringify(context)})`);
   }
   await evaluate(`document.body.innerHTML='<input id="page-input"><video></video>';document.querySelector('input').focus();
     globalThis.pageKeys=[];globalThis.messages=[];
     for(const type of ['keydown','keypress','keyup']) window.addEventListener(type,event=>pageKeys.push(type+':'+event.key),true);
-    globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:[],warnings:[]};messages.push(message);return {ok:true};}}};`);
-  await evaluate(`(${mountPalette.toString()})([{id:1,title:'Video',url:'https://video.example'}])`);
-  async function paletteStyles(rootSize) {
+    globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};messages.push(message);return {ok:true};}}};`);
+  await mount([{id:1,title:'Video',url:'https://video.example'}]);
+  async function paletteCall(functionDeclaration,args=[]) {
     const tree = await send('DOM.getDocument',{depth:-1,pierce:true});
     function find(node) {
       if (node.nodeName === 'DIALOG' && node.attributes?.includes('Search tabs or the web')) return node;
@@ -61,18 +69,21 @@ try {
     const node = find(tree.root);
     assert.ok(node,'search dialog should exist in its frame');
     const {object} = await send('DOM.resolveNode',{backendNodeId:node.backendNodeId});
-    const result = await send('Runtime.callFunctionOn',{objectId:object.objectId,returnByValue:true,
-      functionDeclaration:`function(rootSize) {
-        if(rootSize)this.ownerDocument.documentElement.style.fontSize=rootSize;
-        const probe=this.ownerDocument.createElement('span');
-        probe.style.cssText='background:Canvas;color:CanvasText;color-scheme:light dark';this.append(probe);
-        const view=this.ownerDocument.defaultView;
-        const theme={background:view.getComputedStyle(this).backgroundColor,color:view.getComputedStyle(this).color,
-          canvas:view.getComputedStyle(probe).backgroundColor,canvasText:view.getComputedStyle(probe).color,
-          fontSize:parseFloat(view.getComputedStyle(this).fontSize)};
-        probe.remove();return theme;
-      }`,arguments:[{value:rootSize}]});
+    const result=await send('Runtime.callFunctionOn',{objectId:object.objectId,returnByValue:true,awaitPromise:true,functionDeclaration,arguments:args.map(value=>({value}))});
+    if(result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
     return result.result.value;
+  }
+  async function paletteStyles(rootSize) {
+    return paletteCall(`function(rootSize) {
+      if(rootSize)this.ownerDocument.documentElement.style.fontSize=rootSize;
+      const probe=this.ownerDocument.createElement('span');
+      probe.style.cssText='background:Canvas;color:CanvasText;color-scheme:light dark';this.append(probe);
+      const view=this.ownerDocument.defaultView;
+      const theme={background:view.getComputedStyle(this).backgroundColor,color:view.getComputedStyle(this).color,
+        canvas:view.getComputedStyle(probe).backgroundColor,canvasText:view.getComputedStyle(probe).color,
+        fontSize:parseFloat(view.getComputedStyle(this).fontSize)};
+      probe.remove();return theme;
+    }`,[rootSize]);
   }
   async function screenshot(name) {
     if (!process.env.PALETTE_SCREENSHOT_DIR) return;
@@ -102,19 +113,19 @@ try {
   await key('k','KeyK','k');
   assert.ok((await evaluate('pageKeys')).includes('keydown:k'),'page shortcuts should resume after close');
   await evaluate('pageKeys=[]');
-  await evaluate(`(${mountPalette.toString()})([])`);
+  await mount([]);
   await key('x','KeyX','x');
   await key('Enter','Enter');
   assert.deepEqual(await evaluate('messages'),[{type:'palette:navigate',query:'x'}],'typing and Enter must still work');
   assert.deepEqual(await evaluate('pageKeys'),[]);
-  await evaluate(`(${mountPalette.toString()})([{id:7,title:'Existing',url:'https://existing.example'}])`);
+  await mount([{id:7,title:'Existing',url:'https://existing.example'}]);
   await key('ArrowDown','ArrowDown');
   await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:activate',tabId:7});
   assert.deepEqual(await evaluate('pageKeys'),[],'selection keyup must not leak to the page');
-  await evaluate(`(${mountPalette.toString()})([])`);
+  await mount([]);
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'k',code:'KeyK',text:'k'});
-  await evaluate(`(${mountPalette.toString()})([])`);
+  await mount([]);
   assert.equal(await evaluate("!!document.querySelector('[data-arc-command-palette]')"),true,'dismissal waits for held keys');
   await send('Input.dispatchKeyEvent',{type:'keyUp',key:'k',code:'KeyK'});
   assert.equal(await evaluate("!!document.querySelector('[data-arc-command-palette]')"),false);
@@ -124,7 +135,7 @@ try {
     await new Promise(resolve=>setTimeout(resolve,message.query==='a'?400:10));
     return {ok:true,suggestions:message.query?[{kind:'bookmark',sources:['bookmark'],title:message.query+' saved',url:'https://saved.example/'+message.query}]:[],warnings:[]};
   }`);
-  await evaluate(`(${mountPalette.toString()})([])`);
+  await mount([]);
   await key('a','KeyA','a');
   await evaluate('new Promise(resolve=>setTimeout(resolve,180))');
   await key('b','KeyB','b');
@@ -139,7 +150,7 @@ try {
     return {ok:true,suggestions:[{kind:'bookmark',sources:['bookmark'],title:'Project',url:'https://github.com/org/project'}],
       domains:[{kind:'domain',sources:['domain'],title:'Open github.com',url:'https://github.com/'}],warnings:[]};
   }`);
-  await evaluate(`(${mountPalette.toString()})([])`);
+  await mount([]);
   await key('g','KeyG','g');
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
   const beforeCompletion = await evaluate('messages.length');
@@ -148,7 +159,7 @@ try {
   await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/'},
     'Tab must complete the selected homepage, and Enter must open just the domain');
-  await evaluate(`(${mountPalette.toString()})([])`);
+  await mount([]);
   await key('g','KeyG','g');
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
   await key('ArrowDown','ArrowDown');
@@ -157,8 +168,74 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/org/project'},
     'Tab must also complete the full saved page URL');
   assert.deepEqual(await evaluate('pageKeys'),[],'completion and homepage selection must stay isolated');
-  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling verified.');
+  await evaluate(`globalThis.commandRows=${JSON.stringify(commandSuggestions(''))};globalThis.chrome.runtime.sendMessage=async message=>{
+    if(message.type!=='palette:suggest'){messages.push(message);return {ok:true};}
+    if(message.mode==='commands')return {ok:true,suggestions:commandRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
+    if(message.mode==='closed')return {ok:true,suggestions:[{kind:'closed',sessionId:'closed-7',title:'Closed page',url:'https://closed.example'}],warnings:[]};
+    return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};
+  }`);
+  const context={sites:DEFAULT_SITES,sourceUrl:'https://current.example/page'};
+  await mount([],context);
+  await key('Tab','Tab');
+  await send('Input.insertText',{text:'reload'});
+  await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:command',command:'reload'},'empty Tab enters explicit commands');
+  await mount([],context);
+  await send('Input.insertText',{text:'yt'});await key('Tab','Tab');
+  await send('Input.insertText',{text:'cats & dogs'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:site',site:'yt',query:'cats & dogs'},'keyword Tab scopes site search');
+  await mount([],{...context,mode:'edit'});
+  await send('Input.insertText',{text:'new.example'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'new.example',target:'current'},'edit mode replaces only source tab');
+  await mount([],context);await send('Input.insertText',{text:'background.example'});await key('Enter','Enter',undefined,8);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'background.example',target:'background'},'Shift+Enter opens in background');
+  await mount([],context);await send('Input.insertText',{text:'replace.example'});await key('Enter','Enter',undefined,1);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'replace.example',target:'current'},'Alt+Enter explicitly replaces current page');
+  await mount([],context);
+  await paletteCall(`function(){const select=this.querySelector('select');select.value='closed';select.dispatchEvent(new Event('change'));}`);
+  await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:restore',sessionId:'closed-7'},'closed mode restores session');
+  assert.deepEqual(await evaluate('pageKeys'),[],'all command-bar modes must isolate keyboard events');
+  await evaluate(`globalThis.chrome.runtime.sendMessage=async message=>{
+    if(message.type!=='palette:suggest'){messages.push(message);return {ok:true};}
+    await new Promise(resolve=>setTimeout(resolve,200));
+    return {ok:true,suggestions:message.query==='fast'?[{kind:'bookmark',title:'Fast destination',url:'https://fast.example/'}]:[],warnings:[]};
+  }`);
+  await mount([],context);await send('Input.insertText',{text:'fast'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://fast.example/'},'early Enter must wait for final suggestions, not provisional raw navigation');
+  await mount([],context);await send('Input.insertText',{text:'reload'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'reload'},'ordinary searches must not execute commands');
+  // Serve the actual settings files; only Chrome APIs are stubbed, not form logic.
+  const allowed=new Set(['options.html','options.js','options.css','site-search.js','icons/icon-32.png','icons/icon-48.png']);
+  server=createServer(async(request,response)=>{
+    const path=new URL(request.url,'http://localhost').pathname.slice(1);
+    if(!allowed.has(path)){response.writeHead(404);response.end();return;}
+    try {
+      const content=await readFile(new URL(`../extension/${path}`,import.meta.url));
+      const type=path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':path.endsWith('.png')?'image/png':'text/html';
+      response.writeHead(200,{'Content-Type':type});response.end(content);
+    } catch {response.writeHead(500);response.end();}
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  await send('Page.addScriptToEvaluateOnNewDocument',{source:`globalThis.chrome={storage:{local:{get:async()=>({}),set:async value=>{globalThis.savedSites=value.sites;}}},tabs:{create:async()=>{}}};`});
+  await send('Page.enable');
+  const loaded=new Promise(resolve=>{
+    const listener=event=>{if(JSON.parse(event.data).method==='Page.loadEventFired'){socket.removeEventListener('message',listener);resolve();}};
+    socket.addEventListener('message',listener);
+  });
+  await send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/options.html`});await loaded;
+  assert.equal(await evaluate("document.querySelectorAll('.site').length"),3,'settings should render real default sites');
+  await evaluate(`const row=document.querySelector('.site');row.querySelector('[name=name]').value='My docs';row.querySelector('[name=key]').value='docs';row.querySelector('[name=template]').value='https://docs.example/?q=%s';document.querySelector('[type=submit]').click();`);
+  await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
+  assert.deepEqual((await evaluate('savedSites'))[0],{key:'docs',name:'My docs',template:'https://docs.example/?q=%s'});
+  await evaluate(`document.querySelector('[name=template]').value='javascript:%s';document.querySelector('[type=submit]').click();`);
+  await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
+  assert.match(await evaluate("document.querySelector('#status').textContent"),/HTTP/,'settings reject unsafe templates');
+  await send('Emulation.setDeviceMetricsOverride',{width:900,height:1100,deviceScaleFactor:1,mobile:false});
+  await screenshot('options');
+  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
+  if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();
   if (processChrome.exitCode === null && processChrome.signalCode === null) {
     const exited = new Promise(resolve => processChrome.once('exit',resolve));
