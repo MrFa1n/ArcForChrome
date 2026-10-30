@@ -123,6 +123,25 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (closing) dismiss();
     });
     requestClose = close;
+    function siteMatches(value) {
+      const query=value.trim().toLocaleLowerCase();
+      if(!/^[\p{L}\d-]{2,32}$/u.test(query)) return [];
+      return sites.map(site=>{
+        const aliases=[site.key,...(site.aliases || [])].map(alias=>alias.toLocaleLowerCase());
+        let score=(site.learnedAliases || []).includes(query)?120:aliases.includes(query)?100:aliases.some(alias=>alias.startsWith(query))?70:0;
+        if(!score && query.length<=4) {
+          const name=site.name.toLocaleLowerCase().replace(/[^\p{L}\d]/gu,'');
+          let index=0;for(const char of name)if(char===query[index])index++;
+          if(index===query.length)score=30;
+        }
+        return {site,score};
+      }).filter(item=>item.score).sort((a,b)=>b.score-a.score).slice(0,3);
+    }
+    function enterSite(site,alias=input.value) {
+      // Remember only an explicitly chosen site association, not browsing activity or search queries.
+      if(alias.trim()) chrome.runtime.sendMessage({type:'palette:remember-site',site:site.key,alias}).catch(()=>{});
+      setMode(`site:${site.key}`);
+    }
     function setMode(next,value='') {
       mode=next;completedAddress=null;modes.value=mode;input.value=value;
       input.placeholder=mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
@@ -147,7 +166,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(dismissed || closing || actionRevision!==queryRevision) return;
         const choice=choices[selected];
         if(!choice) return;
-        if(choice.kind==='site') {setMode(`site:${choice.site}`);return;}
+        if(choice.kind==='site') {enterSite(sites.find(site=>site.key===choice.site));return;}
         const target=event.altKey?'current':event.shiftKey?'background':(mode==='edit' && !(event.metaKey||event.ctrlKey))?'current':'new';
         const targetField=target==='new'?{}:{target};
         let message;
@@ -181,7 +200,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function render() {
       const previous = choices[selected];
-      const previousKey = previous && `${previous.kind}:${previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
+      const previousKey = previous && `${previous.kind}:${previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
       choices = [...suggestions.filter(item => item.kind === 'tab'), ...domains, ...suggestions.filter(item => item.kind !== 'tab')];
       const query=input.value.trim();
       if(mode==='commands' || mode==='closed') choices=suggestions;
@@ -189,12 +208,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
       else if(query) {
         const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
         if(mode==='edit' || completedAddress===query) choices.unshift(navigation);else choices.push(navigation);
-        const site=sites.find(site=>site.key===query.toLocaleLowerCase());
-        if(site && mode==='search') choices.unshift({kind:'site',site:site.key,title:`Search ${site.name}`,url:`${site.key} · Press Tab to search this site`});
+        if(mode==='search' && completedAddress!==query) {
+          const siteRows=siteMatches(query).map(({site})=>({kind:'site',site:site.key,title:`Search ${site.name}`,url:site.detected?'Detected from your browsing · Tab to search':'Site search · Tab to search'}));
+          const open=choices.filter(item=>item.kind==='tab');
+          choices=[...open,...siteRows,...choices.filter(item=>item.kind!=='tab')];
+        }
       }
       footer.textContent=mode==='commands'?'Commands only · Esc back':mode==='closed'?'Enter restores the original session · Esc back'
         : '↑ ↓ select · Tab complete / mode · Shift+Enter background · Alt+Enter current';
-      const retained = choices.findIndex(choice => `${choice.kind}:${choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
+      const retained = choices.findIndex(choice => `${choice.kind}:${choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
       selected = selectionMoved && retained >= 0 ? retained : 0;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
@@ -262,8 +284,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
         const choice = choices[selected];
-        const site=sites.find(site=>site.key===input.value.trim().toLocaleLowerCase());
-        if(!event.shiftKey && event.target===input && mode==='search' && site) {setMode(`site:${site.key}`);return;}
+        const matches=siteMatches(input.value);
+        const site=choice?.kind==='site'?sites.find(site=>site.key===choice.site)
+          :matches.length && (matches.length===1 || matches[0].score>matches[1].score)?matches[0].site:null;
+        if(!event.shiftKey && event.target===input && mode==='search' && site) {enterSite(site);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && !input.value.trim()) {setMode('commands');return;}
         if (!event.shiftKey && event.target === input && !['navigate','command','closed','site'].includes(choice?.kind) && choice?.url) {
           input.value = choice.url;

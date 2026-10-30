@@ -1,8 +1,4 @@
-export const DEFAULT_SITES = [
-  {key:'yt',name:'YouTube',template:'https://www.youtube.com/results?search_query=%s'},
-  {key:'wiki',name:'Wikipedia',template:'https://en.wikipedia.org/w/index.php?search=%s'},
-  {key:'gh',name:'GitHub',template:'https://github.com/search?q=%s'}
-];
+import {discoverSites} from './site-discovery.js';
 
 export function parseSites(value) {
   if(!Array.isArray(value) || value.length>20) throw new Error('Use at most 20 search sites');
@@ -18,10 +14,36 @@ export function parseSites(value) {
   });
 }
 
-export async function loadSites(api) {
+export async function loadCustomSites(api) {
   const saved=await api.storage?.local?.get('sites');
-  if(saved?.sites===undefined) return DEFAULT_SITES;
-  return parseSites(saved.sites);
+  return saved?.sites===undefined?[]:parseSites(saved.sites);
+}
+
+export async function loadSites(api,windowId) {
+  const [custom,detected,saved]=await Promise.all([loadCustomSites(api),discoverSites(api,windowId),api.storage?.local?.get(null)]);
+  const manual=custom.map(site=>({...site,aliases:[site.key],detected:false}));
+  const origins=new Set(custom.map(site=>new URL(site.template.replace('%s','query')).origin));
+  const sites=[...manual,...detected.filter(site=>!origins.has(new URL(site.template.replace('%s','query')).origin))];
+  for(const [key,value] of Object.entries(saved || {})) {
+    if(!key.startsWith('siteAlias:') || typeof value!=='string') continue;
+    try {
+      const alias=decodeURIComponent(key.slice(10));
+      const site=sites.find(item=>item.key===value);
+      if(site && /^[\p{L}\d.-]{2,32}$/u.test(alias)) {
+        if(!site.aliases.includes(alias))site.aliases.unshift(alias);
+        site.learnedAliases=[...(site.learnedAliases || []),alias];
+      }
+    } catch { /* Ignore malformed stored alias keys. */ }
+  }
+  return sites;
+}
+
+export async function rememberSite(api,windowId,siteKey,input) {
+  if(typeof input!=='string' || !/^[\p{L}\d.-]{2,32}$/u.test(input.trim())) return;
+  const sites=await loadSites(api,windowId);
+  if(!sites.some(site=>site.key===siteKey)) throw new Error('Search site is no longer available');
+  const alias=input.trim().toLocaleLowerCase();
+  await api.storage.local.set({[`siteAlias:${encodeURIComponent(alias)}`]:siteKey});
 }
 
 export function siteDestination(sites,key,query) {

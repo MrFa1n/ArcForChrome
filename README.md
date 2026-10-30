@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.11.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.12.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -17,7 +17,7 @@ Chrome can preserve older assignments or reject conflicts. Check `chrome://exten
 | Search | Cmd+T / toolbar / dropdown | Search open tabs, bookmarks and history; open addresses and default-engine queries |
 | Edit current URL | Cmd+L / dropdown | Select the source URL for editing; Enter replaces that page, unchanged URL reloads |
 | Commands | Tab on empty Search input, `>` prefix, or dropdown | Search explicit browser actions; ordinary search text never executes a command |
-| Site Search | `yt`, `wiki` or `gh`, then Tab; or dropdown | Search YouTube, Wikipedia or GitHub directly |
+| Site Search | A detected site name/shortcut + Tab; or dropdown | Search using a template observed in your browsing data |
 | Recently closed | Dropdown | Search and restore a recently closed tab with its original browser session |
 
 Escape returns from a scoped mode to Search; Escape in Search closes. Repeating Cmd+T closes the overlay; repeating the edit command in Edit mode closes it. Backspace on an empty site query returns to the site's keyword.
@@ -47,14 +47,15 @@ Commands and session restoration have their own explicit actions; navigation mod
 
 Commands mode includes **Reload current page**, **Duplicate current tab**, **Copy current URL**, **Open browser history**, **Open downloads**, **Reopen last closed tab**, **Search settings** and **New browser window**. English labels and Russian aliases are searchable. There are no bulk-close or archive actions.
 
-### Site Search settings
+### Automatic Site Search
 
-Click **Settings** in the palette or the extension's options entry. Add up to 20 sites with a name, unique keyword and HTTP(S) search URL containing one `%s` query placeholder. For example:
+You do not need to define sites or shortcuts first. On opening the palette, the extension inspects open tabs, 100 recent bookmarks and 250 recent history records for actual search URLs. It recognizes common query parameters on search/results/find pages and derives a template from the observed URL. Site names, domain prefixes, brand initials (such as YouTube → yt, GitHub → gh when that name is available) and short ordered-letter matches can offer a site scope.
 
-- keyword: `docs`
-- search URL: `https://example.com/search?q=%s`
+Type a name or abbreviation and choose the suggested site with Tab. If several sites match, choose explicitly with the arrows rather than relying on a guessed destination. Your confirmed alias-to-site association is saved locally and receives priority next time. No query text or browsing activity log is saved. Sites are rediscovered on the next open; previously unseen sites with no observed search URL have a homepage action but no invented search endpoint.
 
-Then type `docs`, Tab, your query, Enter. Only the query is URL-encoded. Settings are stored locally; Chrome's own internal keyword-search templates are not imported. Reopen the palette after saving changes. The options page also links to Chrome's search-engine and keyboard settings.
+Click **Settings** to see automatically detected sites or clear learned shortcuts. Manual definitions remain optional overrides for unusual search formats. Add up to 20 overrides with a name, unique keyword and HTTP(S) URL containing one `%s`, e.g. `https://example.com/search?q=%s`. Defaults are empty; there is no hard-coded list of search providers. An override replaces an automatically detected template for the same origin. Reopen search after changes.
+
+Chrome's internal Site Search settings are not read, and automatic detection is a conservative heuristic, not support for every website or all historical records. Credential-bearing/ambiguous URLs are excluded, and no website is contacted during discovery.
 
 ### Matching intelligence
 
@@ -79,7 +80,7 @@ No telemetry, backend, online autocomplete, permanent host access or persistent 
 | `history`, `bookmarks` | Read local matching suggestions; never edit/delete these sources |
 | `search` | Execute queries through Chrome's selected provider |
 | `sessions` | List and restore recently closed tabs |
-| `storage` | Save only user-defined Site Search templates locally |
+| `storage` | Save optional site overrides and explicitly learned alias-to-site associations locally |
 | `clipboardWrite` | Explicit Copy current URL action; clipboard contents are not read |
 
 No sidebar, spaces UI, global tab cycling, MRU tracking or numbered pin commands. Native Chrome pins/groups/tabs are retained. Session restoration uses Chrome's original session destination, which can belong to a different window. A failed default-provider query can leave its newly created blank tab; the original page is unaffected.

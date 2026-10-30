@@ -77,7 +77,7 @@ test('re-submitting the unchanged current URL reloads the page',async()=>{
   assert.deepEqual(api.calls,[['reload',5]]);
 });
 test('site search navigates with the configured encoded template',async()=>{
-  const api=browser();await paletteAction(api,{type:'palette:site',site:'gh',query:'my project'},sender);
+  const api=browser();api.history={search:async()=>[{title:'GitHub',url:'https://github.com/search?q=old'}]};await paletteAction(api,{type:'palette:site',site:'auto:https://github.com',query:'my project'},sender);
   assert.deepEqual(api.calls,[['create',{windowId:2,active:true,url:'https://github.com/search?q=my%20project'}]]);
 });
 test('command mode is explicit and unknown commands cannot execute',async()=>{

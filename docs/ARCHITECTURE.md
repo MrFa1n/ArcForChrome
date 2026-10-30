@@ -1,13 +1,13 @@
 # Command Bar architecture
 
-Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bookmarks/sessions. Only custom Site Search definitions are stored by the extension.
+Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bookmarks/sessions. Only optional Site Search overrides and confirmed alias-to-site associations are stored by the extension.
 
 ## Components
 
 - `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts six typed message actions: suggest, activate, navigate, site, command and restore.
 - `palette-service.js` validates sender and source context, queries tabs/settings, and injects the self-contained `mountPalette` function. Protected pages use `palette-page.js` with the original window/tab IDs in the popup URL. Source tab identity is taken from the browser sender or the validated extension popup URL, never an arbitrary message field.
 - `model.js` distinguishes HTTP(S) URLs from search text. It does not construct a provider-specific search URL. `chrome.search.query` handles text against a newly created or explicitly selected source tab.
-- `site-search.js` validates defaults/custom keywords, names and HTTP(S) templates. Queries are encoded once, replacing exactly one `%s`. `options.js` saves validated definitions to storage.local. No browsing history or choice log is persisted.
+- `site-search.js` validates optional custom keywords, names and HTTP(S) templates. Queries are encoded once, replacing exactly one `%s`. `options.js` saves validated definitions to storage.local. No browsing history or choice log is persisted.
 - `command-catalog.js` is a small whitelist with labels and aliases. Matching a word in normal Search never executes it. Sessions API results are separate restore actions, not history URL navigation.
 - `suggestions.js`/`search-match.js` retain bounded local ranking, layout correction, typo tolerance, source warnings, URL deduplication and homepage actions.
 
@@ -36,3 +36,11 @@ Recently closed mode lists tab sessions from the 25 latest session entries and r
 No exact Arc ranking/modifier parity is claimed. History candidate/fuzzy fallback bounds remain documented. Cross-profile tab search, native browser-shell replacement and unsupported Arc subsystems are out of scope. A provider failure may leave a blank tab created for the query.
 
 Unit tests exercise APIs through fakes; real headless Chrome exercises DOM, keyboard, modes, stale/early replies, settings validation and native CSS appearance with API stubs. Actual extension/provider/session/clipboard integration and Chrome shortcut registration remain manual checks.
+
+## Automatic site inference (0.12)
+
+`site-discovery.js` examines current-window tabs plus 100 recent bookmarks and 250 recent history records on palette open. It accepts a single recognized search parameter on an observed HTTP(S) search endpoint, excludes credentials/token-like parameters, removes fragments/tracking/pagination, and replaces only the observed query value with `%s`. It retains at most 20 origins and never invents a generic search URL for a plain domain.
+
+The UI derives name/domain-prefix/initials/ordered-letter candidates. Open tabs keep priority. Ambiguous matches remain explicit alternatives. Entering a site through a typed alias sends a validated remember-site action. Each alias is stored in its own storage.local key, avoiding a shared read-modify-write map across windows. A learned alias gets stronger priority than inferred aliases; only associations with currently known sites are accepted. Automatically inferred templates are kept in memory and revalidated from current source data on use.
+
+The options page shows detected sites separately from manual overrides and supports clearing learned associations. Existing user-defined templates remain valid. There is no fixed default provider list, automatic network discovery, persistent browsing index or import of Chrome's protected keyword configuration.

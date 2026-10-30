@@ -1,4 +1,4 @@
-import {DEFAULT_SITES,loadSites,parseSites} from './site-search.js';
+import {loadCustomSites,loadSites,parseSites} from './site-search.js';
 const container=document.querySelector('#sites');
 const status=document.querySelector('#status');
 function addRow(site={name:'',key:'',template:''}) {
@@ -13,7 +13,7 @@ function addRow(site={name:'',key:'',template:''}) {
 }
 function render(sites) {container.replaceChildren();sites.forEach(addRow);}
 document.querySelector('#add').addEventListener('click',()=>{if(container.children.length<20)addRow();else status.textContent='Use at most 20 sites.';});
-document.querySelector('#reset').addEventListener('click',()=>{render(DEFAULT_SITES);status.textContent='Defaults restored in this form. Save to apply.';});
+document.querySelector('#reset').addEventListener('click',()=>{render([]);status.textContent='Manual overrides cleared in this form. Save to use automatic detection only.';});
 document.querySelector('#sites-form').addEventListener('submit',async event=>{
   event.preventDefault();const submit=event.submitter || document.querySelector('button[type=submit]');submit.disabled=true;
   try {
@@ -24,4 +24,18 @@ document.querySelector('#sites-form').addEventListener('submit',async event=>{
 for(const [id,url] of [['provider','chrome://settings/searchEngines'],['shortcuts','chrome://extensions/shortcuts']]) {
   document.querySelector(`#${id}`).addEventListener('click',()=>chrome.tabs.create({url}).catch(error=>{status.textContent=error.message;}));
 }
-loadSites(chrome).then(render).catch(error=>{status.textContent=error.message;render(DEFAULT_SITES);});
+loadCustomSites(chrome).then(render).catch(error=>{status.textContent=error.message;});
+loadSites(chrome).then(sites=>{
+  const list=document.querySelector('#detected');
+  for(const site of sites.filter(site=>site.detected)) {
+    const item=document.createElement('li');item.textContent=`${site.name} · ${site.aliases.join(', ')}`;list.append(item);
+  }
+  if(!list.children.length)list.textContent='No search URLs detected yet. Search on a website in Chrome once, then reopen the palette.';
+}).catch(()=>{});
+document.querySelector('#forget').addEventListener('click',async()=>{
+  try {
+    const saved=await chrome.storage.local.get(null);
+    await chrome.storage.local.remove(Object.keys(saved).filter(key=>key.startsWith('siteAlias:')));
+    status.textContent='Learned shortcuts cleared. Reopen search to refresh.';
+  } catch(error) {status.textContent=error.message;}
+});

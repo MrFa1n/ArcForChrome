@@ -5,7 +5,8 @@ import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { mountPalette } from '../extension/palette.js';
-import { DEFAULT_SITES } from '../extension/site-search.js';
+import {inferSites} from '../extension/site-discovery.js';
+const DISCOVERED_SITES=inferSites([{title:'cats - YouTube',url:'https://www.youtube.com/results?search_query=cats'},{title:'GitHub',url:'https://github.com/search?q=old'}]);
 import { commandSuggestions } from '../extension/command-catalog.js';
 
 const profile = await mkdtemp(join(tmpdir(), 'arc-keyboard-'));
@@ -174,7 +175,7 @@ try {
     if(message.mode==='closed')return {ok:true,suggestions:[{kind:'closed',sessionId:'closed-7',title:'Closed page',url:'https://closed.example'}],warnings:[]};
     return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};
   }`);
-  const context={sites:DEFAULT_SITES,sourceUrl:'https://current.example/page'};
+  const context={sites:DISCOVERED_SITES,sourceUrl:'https://current.example/page'};
   await mount([],context);
   await key('Tab','Tab');
   await send('Input.insertText',{text:'reload'});
@@ -183,7 +184,7 @@ try {
   await mount([],context);
   await send('Input.insertText',{text:'yt'});await key('Tab','Tab');
   await send('Input.insertText',{text:'cats & dogs'});await key('Enter','Enter');
-  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:site',site:'yt',query:'cats & dogs'},'keyword Tab scopes site search');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:site',site:'auto:https://www.youtube.com',query:'cats & dogs'},'keyword Tab scopes an automatically discovered site');
   await mount([],{...context,mode:'edit'});
   await send('Input.insertText',{text:'new.example'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'new.example',target:'current'},'edit mode replaces only source tab');
@@ -206,7 +207,7 @@ try {
   await mount([],context);await send('Input.insertText',{text:'reload'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'reload'},'ordinary searches must not execute commands');
   // Serve the actual settings files; only Chrome APIs are stubbed, not form logic.
-  const allowed=new Set(['options.html','options.js','options.css','site-search.js','icons/icon-32.png','icons/icon-48.png']);
+  const allowed=new Set(['options.html','options.js','options.css','site-search.js','site-discovery.js','icons/icon-32.png','icons/icon-48.png']);
   server=createServer(async(request,response)=>{
     const path=new URL(request.url,'http://localhost').pathname.slice(1);
     if(!allowed.has(path)){response.writeHead(404);response.end();return;}
@@ -224,7 +225,8 @@ try {
     socket.addEventListener('message',listener);
   });
   await send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/options.html`});await loaded;
-  assert.equal(await evaluate("document.querySelectorAll('.site').length"),3,'settings should render real default sites');
+  assert.equal(await evaluate("document.querySelectorAll('.site').length"),0,'manual setup is optional and starts empty');
+  await evaluate("document.querySelector('#add').click()");
   await evaluate(`const row=document.querySelector('.site');row.querySelector('[name=name]').value='My docs';row.querySelector('[name=key]').value='docs';row.querySelector('[name=template]').value='https://docs.example/?q=%s';document.querySelector('[type=submit]').click();`);
   await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
   assert.deepEqual((await evaluate('savedSites'))[0],{key:'docs',name:'My docs',template:'https://docs.example/?q=%s'});

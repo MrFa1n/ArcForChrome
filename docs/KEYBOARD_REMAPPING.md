@@ -12,7 +12,7 @@ The user confirmed direct Cmd+T assignment in their Chrome. Cmd+L registration s
 Inside the palette:
 
 - Empty Search + Tab: Commands.
-- `yt` / `wiki` / `gh` (or a custom keyword) + Tab: Site Search.
+- Detected site name/abbreviation + Tab: Site Search. Confirmed shortcuts are learned automatically; manual definitions are optional.
 - Selected URL + Tab: insert its address for editing without navigating.
 - Up/Down: select a result. Tab/Shift+Tab also move between controls where not completing/entering a scope.
 - Enter: open/execute selected result. In Edit it replaces the source page.

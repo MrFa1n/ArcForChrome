@@ -1,12 +1,12 @@
 import { destination } from './model.js';
 import { findSuggestions } from './suggestions.js';
-import { loadSites,siteDestination } from './site-search.js';
+import { loadSites,siteDestination,rememberSite } from './site-search.js';
 import { COMMANDS,commandSuggestions } from './command-catalog.js';
 
 export async function openPalette(api,mount,mode='search') {
   const [tab]=await api.tabs.query({active:true,currentWindow:true});
   if(!tab) return;
-  const [tabs,sites]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api)]);
+  const [tabs,sites]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api,tab.windowId)]);
   const context={mode,sourceUrl:tab.url || '',sites};
   try {
     await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url})=>({id,title,url})),false,context]});
@@ -94,7 +94,8 @@ export async function paletteAction(api,message,sender) {
     await api.tabs.update(tab.id,{active:true});await api.windows.update(context.windowId,{focused:true});return;
   }
   if(message.type==='palette:navigate') return navigate(api,context,message.query,message.target);
-  if(message.type==='palette:site') return navigate(api,context,siteDestination(await loadSites(api),message.site,message.query),message.target);
+  if(message.type==='palette:site') return navigate(api,context,siteDestination(await loadSites(api,context.windowId),message.site,message.query),message.target);
+  if(message.type==='palette:remember-site') return rememberSite(api,context.windowId,message.site,message.alias);
   if(message.type==='palette:command') return executeAction(api,context,message.command);
   if(message.type==='palette:restore') {
     if(typeof message.sessionId!=='string' || !message.sessionId) throw new Error('Invalid closed tab');
