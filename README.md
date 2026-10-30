@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.9.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.9.1. Not affiliated with Arc or The Browser Company.
 
 ## Install
 
@@ -66,3 +66,7 @@ Search uses native CSS Canvas/CanvasText colors, a neutral Chrome-like surface a
 High-contrast/forced-colors preferences are respected. No appearance preference is saved separately, no page font is copied and no additional permissions are requested. Arbitrary Chrome profile accent colors, theme images and wallpapers are not read or copied; this is not full synchronization of every Chrome Appearance setting.
 
 The browser regression emulates live light/dark changes and changes the iframe's base font size to check scaling. For optional screenshots, set `PALETTE_SCREENSHOT_DIR` to an existing directory before `npm run check:browser`. Actual Chrome settings UI changes remain a manual integration check.
+
+## Extension icon
+
+The custom search mark is bundled at 16, 32, 48 and 128 px for Chrome's toolbar and extension manager. Regenerate it with `python3 scripts/generate-icons.py` (development only; requires Pillow). The deterministic generator is the editable source; Pillow is not a runtime dependency. The mark is independent of Arc's official branding.
