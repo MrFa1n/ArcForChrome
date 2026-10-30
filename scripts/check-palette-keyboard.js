@@ -92,7 +92,30 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://saved.example/ab'},
     'Enter must open the first suggestion URL; stale responses must not replace new results');
   assert.deepEqual(await evaluate('pageKeys'),[],'suggestion interactions stay isolated');
-  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection and stale-response rejection verified.');
+  await evaluate(`globalThis.chrome.runtime.sendMessage=async message=>{
+    if(message.type!=='palette:suggest'){messages.push(message);return {ok:true};}
+    return {ok:true,suggestions:[{kind:'bookmark',sources:['bookmark'],title:'Project',url:'https://github.com/org/project'}],
+      domains:[{kind:'domain',sources:['domain'],title:'Open github.com',url:'https://github.com/'}],warnings:[]};
+  }`);
+  await evaluate(`(${mountPalette.toString()})([])`);
+  await key('g','KeyG','g');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  const beforeCompletion = await evaluate('messages.length');
+  await key('Tab','Tab');
+  assert.equal(await evaluate('messages.length'),beforeCompletion,'Tab must not navigate');
+  await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/'},
+    'Tab must complete the selected homepage, and Enter must open just the domain');
+  await evaluate(`(${mountPalette.toString()})([])`);
+  await key('g','KeyG','g');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('ArrowDown','ArrowDown');
+  await key('Tab','Tab');
+  await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/org/project'},
+    'Tab must also complete the full saved page URL');
+  assert.deepEqual(await evaluate('pageKeys'),[],'completion and homepage selection must stay isolated');
+  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion and homepage navigation verified.');
 } finally {
   socket?.close();
   if (processChrome.exitCode === null && processChrome.signalCode === null) {

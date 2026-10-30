@@ -43,6 +43,21 @@ export function rankSuggestions(tabs, bookmarks, history, input) {
     .slice(0,LIMIT).map(({search, lastVisitTime, ...item}) => item);
 }
 
+function domainSuggestions(suggestions, query) {
+  if (!query) return [];
+  const known = new Set(suggestions.map(item => item.url));
+  const domains = new Map();
+  for (const item of suggestions) {
+    try {
+      const url = new URL(item.url);
+      if (!['http:','https:'].includes(url.protocol)) continue;
+      const home = `${url.origin}/`;
+      if (!known.has(home)) domains.set(home, {kind:'domain',title:`Open ${url.host}`,url:home,sources:['domain']});
+    } catch { /* Open browser-internal tabs have no web homepage action. */ }
+  }
+  return [...domains.values()].slice(0,3);
+}
+
 export async function findSuggestions(api, windowId, input) {
   if (typeof input !== 'string' || input.length > 8192) throw new Error('Invalid query');
   const query = input.trim();
@@ -52,5 +67,6 @@ export async function findSuggestions(api, windowId, input) {
   const names = ['Open tabs', 'Bookmarks', 'History'];
   const warnings = results.flatMap((result,index) => result.status === 'rejected' ? [`${names[index]} unavailable`] : []);
   const [tabs=[], bookmarks=[], history=[]] = results.map(result => result.status === 'fulfilled' ? result.value : []);
-  return {suggestions:rankSuggestions(tabs,bookmarks,history,query),warnings};
+  const suggestions = rankSuggestions(tabs,bookmarks,history,query);
+  return {suggestions,domains:domainSuggestions(suggestions,query),warnings};
 }

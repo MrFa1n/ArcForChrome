@@ -44,7 +44,7 @@ export function mountPalette(tabs, floating = false) {
       border-radius:10px;background:transparent;text-align:left;padding:12px}button.result[aria-selected=true]{background:var(--hover)}
       .icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .url{font-size:11px;color:var(--muted)}footer{padding:12px 22px;color:var(--muted);font-size:11px;border-top:1px solid #a99bb833}
+      .hint{font-size:10px;color:var(--muted);flex-shrink:0} .url{font-size:11px;color:var(--muted)}footer{padding:12px 22px;color:var(--muted);font-size:11px;border-top:1px solid #a99bb833}
       #error{color:#d05d71;padding:0 22px;font-size:12px}#close{border:0;background:transparent;color:inherit;border-radius:4px}
       button:focus-visible{outline:2px solid #9b7bc8;outline-offset:-2px}`;
     root.append(style);
@@ -62,7 +62,7 @@ export function mountPalette(tabs, floating = false) {
     input.setAttribute('aria-controls','results');input.setAttribute('aria-expanded','true');
     const results = document.createElement('div'); results.id = 'results'; results.setAttribute('role','listbox');
     const error = document.createElement('p'); error.id = 'error'; error.setAttribute('role','status');
-    const footer = document.createElement('footer');footer.textContent = '↑ ↓ to select · Enter to open · Esc to return · Opens links in a new tab';
+    const footer = document.createElement('footer');footer.textContent = '↑ ↓ select · Tab complete address · Enter open · Esc return';
     dialog.append(header,input,results,error,footer); root.append(dialog);document.documentElement.append(host);
     let selected = 0;
     let selectionMoved = false;
@@ -71,7 +71,8 @@ export function mountPalette(tabs, floating = false) {
     let queryRevision = 0;
     let timer;
     let suggestions = [];
-    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History'};
+    let domains = [];
+    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab'};
     const heldKeys = new Set();
     let closing = false;
     function close() {
@@ -112,19 +113,22 @@ export function mountPalette(tabs, floating = false) {
     function render() {
       const previous = choices[selected];
       const previousKey = previous && `${previous.kind}:${previous.id ?? previous.url}`;
-      choices = suggestions.slice(0,8);
+      choices = [...suggestions.filter(item => item.kind === 'tab'), ...domains, ...suggestions.filter(item => item.kind !== 'tab')];
       if (input.value.trim()) choices.push({kind:'navigate', title:`Open ${input.value.trim()}`, url:'New tab · URL or Google search'});
       const retained = choices.findIndex(choice => `${choice.kind}:${choice.id ?? choice.url}` === previousKey);
       selected = selectionMoved && retained >= 0 ? retained : 0;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
         row.setAttribute('role','option');row.tabIndex = -1;
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',navigate:'↗'})[choice.kind];
+        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗'})[choice.kind];
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
         const url = document.createElement('span');url.className = 'url';url.textContent = choice.kind === 'navigate' ? choice.url
           : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
         text.append(title,url);row.append(icon,text);
+        if (choice.kind !== 'navigate') {
+          const hint = document.createElement('span');hint.className = 'hint';hint.textContent = 'Tab ↹';row.append(hint);
+        }
         row.addEventListener('click',() => activate(index));
         row.addEventListener('mousemove',() => {selected = index;selectionMoved = true;highlight();});
         return row;
@@ -137,6 +141,7 @@ export function mountPalette(tabs, floating = false) {
       const terms = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
       suggestions = tabs.filter(tab => terms.every(term => `${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
         .slice(0,8).map(tab => ({...tab,kind:'tab',sources:['tab']}));
+      domains = [];
       choices = []; selected = 0; selectionMoved = false; error.textContent = '';
       render();
       timer = setTimeout(async () => {
@@ -145,6 +150,7 @@ export function mountPalette(tabs, floating = false) {
           if (revision !== queryRevision || dismissed || closing || busy) return;
           if (!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions = response.suggestions;
+          domains = Array.isArray(response.domains) ? response.domains : [];
           error.textContent = (response.warnings || []).join(' · ');
           render();
         } catch (failure) {
@@ -159,8 +165,20 @@ export function mountPalette(tabs, floating = false) {
       if (['ArrowDown','ArrowUp'].includes(event.key) && choices.length) {
         event.preventDefault(); selectionMoved = true; selected = (selected + (event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length;highlight();
       }
-      if (event.key === 'Enter') {event.preventDefault();activate(selected);}
-      if (event.key === 'Tab') {event.preventDefault();input.focus();}
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (event.target === closeButton) close(); else activate(selected);
+      }
+      if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        const choice = choices[selected];
+        if (!event.shiftKey && event.target === input && choice?.kind !== 'navigate' && choice?.url) {
+          input.value = choice.url;
+          input.focus();
+          input.setSelectionRange(input.value.length,input.value.length);
+          updateSuggestions();
+        } else (event.target === input ? closeButton : input).focus();
+      }
     });
     dialog.addEventListener('cancel', event => {event.preventDefault();close();});
     dialog.addEventListener('click',event => {if(event.target === dialog) close();});

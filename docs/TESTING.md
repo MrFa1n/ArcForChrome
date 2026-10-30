@@ -28,3 +28,10 @@ The harness does not load the full extension or use a user's browser profile.
 - Check actual shortcut values after updating: Chrome may preserve previous user choices.
 
 Full user-profile upgrade, real history/bookmark permission integration and site-specific UI checks remain manual.
+
+## Homepage and Tab v0.8.0
+
+- Unit tests verify deep-link to origin conversion, scheme/subdomain/port preservation, duplicate elimination and no domain actions for empty input or existing homepages.
+- The real-Chrome regression verifies Tab emits no navigation, then Enter opens exactly the completed homepage/full-page URL; host page key listeners stay isolated.
+- Manually search a known site with deep bookmark/history links. Verify Open host is clearly distinct from the saved page and open tabs stay above it. Test multiple same-origin results and saved root URLs.
+- Select either a homepage or saved path, press Tab, edit the address, then Enter. Test Shift+Tab and Enter on the close control; test IME without accidental completion.

@@ -51,3 +51,20 @@ test('suggestions are bounded and canonical URLs are deduplicated', () => {
   assert.equal(rankSuggestions([],bookmarks,[],'project').length,8);
   assert.equal(rankSuggestions([],[{title:'Saved',url:'https://example.com'}],[{title:'Saved',url:'https://example.com/'}],'saved').length,1);
 });
+test('known deep pages provide a separate homepage action with no path, query or fragment', async () => {
+  const api={tabs:{query:async()=>[]},bookmarks:{search:async()=>[{title:'Project',url:'https://github.com/org/project?tab=readme#start'}]},history:{search:async()=>[]}};
+  const result=await findSuggestions(api,2,'github');
+  assert.deepEqual(result.domains,[{kind:'domain',title:'Open github.com',url:'https://github.com/',sources:['domain']}]);
+  assert.equal(result.suggestions[0].url,'https://github.com/org/project?tab=readme#start');
+});
+test('homepage actions merge same-origin pages and preserve ports and subdomains', async () => {
+  const api={tabs:{query:async()=>[]},bookmarks:{search:async()=>[
+    {title:'Docs A',url:'http://docs.example.com:3000/a'}, {title:'Docs B',url:'http://docs.example.com:3000/b'}]},history:{search:async()=>[]}};
+  const result=await findSuggestions(api,2,'docs');
+  assert.equal(result.domains.length,1);assert.equal(result.domains[0].url,'http://docs.example.com:3000/');
+});
+test('empty input and already suggested homepages add no duplicate domain action', async () => {
+  const api={tabs:{query:async()=>[{id:1,title:'Home',url:'https://example.com/'}]},bookmarks:{search:async()=>[]},history:{search:async()=>[]}};
+  assert.deepEqual((await findSuggestions(api,2,'')).domains,[]);
+  assert.deepEqual((await findSuggestions(api,2,'example')).domains,[]);
+});

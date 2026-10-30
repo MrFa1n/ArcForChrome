@@ -7,7 +7,7 @@ Only **Open Spotlight-style search** is declared as a keyboard command:
 | macOS | Cmd+T |
 | Windows/Linux | Alt+Shift+K |
 
-The toolbar button opens the same search. Within search: Up/Down select results, Enter opens, Escape closes; normal typing and editing work in the input.
+The toolbar button opens the same search. Within search: Up/Down select results, Tab completes the selected address without navigating, Enter opens, Escape closes; normal typing and editing work in the input.
 
 The user confirmed direct Cmd+T assignment works in their Chrome version. Existing Chrome user assignments may be preserved on reload/update. If the shortcut differs, open `chrome://extensions/shortcuts` and change this single command. Keep scope **In Chrome**. Chrome handles conflicts; an extension has no supported API to overwrite user bindings.
 

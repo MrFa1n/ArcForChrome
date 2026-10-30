@@ -30,3 +30,9 @@ The worker validates extension senders, popup URL protocol/host/path, source win
 - **Source window**: the native Chrome window from which search was invoked.
 
 The removed sidebar, groups/spaces UI, pin commands, MRU cycle and session storage can be found in Git history. They are not part of the current product.
+
+## Homepage actions and address completion
+
+The worker derives up to three unique HTTP(S) origin URLs from the eight matched page suggestions when input is nonempty. These are separate domain actions with an explicit Open host title and Homepage/New tab label. Origins preserve scheme, subdomain and port and remove credentials, path, query and fragment. Already suggested homepages are not repeated. Open tab suggestions stay first, then domain actions, then saved/visited page results, and finally raw-input navigation.
+
+Plain Tab copies the selected result URL into the search input, places the caret at its end and starts a fresh debounced query without navigation. Shift+Tab moves between input and close. Enter on the close control closes instead of opening a result. No special Tab shortcut leaves the iframe or affects the host page. The self-contained mount function remains serializable for executeScript.

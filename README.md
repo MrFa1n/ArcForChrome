@@ -1,6 +1,6 @@
 # Arc for Chrome
 
-An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.7.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Spotlight-style command bar for Chrome**. Search open tabs, bookmarks, history and the web from one keyboard-driven overlay. Early MVP, v0.8.0. Not affiliated with Arc or The Browser Company.
 
 ## Install
 
@@ -13,11 +13,13 @@ No build, dependencies, additional applications or account required. Pin the too
 ## Search
 
 - Type part of a page title or URL. Matching open tabs in the current window appear first, followed by bookmarks and history. Shared URLs are merged.
+- Press **Tab** to copy the selected suggestion URL into the search field without navigating. Edit it or press Enter. Shift+Tab moves focus between the input and close button.
+- Matching saved/visited pages also offer explicit **Open example.com** homepage actions. These open the URL origin (no path, query or fragment), preserving scheme, subdomain and port. Existing open tabs remain first; homepage actions come before saved page suggestions.
 - Use Up/Down and Enter, or click a result. An existing tab is activated; a saved/visited URL opens in a new tab.
 - Choose the final **Open…** row to open the typed address or Google search in a new tab.
 - Escape, outside click or the esc button closes search and restores page focus. Repeating the shortcut toggles the overlay.
 - The page stays open while search is displayed. Keyboard events remain inside the search iframe, so page/video shortcuts do not receive them.
-- Empty input shows only open tabs. History is searched across all dates, up to 50 matching history candidates; up to eight unique suggestions are displayed.
+- Empty input shows only open tabs. History is searched across all dates, up to 50 matching history candidates; up to eight unique page suggestions and three homepage actions are displayed. Duplicate homepage actions are merged, and a homepage already present as a page result is not repeated.
 - Local queries are debounced by 150 ms, and stale responses are ignored. If a source fails, the others remain usable with a warning.
 - On protected pages such as `chrome://` and the Chrome Web Store, a small separate search window is used when injection is prohibited.
 
