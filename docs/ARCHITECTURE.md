@@ -55,7 +55,7 @@ The options page shows detected sites separately from manual overrides and suppo
 
 ## Direct movement (0.15)
 
-Alt+Left/Right and Alt+Shift+Left/Right (plus Alt+Home/End) move the currently selected open tab in Search/Arrange, or the source in destination mode. The action waits for final suggestions, validates cancellation revisions and uses the same worker move path. On success it returns to Arrange, retains any Arrange-list filter, and refreshes actual positions with the moved ID as preferred selection. The overlay stays open for repeated moves. Pending operations block additional mutations; dismissal/mode changes cannot be overwritten by a late move response. Explicit before-placement retains its close-on-success behavior.
+Alt+Left/Right and Alt+Shift+Left/Right (plus Alt+Home/End) move the currently selected open tab in Search/Arrange, or the source in destination mode. The action waits for final suggestions, validates cancellation revisions and uses the same worker move path. On success it returns to Arrange, retains any Arrange-list filter, and refreshes actual positions with the moved ID as preferred selection. The overlay stays open for repeated moves. Pending operations block unrelated mutations; repeated quick-move keys enter a FIFO queue; dismissal/mode changes cannot be overwritten by a late move response. Explicit before-placement retains its close-on-success behavior.
 
 ## Provider requests and recovery (0.16)
 
@@ -66,3 +66,11 @@ activity-store.js writes independent local keys after mutation success/failure, 
 ## Overlay positioning (0.17)
 
 Position is UI-local state. Footer pointer capture plus frame-document movement/up tracking handles native-modal backdrop retargeting. A completed drag suppresses its trailing click so it cannot dismiss the modal or activate a result; a new pointerdown clears that suppression. Geometry resolves from current bounds, with a fixed-position 16px gutter clamp. ResizeObserver and frame resize keep manual placement visible when dimensions change. Keyboard positioning runs before action-busy handling, separate from tab movement, and does not change query revisions or browser state. Closing destroys the frame and its listeners; no coordinates persist.
+
+## Size, move queue and native popup fallback (0.18)
+
+Manual corner size shares pointer tracking/trailing-click suppression with dragging, uses viewport-aware hard bounds and turns the dialog into a flex column so results absorb free height. ResizeObserver reapplies bounds without persisting geometry. No backdrop filter remains.
+
+Quick moves preserve rendered rows, enqueue every key intent with the tab ID, and process one browser mutation at a time. The worker returns current orderSuggestions after moving; the client filters the snapshot locally and renders with preferred tab ID. No debounced updateSuggestions is invoked for each move. FLIP transforms use previous row positions and respect prefers-reduced-motion. Mode/dismissal revisions cancel queued future moves. Move journal writes start asynchronously so storage/expiry maintenance does not hold the navigation response.
+
+Injection failures try a tab-specific action popup with source context in its URL, then clear the temporary popup setting in finally. palette-page.css supplies a 680×560 action-popup viewport; palette-page.js marks that surface before mounting. If action.openPopup is unavailable or rejects, the original native window path is retained. No privilege bypass, debugger permission or replacement of Chrome's built-in pages is attempted.

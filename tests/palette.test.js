@@ -166,3 +166,19 @@ test('executed actions log metadata without URL query/path content by default',a
  assert.equal(rows.length,1);assert.equal(rows[0].label,'Open example.com');assert.equal(rows[0].status,'ok');
  assert.ok(!JSON.stringify(rows).includes('token'));assert.equal(rows[0].text,undefined);
 });
+test('restricted pages prefer the toolbar popup inside the source browser window',async()=>{
+ const api=browser();api.scripting.executeScript=async()=>{throw Error('Restricted');};
+ api.action={setPopup:async options=>api.calls.push(['setPopup',options]),openPopup:async options=>api.calls.push(['openPopup',options])};
+ await openPalette(api,()=>{});
+ assert.equal(api.calls[0][0],'setPopup');assert.match(api.calls[0][1].popup,/surface=action/);
+ assert.deepEqual(api.calls[1],['openPopup',{windowId:2}]);
+ assert.deepEqual(api.calls[2],['setPopup',{tabId:5,popup:''}]);
+ assert.ok(!api.calls.some(call=>call[0]==='popup'));
+});
+test('native popup failure restores toolbar behavior before legacy fallback',async()=>{
+ const api=browser();api.scripting.executeScript=async()=>{throw Error('Restricted');};
+ api.action={setPopup:async options=>api.calls.push(['setPopup',options]),openPopup:async()=>{throw Error('Unavailable');}};
+ await openPalette(api,()=>{});
+ assert.deepEqual(api.calls[1],['setPopup',{tabId:5,popup:''}]);
+ assert.equal(api.calls[2][0],'popup');
+});

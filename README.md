@@ -77,11 +77,15 @@ For ambiguous site matches, choose a site explicitly with the arrows. Repeating 
 
 ### Position the overlay
 
-Drag the bottom hint strip to move Spotlight within the browser viewport. **Ctrl+Alt+arrow keys** move it by 16 pixels; add **Shift** for 64-pixel steps. **Ctrl+Alt+0** resets its position. These keys act only while Spotlight is open; Option/Alt+Left/Right still rearranges tabs. Position remains visible as results or window size change and resets on the next open. On protected pages this moves the palette inside its fallback window; use the native title bar to move that window on the desktop.
+Drag the bottom hint strip to move Spotlight within the browser viewport. **Ctrl+Alt+arrow keys** move it by 16 pixels; add **Shift** for 64-pixel steps. **Ctrl+Alt+0** resets its position. These keys act only while Spotlight is open; Option/Alt+Left/Right still rearranges tabs. Position remains visible as results or window size change and resets on the next open. On protected pages, positioning stays inside the extension popup; a legacy fallback window can be moved by its native title bar.
+
+### Resize the overlay
+
+Drag Spotlight’s bottom-right corner. Bounds are **360×220 to 1000×800 pixels**, further limited by the available viewport; small viewports also lower the minimum. Results scroll within the chosen height. Shift+Tab can focus the corner: arrows resize, Shift increases the step and Enter resets size. Ctrl+Alt+0 resets both size and position. The backdrop is dimmed without blur.
 
 ### Keep your place
 
-The current page stays open beneath the overlay. Page and video shortcuts are isolated while you type, then focus returns when you dismiss it. On protected pages where Chrome blocks injection, a small separate search window keeps the original tab’s context.
+The current page stays open beneath the overlay. Page and video shortcuts are isolated while you type, then focus returns when you dismiss it. On protected pages, Chrome 127+ first uses an extension toolbar popup in the same browser window, keeping the original tab context. Chrome forbids injecting the overlay into chrome:// pages. A separate native window remains a compatibility fallback if the popup API is unavailable or fails.
 
 ### Let sites find their shortcuts
 
@@ -137,7 +141,7 @@ Known catalogue addresses such as `chrome://extensions` also open directly. Only
 
 ### Put tabs in order
 
-Find an open tab in ordinary Search, select it with ↑/↓ and press **Alt/Option+← or →** to move it immediately. Add **Shift** to move to the start/end instead (**Alt+Home/End** also works). The overlay stays open, refreshes the real order and keeps that tab selected for repeated moves.
+Find an open tab in ordinary Search, select it with ↑/↓ and press **Alt/Option+← or →** to move it immediately. Add **Shift** to move to the start/end instead (**Alt+Home/End** also works). The overlay stays open and keeps that tab selected. Fast repeat presses are queued without discarded inputs or an empty-list refresh pause; rows animate between positions, respecting reduced-motion preferences.
 
 Type **`@`** to see tabs in their actual strip order; **`@github`** filters that list. Use the same move keys directly. For an exact destination, press Enter on a tab and choose **Move before…**. That explicit placement closes the overlay after applying; Esc returns to tab selection. Commands → Arrange tabs remains available.
 

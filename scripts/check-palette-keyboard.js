@@ -99,6 +99,7 @@ try {
   const light=await paletteStyles();
   assert.equal(light.background,light.canvas,'palette should use native browser Canvas color');
   assert.equal(light.color,light.canvasText);
+  assert.equal(await paletteCall(`function(){return this.ownerDocument.defaultView.getComputedStyle(this,'::backdrop').backdropFilter;}`),'none','backdrop must not blur the page');
   await screenshot('light');
   const initialPosition=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
   await key('ArrowRight','ArrowRight',undefined,3);
@@ -131,6 +132,27 @@ try {
   await send('Emulation.setDeviceMetricsOverride',{...viewport,deviceScaleFactor:1,mobile:false});
   await key('0','Digit0','',3);
   assert.deepEqual(await evaluate('messages'),[],'moving the palette must not navigate or reorder tabs');
+  const resizeRect=await paletteCall(`function(){return this.querySelector('#resize').getBoundingClientRect().toJSON();}`);
+  const beforeResize=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  const rx=resizeRect.x+resizeRect.width/2,ry=resizeRect.y+resizeRect.height/2;
+  await send('Input.dispatchMouseEvent',{type:'mousePressed',x:rx,y:ry,button:'left',buttons:1,clickCount:1});
+  await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:rx+40,y:ry+40,buttons:1});
+  await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:rx+40,y:ry+40,button:'left',buttons:0,clickCount:1});
+  const afterResize=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.equal(Math.round(afterResize.width-beforeResize.width),40);
+  assert.ok(afterResize.height>=beforeResize.height+39,'corner drag should resize height');
+  await key('Tab','Tab',undefined,8);
+  assert.equal(await paletteCall(`function(){return this.getRootNode().activeElement.id;}`),'resize');
+  for(let index=0;index<15;index++)await key('ArrowLeft','ArrowLeft',undefined,8);
+  for(let index=0;index<15;index++)await key('ArrowUp','ArrowUp',undefined,8);
+  const minimumSize=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.equal(Math.round(minimumSize.width),360);assert.equal(Math.round(minimumSize.height),220);
+  for(let index=0;index<20;index++)await key('ArrowRight','ArrowRight',undefined,8);
+  for(let index=0;index<20;index++)await key('ArrowDown','ArrowDown',undefined,8);
+  const maximumSize=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.ok(maximumSize.width<=Math.min(1000,viewport.width-32)+1 && maximumSize.height<=Math.min(800,viewport.height-32)+1);
+  await key('0','Digit0','',3);await key('Tab','Tab',undefined,8);
+
 
 
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
@@ -343,6 +365,21 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'left'});
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
   assert.ok(await paletteCall(`function(){return this.querySelector('[aria-selected="true"]').textContent.includes('Beta');}`));
+  const beforeBurst=(await evaluate('messages')).filter(message=>message.type==='palette:move').length;
+  await evaluate(`const quickSend=chrome.runtime.sendMessage;globalThis.movesInFlight=0;globalThis.maxMovesInFlight=0;chrome.runtime.sendMessage=async message=>{
+    if(message.type!=='palette:move')return quickSend(message);
+    movesInFlight++;maxMovesInFlight=Math.max(maxMovesInFlight,movesInFlight);
+    await new Promise(resolve=>setTimeout(resolve,80));
+    try{return await quickSend(message);}finally{movesInFlight--;}
+  };`);
+  for(let index=0;index<4;index++)await key('ArrowLeft','ArrowLeft',undefined,1);
+  assert.ok(await paletteCall(`function(){return this.querySelector('#results').children.length>0;}`),'list must not disappear while movement is in flight');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,800))');
+  const burst=(await evaluate('messages')).filter(message=>message.type==='palette:move').slice(beforeBurst);
+  assert.equal(burst.length,4,'every repeated move must be retained');
+  assert.ok(burst.every(message=>message.tabId===42));assert.equal(await evaluate('maxMovesInFlight'),1);
+  await evaluate('chrome.runtime.sendMessage=quickSend');
+
   await key('ArrowRight','ArrowRight',undefined,9);
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'end'});
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');

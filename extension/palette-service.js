@@ -16,8 +16,16 @@ export async function openPalette(api,mount,mode='search') {
   try {
     await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url})=>({id,title,url})),false,context]});
   } catch {
-    await api.windows.create({type:'popup',width:680,height:620,
-      url:`${api.runtime.getURL('palette.html')}?window=${tab.windowId}&tab=${tab.id}&mode=${mode}`});
+    const url=`${api.runtime.getURL('palette.html')}?window=${tab.windowId}&tab=${tab.id}&mode=${mode}`;
+    if(api.action?.openPopup && api.action?.setPopup) {
+      try {
+        await api.action.setPopup({tabId:tab.id,popup:`${url}&surface=action`});
+        await api.action.openPopup({windowId:tab.windowId});
+        return;
+      } catch { /* Older Chrome or a rejected native popup uses the legacy window. */ }
+      finally {await api.action.setPopup({tabId:tab.id,popup:''}).catch(()=>{});}
+    }
+    await api.windows.create({type:'popup',width:680,height:620,url});
   }
 }
 
@@ -98,7 +106,10 @@ async function performAction(api,message,context) {
     if(message.mode==='closed') return {suggestions:await closedSuggestions(api,message.query),domains:[],warnings:[]};
     return findSuggestions(api,context.windowId,message.query);
   }
-  if(message.type==='palette:move') return moveTab(api,context.windowId,message);
+  if(message.type==='palette:move') {
+    await moveTab(api,context.windowId,message);
+    return {suggestions:await orderSuggestions(api,context.windowId,'')};
+  }
   if(message.type==='palette:activate') {
     if(!Number.isInteger(message.tabId)) throw new Error('Invalid tab');
     const tab=await api.tabs.get(message.tabId);
@@ -145,7 +156,10 @@ export async function paletteAction(api,message,sender) {
   const logged=!['palette:suggest','palette:remember-site'].includes(message.type) && message.command!=='activity';
   try {
     const result=await performAction(api,message,context);
-    if(logged)await recordActivity(api,activityEvent(message,'ok')).catch(()=>{});
+    if(logged) {
+      const recording=recordActivity(api,activityEvent(message,'ok')).catch(()=>{});
+      if(message.type!=='palette:move')await recording;
+    }
     return result;
   } catch(error) {
     if(logged)await Promise.resolve().then(()=>recordActivity(api,activityEvent(message,'error'))).catch(()=>{});

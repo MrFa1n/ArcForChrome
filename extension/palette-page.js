@@ -1,6 +1,7 @@
 import {mountPalette} from './palette.js';
 import {loadSites} from './site-search.js';
 const params=new URL(location.href).searchParams;
+if(params.get('surface')==='action')document.documentElement.classList.add('action-popup');
 const windowId=Number(params.get('window'));
 const tabId=Number(params.get('tab'));
 Promise.all([chrome.tabs.query({windowId}),chrome.tabs.get(tabId),loadSites(chrome,windowId)]).then(([tabs,tab,sites])=>{
