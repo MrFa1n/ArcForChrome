@@ -54,6 +54,12 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 | Edit the current URL | **⌘L** | **Alt+Shift+L** |
 | Move selected tab left / right | **⌥← / ⌥→** | **Alt+← / Alt+→** |
 | Move selected tab to start / end | **⌥⇧← / ⌥⇧→** | **Alt+Shift+← / →** |
+| Mark / unmark a tab | **Shift+Space** | **Shift+Space** |
+| Create / add to a group | **⌘G** | **Ctrl+G** |
+| Remove from groups | **⌘⇧G** | **Ctrl+Shift+G** |
+| Manage groups | **⌘⌥G** | **Ctrl+Alt+G** |
+| Save in a bookmark folder | **⌘D** | **Ctrl+D** |
+| Remove from a bookmark folder | **⌘⇧D** | **Ctrl+Shift+D** |
 | Choose a result | **↑ / ↓** | **↑ / ↓** |
 | Open / run the selection | **Enter** | **Enter** |
 | Open in a background tab | **Shift+Enter** | **Shift+Enter** |
@@ -64,6 +70,8 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 In Search, Enter activates an existing tab or opens a new one. In **Edit current URL**, Enter replaces the source page; submitting its unchanged URL reloads it. Navigation modifiers apply to URL/search results; commands and session restoration keep their explicit actions.
 
 **Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed · `?` recover AI prompts. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
+
+These action shortcuts work while Spotlight is open. For vertical tabs, use **Alt/Option+↑/↓**; add Shift for start/end. **`#Work`** chooses a group; **`*Work`** chooses a bookmark folder.
 
 **Tab does three useful things:**
 
@@ -138,6 +146,16 @@ Type **extensions**, **settings**, **passwords**, **bookmarks** or their Russian
 The catalogue includes extensions and their shortcuts, browser settings, history, downloads, bookmarks, Password Manager, privacy/security, site permissions, appearance, search engines, languages, accessibility, performance, startup, default browser, autofill, About Chrome, version information and Chrome’s internal-page directory. These destinations also appear in Commands; **Open Chrome settings** is separate from the extension’s **Search settings**.
 
 Known catalogue addresses such as `chrome://extensions` also open directly. Only listed internal routes are recognized; this is navigation to browser pages, not a search inside their private contents or automatic modification of settings. No new permissions are required.
+
+### Select once, then act
+
+1. Find tabs in Search or `@`; mark each with **Shift+Space**. Marks stay when you change the query.
+2. Press **⌘/Ctrl+G**, type a group name and Enter to create it or choose an existing group.
+3. Or press **⌘/Ctrl+D**, find a folder by name/path and Enter to save the same pages. Use **⌘/Ctrl+Shift+D** to remove their bookmarks from a chosen folder.
+
+| Select tabs | Choose a group | Choose a bookmark folder |
+| --- | --- | --- |
+| ![Two marked tabs with group labels](docs/assets/spotlight-selection.png) | ![Existing group and create action](docs/assets/spotlight-groups.png) | ![Bookmark folders with full paths](docs/assets/spotlight-bookmarks.png) |
 
 ### Put tabs in order
 

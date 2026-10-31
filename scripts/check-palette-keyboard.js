@@ -530,6 +530,21 @@ try {
     await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     await screenshot('demo-04');
     await key('Escape','Escape');await key('Escape','Escape');
+    await evaluate(`chrome.runtime.sendMessage=async message=>{
+      if(message.type!=='palette:suggest')return {ok:true};
+      const rows=message.mode==='bookmark-folders'?[{kind:'bookmark-folder',folderId:'work',title:'Bookmarks bar / Work / Research',url:'Save selected tabs here'},{kind:'bookmark-folder',folderId:'reading',title:'Bookmarks bar / Reading list',url:'Save selected tabs here'}]:message.mode==='groups'?workRows:mockTabs.map(tab=>({...tab,kind:'tab',sources:['tab']}));
+      return {ok:true,suggestions:rows,warnings:[]};
+    };`);
+    await mount(demoTabs,context);await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
+    await screenshot('selection');
+    await key('g','KeyG','',4);await send('Input.insertText',{text:'Work'});
+    await evaluate('new Promise(resolve=>setTimeout(resolve,300))');await screenshot('groups');
+    await key('Escape','Escape');await key('Escape','Escape');await key('Escape','Escape');
+    await mount(demoTabs,context);await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
+    await key('d','KeyD','',4);await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
+    await screenshot('bookmarks');await key('Escape','Escape');await key('Escape','Escape');await key('Escape','Escape');
     await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
     await mount(demoTabs,context);await screenshot('demo-dark');
     await key('Escape','Escape');
