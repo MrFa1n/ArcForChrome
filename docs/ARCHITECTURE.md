@@ -13,15 +13,15 @@ Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bo
 
 ## Modes and selection
 
-Search, Edit, Commands, Recently closed and explicit site scopes are visible in the dropdown. Empty Search+Tab enters Commands; an exact site keyword+Tab enters Site Search; a highlighted URL+Tab completes its address. Escape returns a scoped mode to Search, then closes. Backspace on empty site input restores its keyword.
+The UI is a single input with results and contextual hints. Search enters Commands with `>`, Arrange with `@` and Recently closed with `<`. Edit and settings are searchable commands; global Edit remains available. Empty Search+Tab enters Commands; an exact site keyword+Tab enters Site Search; a highlighted URL+Tab completes its address. Escape returns a scoped mode to Search, then closes. Backspace on empty site input restores its keyword.
 
-Raw navigation is last in Search, first in Edit and first after explicit Tab completion. Open tab results otherwise retain priority. Enter waits for the current debounced suggestion promise; edits, mode changes and dismissal increment the revision to cancel stale commits. Busy operations reject further input/selection; controls are reenabled on failure. A Tab-completed deep link cannot be displaced by an asynchronous homepage action.
+Raw navigation is last in Search, first in Edit and first after explicit Tab completion. Open tab results otherwise retain priority. Enter waits for the current debounced suggestion promise; edits, mode changes and dismissal increment the revision to cancel stale commits. Busy operations reject further input/selection; input accepts actions again on failure. A Tab-completed deep link cannot be displaced by an asynchronous homepage action.
 
 Foreground/background/current targets are validated server-side. Current navigation checks the original tab's window; an unchanged source URL reloads. Primary-modifier Enter forces a new tab; Shift targets background; Alt targets current (Alt wins over Shift). Commands/restores do not use navigation modifiers.
 
 ## UI isolation and accessibility
 
-The palette is a native outer modal in a closed shadow root with a dedicated about:blank iframe containing the actual dialog. Keyboard events do not traverse the host page's capture/bubble listeners. Held-key tracking keeps the closing keyup in the frame; focus returns to the previous page element. Tab can reach mode/settings/close controls. The UI uses textContent, native color-scheme/system colors, rem typography and contrast/forced-colors rules.
+The palette is a native outer modal in a closed shadow root with a dedicated about:blank iframe containing the actual dialog. Keyboard events do not traverse the host page's capture/bubble listeners. Held-key tracking keeps the closing keyup in the frame; focus returns to the previous page element. There is no header/nav/close control. Result selection uses combobox arrows; input labels/hints convey the active scope. The UI uses textContent, native color-scheme/system colors, rem typography and contrast/forced-colors rules.
 
 The page can still remove DOM; this is not a security boundary against hostile sites. No persistent content script, web-accessible resource, window.postMessage bridge, arbitrary HTML template or remote code is used. The mount function has no imported closure dependencies because scripting.executeScript serializes it.
 
@@ -52,3 +52,7 @@ The options page shows detected sites separately from manual overrides and suppo
 ## Browser sections (0.14)
 
 `browser-pages.js` owns the Chrome destination catalogue, translated aliases, ranked matches, reuse of open tabs and command entries. `suggestions.js` adds catalogue results after bounded source matching, independently of source availability. Empty input gets no catalogue rows. `model.destination` resolves only exact catalogue URLs (canonical trailing slash; no credentials, port, query or fragment). Unknown internal addresses retain the ordinary default-provider path. The UI treats catalogue results as explicit navigation, preserving URL completion and navigation modifiers. Browser-section commands resolve through the same catalogue after the command whitelist check. Nothing reads or modifies Chrome settings or password contents.
+
+## Direct movement (0.15)
+
+Alt+Left/Right and Alt+Shift+Left/Right (plus Alt+Home/End) move the currently selected open tab in Search/Arrange, or the source in destination mode. The action waits for final suggestions, validates cancellation revisions and uses the same worker move path. On success it returns to Arrange, retains any Arrange-list filter, and refreshes actual positions with the moved ID as preferred selection. The overlay stays open for repeated moves. Pending operations block additional mutations; dismissal/mode changes cannot be overwritten by a late move response. Explicit before-placement retains its close-on-success behavior.

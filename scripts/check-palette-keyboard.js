@@ -61,6 +61,7 @@ try {
     for(const type of ['keydown','keypress','keyup']) window.addEventListener(type,event=>pageKeys.push(type+':'+event.key),true);
     globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};messages.push(message);return {ok:true};}}};`);
   await mount([{id:1,title:'Video',url:'https://video.example'}]);
+  assert.equal(await paletteCall(`function(){return this.querySelectorAll('header,nav,select,#close').length;}`),0,'palette must open directly on the query without a toolbar');
   async function paletteCall(functionDeclaration,args=[]) {
     const tree = await send('DOM.getDocument',{depth:-1,pierce:true});
     function find(node) {
@@ -195,7 +196,7 @@ try {
   await mount([],context);await send('Input.insertText',{text:'replace.example'});await key('Enter','Enter',undefined,1);
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'replace.example',target:'current'},'Alt+Enter explicitly replaces current page');
   await mount([],context);
-  await paletteCall(`function(){const select=this.querySelector('select');select.value='closed';select.dispatchEvent(new Event('change'));}`);
+  await send('Input.insertText',{text:'<'});
   await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:restore',sessionId:'closed-7'},'closed mode restores session');
   assert.deepEqual(await evaluate('pageKeys'),[],'all command-bar modes must isolate keyboard events');
@@ -236,7 +237,7 @@ try {
   await evaluate(`globalThis.arrangeRows=${JSON.stringify(arrangeRows)};globalThis.moveRows=${JSON.stringify(moveRows)};globalThis.failMove=true;
     globalThis.chrome.runtime.sendMessage=async message=>{
       if(message.type==='palette:suggest') {
-        const rows=message.mode==='order'?(message.tabId===undefined?arrangeRows:moveRows):message.mode==='commands'?commandRows:[];
+        const rows=message.mode==='order'?(message.tabId===undefined?arrangeRows:moveRows):message.mode==='commands'?commandRows:arrangeRows.map(row=>({...row,kind:'tab',id:row.tabId}));
         return {ok:true,suggestions:rows.filter(row=>(row.title+' '+row.url).toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
       }
       messages.push(message);
@@ -245,9 +246,9 @@ try {
     };`);
   await mount([],context);await key('Tab','Tab');
   await send('Input.insertText',{text:'arrange'});await key('Enter','Enter');
-  assert.equal(await paletteCall(`function(){return this.querySelector('select').value;}`),'order');
+  assert.ok(await paletteCall(`function(){return this.querySelector('footer').textContent.startsWith('Arrange tabs');}`));
   await key('Tab','Tab');
-  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'','Tab in Arrange must move focus, never insert a position label');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'','Tab in Arrange must keep input focus, never insert a position label');
   await key('Tab','Tab',undefined,8);
   await key('Enter','Enter');
   assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a position or a destination tab…');
@@ -259,6 +260,39 @@ try {
   await evaluate('failMove=false');await key('Enter','Enter');
   assert.equal(await evaluate("document.querySelector('[data-arc-command-palette]') === null"),true);
   assert.deepEqual(await evaluate('pageKeys'),[],'arrange mode must also isolate page shortcuts');
+  // Prefixes and immediate moves keep the selected tab after refreshing the list.
+  await mount([],context);await send('Input.insertText',{text:'@'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');await key('ArrowDown','ArrowDown');
+  await evaluate(`const baseSend=chrome.runtime.sendMessage;chrome.runtime.sendMessage=async message=>{
+    const response=await baseSend(message);
+    if(message.type==='palette:move' && response.ok)arrangeRows.reverse();
+    return response;
+  };`);
+  await key('ArrowLeft','ArrowLeft',undefined,1);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'left'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.ok(await paletteCall(`function(){return this.querySelector('[aria-selected="true"]').textContent.includes('Beta');}`));
+  await key('ArrowRight','ArrowRight',undefined,9);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'end'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('Escape','Escape');await key('Escape','Escape');
+  await mount([],context);await send('Input.insertText',{text:'@Beta'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'Beta');
+  await key('Escape','Escape');await key('Escape','Escape');
+  await mount([],context);await send('Input.insertText',{text:'Beta'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('ArrowRight','ArrowRight',undefined,1);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'right'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.ok(await paletteCall(`function(){return this.querySelector('footer').textContent.startsWith('Arrange tabs');}`));
+  await key('Escape','Escape');await key('Escape','Escape');
+  await mount([],context);await send('Input.insertText',{text:'> settings'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:command',command:'settings'});
+  await mount([],context);await send('Input.insertText',{text:'> edit current url'});await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),context.sourceUrl);
+  await key('Escape','Escape');await key('Escape','Escape');
+
   // Optional documentation demo: real palette DOM, fictional tabs, disposable profile.
   if (process.env.PALETTE_SCREENSHOT_DIR) {
     await key('Escape','Escape');

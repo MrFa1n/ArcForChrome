@@ -1,5 +1,7 @@
 import {browserPageCommands} from './browser-pages.js';
 export const COMMANDS = [
+  {command:'closed-tabs',title:'Recently closed tabs',aliases:'recent closed sessions недавно закрытые вкладки'},
+  {command:'edit-url',title:'Edit current URL',aliases:'address edit изменить адрес текущей вкладки'},
   {command:'order-tabs',title:'Arrange tabs',aliases:'move reorder position порядок вкладки переместить расположить'},
   {command:'reload',title:'Reload current page',aliases:'refresh перезагрузить обновить'},
   {command:'duplicate',title:'Duplicate current tab',aliases:'дублировать копия'},

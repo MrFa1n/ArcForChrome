@@ -48,9 +48,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       max-height:80vh;margin:12vh auto 0;background:var(--bg);color:var(--fg);box-shadow:0 12px 40px #0004;
       font:.875rem/1.5 sans-serif;overflow:hidden}
       dialog::backdrop{background:#0005;backdrop-filter:blur(4px)}
-      header{padding:20px 22px 0;display:flex;justify-content:space-between;color:var(--muted);font-size:.6875rem;letter-spacing:.5px}
       input{font:inherit;font-size:1.3125rem;width:100%;padding:18px 22px;border:0;outline:none;color:var(--fg);background:transparent}
-      nav{display:flex;gap:8px;padding:12px 22px 0;align-items:center} nav select{min-width:0;flex:1;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px;font:inherit} nav button{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:6px 10px}
       #results{padding:6px 10px;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:12px;width:100%;border:0;
       border-radius:8px;background:transparent;text-align:left;padding:12px}button.result[aria-selected=true]{background:var(--hover)}
@@ -58,10 +56,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
       footer{padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
-      #error{color:#b3261e;padding:0 22px;font-size:.75rem}#close{border:0;background:transparent;color:inherit;border-radius:4px}
+      #error{color:#b3261e;padding:0 22px;font-size:.75rem}
       button:focus-visible{outline:2px solid Highlight;outline-offset:-2px}
       @media(prefers-color-scheme:dark){#error{color:#f2b8b5}}
-      @media(prefers-contrast:more){dialog{--line:CanvasText}.url,.hint,header,footer{color:CanvasText}}
+      @media(prefers-contrast:more){dialog{--line:CanvasText}.url,.hint,footer{color:CanvasText}}
       @media(forced-colors:active){button.result[aria-selected=true]{background:Highlight;color:HighlightText}
         button.result[aria-selected=true] .url,button.result[aria-selected=true] .hint{color:HighlightText}}
       @media(prefers-reduced-transparency:reduce){dialog::backdrop{backdrop-filter:none}}
@@ -69,11 +67,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
     root.append(style);
     const dialog = document.createElement('dialog');
     dialog.setAttribute('aria-label', 'Search tabs or the web');
-    const header = document.createElement('header');
-    header.textContent = 'Search tabs and the web';
-    const closeButton = document.createElement('button');
-    closeButton.id = 'close'; closeButton.textContent = 'esc'; closeButton.setAttribute('aria-label','Close search');
-    header.append(closeButton);
     const input = document.createElement('input');
     input.placeholder = 'Search tabs or enter a URL…';
     input.maxLength = 8192;
@@ -83,14 +76,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const results = document.createElement('div'); results.id = 'results'; results.setAttribute('role','listbox');
     const error = document.createElement('p'); error.id = 'error'; error.setAttribute('role','status');
     const footer = document.createElement('footer');footer.textContent = '↑ ↓ select · Tab complete address · Enter open · Esc return';
-    const modes = document.createElement('select');modes.setAttribute('aria-label','Search mode');
     const sites = Array.isArray(context.sites) ? context.sites : [];
-    for(const [value,label] of [['search','Search · new tab'],['edit','Edit current URL'],['commands','Commands'],['closed','Recently closed'],['order','Arrange tabs'],...sites.map(site=>[`site:${site.key}`,`Search ${site.name}`])]) {
-      const option = document.createElement('option');option.value=value;option.textContent=label;modes.append(option);
-    }
-    const settings = document.createElement('button');settings.textContent='Settings';settings.type='button';
-    const nav = document.createElement('nav');nav.append(modes,settings);
-    dialog.append(header,nav,input,results,error,footer); root.append(dialog);document.documentElement.append(host);
+    footer.id='hints';input.setAttribute('aria-describedby','hints');
+    dialog.append(input,results,error,footer); root.append(dialog);document.documentElement.append(host);
     let mode = context.mode === 'edit' ? 'edit' : 'search';
     let orderTabId;
     let completedAddress = null;
@@ -143,12 +131,13 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(alias.trim()) chrome.runtime.sendMessage({type:'palette:remember-site',site:site.key,alias}).catch(()=>{});
       setMode(`site:${site.key}`);
     }
-    function setMode(next,value='',tabId) {
+    function setMode(next,value='',tabId,preferredId) {
       orderTabId=next==='order'?tabId:undefined;
-      mode=next;completedAddress=null;modes.value=mode;input.value=value;
+      mode=next;completedAddress=null;input.value=value;
       input.placeholder=mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
         :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
-      updateSuggestions();input.focus();
+      input.setAttribute('aria-label',input.placeholder);
+      updateSuggestions(preferredId);input.focus();
       if(mode==='edit') input.select();
     }
     async function copyText(value) {
@@ -161,7 +150,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(busy) return;
       busy=true;error.textContent='';
       const actionRevision=queryRevision;
-      modes.disabled=true;settings.disabled=true;
       try {
         // Do not commit the provisional list while smart suggestions are still loading.
         await pendingQuery;
@@ -169,7 +157,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const choice=choices[selected];
         if(!choice) return;
         if(choice.kind==='order-tab') {setMode('order','',choice.tabId);return;}
-        if(choice.kind==='command' && choice.command==='order-tabs') {setMode('order');return;}
+        const commandMode={'order-tabs':'order','closed-tabs':'closed','edit-url':'edit'}[choice.command];
+        if(choice.kind==='command' && commandMode) {setMode(commandMode,commandMode==='edit'?context.sourceUrl || '':'');return;}
         if(choice.kind==='site') {enterSite(sites.find(site=>site.key===choice.site));return;}
         const target=event.altKey?'current':event.shiftKey?'background':(mode==='edit' && !(event.metaKey||event.ctrlKey))?'current':'new';
         const targetField=target==='new'?{}:{target};
@@ -186,16 +175,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(response.copyText!==undefined) await copyText(response.copyText);
         close();
       } catch(failure) {error.textContent=failure.message;}
-      finally {busy=false;modes.disabled=false;settings.disabled=false;}
+      finally {busy=false;}
     }
-    modes.addEventListener('change',()=>setMode(modes.value,modes.value==='edit'?context.sourceUrl || '':''));
-    settings.addEventListener('click',async()=>{
-      try {
-        const response=await chrome.runtime.sendMessage({type:'palette:command',command:'settings'});
-        if(!response?.ok) throw new Error(response?.error || 'Could not open settings');
-        close();
-      } catch(failure) {error.textContent=failure.message;}
-    });
     editCurrent=value=>mode==='edit'?close():setMode('edit',value);
     function highlight() {
       [...results.children].forEach((row,index) => row.setAttribute('aria-selected', String(index === selected)));
@@ -203,7 +184,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (row) {input.setAttribute('aria-activedescendant',row.id);row.scrollIntoView({block:'nearest'});}
       else input.removeAttribute('aria-activedescendant');
     }
-    function render() {
+    function render(preferredId) {
       const previous = choices[selected];
       const previousKey = previous && `${previous.kind}:${previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
       choices = [...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['tab','browser-page'].includes(item.kind))];
@@ -219,10 +200,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
           choices=[...open,...siteRows,...choices.filter(item=>item.kind!=='tab')];
         }
       }
-      footer.textContent=mode==='order'?(orderTabId===undefined?'Choose a tab · Enter to choose its position · Esc back':'Enter moves without activating · Keeps pins/groups · Esc back'):mode==='commands'?'Commands only · Esc back':mode==='closed'?'Enter restores the original session · Esc back'
-        : '↑ ↓ select · Tab complete / mode · Shift+Enter background · Alt+Enter current';
+      footer.textContent=mode==='order'?(orderTabId===undefined?'Arrange tabs · Alt+←/→ move · +Shift first/last · Enter place'
+        :'Choose a destination · Enter move · Esc back'):mode==='commands'?'Commands · ↑ ↓ select · Enter run · Esc back'
+        :mode==='closed'?'Recently closed · Enter restore · Esc back':mode==='edit'?'Edit URL · Enter replace · Cmd/Ctrl+Enter new tab · Esc back'
+        :mode.startsWith('site:')?`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'} · Enter search · Esc back`
+        :'↑ ↓ select · Alt+←/→ move tab · > commands · @ arrange · < closed';
       const retained = choices.findIndex(choice => `${choice.kind}:${choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
-      selected = selectionMoved && retained >= 0 ? retained : 0;
+      const preferred=preferredId===undefined?-1:choices.findIndex(choice=>(choice.tabId ?? choice.id)===preferredId);
+      selected = preferred>=0?preferred:selectionMoved && retained >= 0 ? retained : 0;
+      if(preferred>=0)selectionMoved=true;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
         row.setAttribute('role','option');row.tabIndex = -1;
@@ -241,8 +227,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
         return row;
       }));highlight();
     }
-    function updateSuggestions() {
-      if(mode==='search' && input.value.startsWith('>')) {setMode('commands',input.value.slice(1).trimStart());return;}
+    function updateSuggestions(preferredId) {
+      const prefixMode={'>':'commands','@':'order','<':'closed'}[input.value[0]];
+      if(mode==='search' && prefixMode) {setMode(prefixMode,input.value.slice(1).trimStart());return;}
       const revision=++queryRevision;
       clearTimeout(timer);finishPending();
       let resolvePending;
@@ -252,7 +239,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       suggestions=['commands','closed','order'].includes(mode) || mode.startsWith('site:')?[]
         :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
-      domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render();
+      domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
       if(mode.startsWith('site:')) {resolvePending();return;}
       timer=setTimeout(async()=>{
         try {
@@ -260,11 +247,28 @@ export function mountPalette(tabs, floating = false, context = {}) {
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];
-          error.textContent=(response.warnings || []).join(' · ');render();
+          error.textContent=(response.warnings || []).join(' · ');render(preferredId);
         } catch(failure) {
           if(revision===queryRevision && !dismissed && !closing) error.textContent=failure.message;
         } finally {resolvePending();}
       },150);
+    }
+    async function quickMove(placement) {
+      if(busy)return;
+      busy=true;error.textContent='';
+      const revision=queryRevision;
+      try {
+        await pendingQuery;
+        if(dismissed || closing || revision!==queryRevision)return;
+        const choice=choices[selected];
+        const tabId=orderTabId ?? (choice?.kind==='order-tab'?choice.tabId:choice?.kind==='tab'?choice.id:undefined);
+        if(tabId===undefined)return;
+        const filter=mode==='order' && orderTabId===undefined?input.value:'';
+        const response=await chrome.runtime.sendMessage({type:'palette:move',tabId,placement});
+        if(!response?.ok)throw new Error(response?.error || 'Could not move tab');
+        if(!dismissed && !closing && revision===queryRevision)setMode('order',filter,undefined,tabId);
+      } catch(failure) {if(!dismissed && !closing && revision===queryRevision)error.textContent=failure.message;}
+      finally {busy=false;}
     }
     input.addEventListener('input',()=>{completedAddress=null;updateSuggestions();});
     input.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
@@ -277,16 +281,20 @@ export function mountPalette(tabs, floating = false, context = {}) {
         return;
       }
       if(busy) {event.preventDefault();return;}
-      if(event.key==='Backspace' && mode.startsWith('site:') && !input.value) {event.preventDefault();setMode('search',mode.slice(5));return;}
+      if(event.key==='Backspace' && mode!=='search' && !input.value) {
+        event.preventDefault();
+        if(mode==='order' && orderTabId!==undefined)setMode('order');
+        else setMode('search',mode.startsWith('site:')?mode.slice(5):'');
+        return;
+      }
+      const moveKey={ArrowLeft:'left',ArrowRight:'right',Home:'start',End:'end'}[event.key];
+      if(event.altKey && !event.ctrlKey && !event.metaKey && moveKey && (orderTabId!==undefined || ['tab','order-tab'].includes(choices[selected]?.kind))) {
+        event.preventDefault();quickMove(event.shiftKey && ['left','right'].includes(moveKey)?(moveKey==='left'?'start':'end'):moveKey);return;
+      }
       if (['ArrowDown','ArrowUp'].includes(event.key) && event.target===input && choices.length) {
         event.preventDefault(); selectionMoved = true; selected = (selected + (event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length;highlight();
       }
-      if (event.key === 'Enter' && event.target!==modes) {
-        event.preventDefault();
-        if(event.target===closeButton)close();
-        else if(event.target===settings)settings.click();
-        else activate(event);
-      }
+      if (event.key === 'Enter') {event.preventDefault();activate(event);}
       if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
         const choice = choices[selected];
@@ -302,15 +310,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
           input.setSelectionRange(input.value.length,input.value.length);
           updateSuggestions();
         } else {
-          const controls=[input,modes,settings,closeButton];
-          const index=controls.indexOf(root.activeElement);
-          controls[(index+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();
+          input.focus();
         }
       }
     });
     dialog.addEventListener('cancel', event => {event.preventDefault();close();});
     dialog.addEventListener('click',event => {if(event.target === dialog) close();});
-    closeButton.addEventListener('click',close);
     dialog.showModal();setMode(mode,mode==='edit'?context.sourceUrl || '':'');
   }
   showPalette(frame.contentDocument);

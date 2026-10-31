@@ -42,7 +42,7 @@ Find an open tab, revisit a bookmarked page, search a website or run a browser c
 3. Click **Load unpacked** and select the repository’s **`extension`** folder.
 4. Click the extension’s toolbar icon or press **⌘T** on macOS / **Alt+Shift+K** on Windows and Linux.
 
-Chrome may keep an older key assignment or reject a conflicting binding. Open `chrome://extensions/shortcuts` to check or change it. All modes are also accessible from the overlay’s dropdown. The extension is not currently published to the Chrome Web Store.
+Chrome may keep an older key assignment or reject a conflicting binding. Open `chrome://extensions/shortcuts` to check or change it. Modes are available through prefixes and searchable commands; no mode dropdown is needed. The extension is not currently published to the Chrome Web Store.
 
 **Updating:** download/pull the latest files, then click **Reload** on the extension card. If Chrome requests new permissions, review them and re-enable the extension. Reloading the extension uses the files inside `extension`; there is no compiled output to generate.
 
@@ -52,6 +52,8 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 | --- | --- | --- |
 | Open Search | **⌘T** | **Alt+Shift+K** |
 | Edit the current URL | **⌘L** | **Alt+Shift+L** |
+| Move selected tab left / right | **⌥← / ⌥→** | **Alt+← / Alt+→** |
+| Move selected tab to start / end | **⌥⇧← / ⌥⇧→** | **Alt+Shift+← / →** |
 | Choose a result | **↑ / ↓** | **↑ / ↓** |
 | Open / run the selection | **Enter** | **Enter** |
 | Open in a background tab | **Shift+Enter** | **Shift+Enter** |
@@ -60,6 +62,8 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 | Exit a mode / close Search | **Esc** | **Esc** |
 
 In Search, Enter activates an existing tab or opens a new one. In **Edit current URL**, Enter replaces the source page; submitting its unchanged URL reloads it. Navigation modifiers apply to URL/search results; commands and session restoration keep their explicit actions.
+
+**Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
 
 **Tab does three useful things:**
 
@@ -97,7 +101,9 @@ Known catalogue addresses such as `chrome://extensions` also open directly. Only
 
 ### Put tabs in order
 
-Choose **Arrange tabs** from the mode dropdown, or type `>` and find **Arrange tabs**. Search for the tab to move and press Enter. Then choose one position left/right, start/end, or search another tab and select **Move before…**. Enter applies the move without activating or reopening either tab; Esc returns to tab selection before leaving the mode.
+Find an open tab in ordinary Search, select it with ↑/↓ and press **Alt/Option+← or →** to move it immediately. Add **Shift** to move to the start/end instead (**Alt+Home/End** also works). The overlay stays open, refreshes the real order and keeps that tab selected for repeated moves.
+
+Type **`@`** to see tabs in their actual strip order; **`@github`** filters that list. Use the same move keys directly. For an exact destination, press Enter on a tab and choose **Move before…**. That explicit placement closes the overlay after applying; Esc returns to tab selection. Commands → Arrange tabs remains available.
 
 Positions are read from the source window in Chrome’s actual tab-strip order. Start/end stays within the same pinned state and group. Moving before another tab requires the same pinned state and group; a one-position move cannot cross their boundary. This release changes order only, with no automatic regrouping or cross-window moves.
 

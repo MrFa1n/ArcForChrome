@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.14.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.15.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -8,18 +8,18 @@ An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions,
 2. For an existing installation, click its reload button. Version 0.11 adds permissions for default-engine search, session restoration, saved site definitions and copying the URL; Chrome may require re-enabling the extension after permission review.
 3. Click the toolbar button or press **Cmd+T** on macOS (**Alt+Shift+K** elsewhere). **Cmd+L** opens URL editing (**Alt+Shift+L** elsewhere).
 
-Chrome can preserve older assignments or reject conflicts. Check `chrome://extensions/shortcuts` if a suggested key is not active. The same modes are available from the dropdown in the palette, so they remain usable without remapping. No build, external helper, runtime dependencies or account required.
+Chrome can preserve older assignments or reject conflicts. Check `chrome://extensions/shortcuts` if a suggested key is not active. Prefixes and commands provide alternate entry without global remapping. No build, external helper, runtime dependencies or account required.
 
 ## Modes
 
 | Mode | How to enter | Behavior |
 | --- | --- | --- |
-| Search | Cmd+T / toolbar / dropdown | Search open tabs, bookmarks and history; open addresses and default-engine queries |
-| Edit current URL | Cmd+L / dropdown | Select the source URL for editing; Enter replaces that page, unchanged URL reloads |
-| Commands | Tab on empty Search input, `>` prefix, or dropdown | Search explicit browser actions; ordinary search text never executes a command |
-| Site Search | A detected site name/shortcut + Tab; or dropdown | Search using a template observed in your browsing data |
-| Arrange tabs | Dropdown or Commands → Arrange tabs | Choose a tab, then a relative move or destination in the same window |
-| Recently closed | Dropdown | Search and restore a recently closed tab with its original browser session |
+| Search | Cmd+T / extension toolbar button | Search open tabs, bookmarks and history; open addresses and default-engine queries |
+| Edit current URL | Cmd+L / `> edit current URL` | Select the source URL for editing; Enter replaces that page, unchanged URL reloads |
+| Commands | Tab on empty Search input or `>` prefix | Search explicit browser actions; ordinary search text never executes a command |
+| Site Search | A detected site name/shortcut + Tab | Search using a template observed in your browsing data |
+| Arrange tabs | `@` prefix or Commands → Arrange tabs | Choose a tab, then a relative move or destination in the same window |
+| Recently closed | `<` prefix or `> recently closed tabs` | Search and restore a recently closed tab with its original browser session |
 
 Escape returns from a scoped mode to Search; Escape in Search closes. Repeating Cmd+T closes the overlay; repeating the edit command in Edit mode closes it. Backspace on an empty site query returns to the site's keyword.
 
@@ -27,7 +27,7 @@ Escape returns from a scoped mode to Search; Escape in Search closes. Repeating 
 
 Search titles and URLs. Open tabs in the source window come first, followed by explicit homepage actions, bookmarks and history. Shared URLs are merged; selected open tabs activate without a duplicate. An **Open example.com** row opens the origin of a matched deep link without its path, query or fragment. Up to eight page results and three unique homepage actions are shown.
 
-Up/Down selects, **Tab completes a selected address without navigating**, and Enter opens it. A Tab-completed full address remains the primary action even after asynchronous suggestions arrive. Empty-input Tab deliberately enters Commands instead. Modified Tab and Shift+Tab can move focus among controls.
+Up/Down selects, **Tab completes a selected address without navigating**, and Enter opens it. A Tab-completed full address remains the primary action even after asynchronous suggestions arrive. Empty-input Tab deliberately enters Commands instead. Outside completion/scope entry, Tab keeps focus on the single search input.
 
 The final **Open…** row uses the typed address or Chrome's chosen default search provider. Queries are not forced to Google. Enter waits for the current suggestion request rather than submitting a provisional result. Escape cancels a pending selection.
 
@@ -54,7 +54,7 @@ You do not need to define sites or shortcuts first. On opening the palette, the 
 
 Type a name or abbreviation and choose the suggested site with Tab. If several sites match, choose explicitly with the arrows rather than relying on a guessed destination. Your confirmed alias-to-site association is saved locally and receives priority next time. No query text or browsing activity log is saved. Sites are rediscovered on the next open; previously unseen sites with no observed search URL have a homepage action but no invented search endpoint.
 
-Click **Settings** to see automatically detected sites or clear learned shortcuts. Manual definitions remain optional overrides for unusual search formats. Add up to 20 overrides with a name, unique keyword and HTTP(S) URL containing one `%s`, e.g. `https://example.com/search?q=%s`. Defaults are empty; there is no hard-coded list of search providers. An override replaces an automatically detected template for the same origin. Reopen search after changes.
+Use **`> Search settings`** to see automatically detected sites or clear learned shortcuts. Manual definitions remain optional overrides for unusual search formats. Add up to 20 overrides with a name, unique keyword and HTTP(S) URL containing one `%s`, e.g. `https://example.com/search?q=%s`. Defaults are empty; there is no hard-coded list of search providers. An override replaces an automatically detected template for the same origin. Reopen search after changes.
 
 Chrome's internal Site Search settings are not read, and automatic detection is a conservative heuristic, not support for every website or all historical records. Credential-bearing/ambiguous URLs are excluded, and no website is contacted during discovery.
 
@@ -103,7 +103,7 @@ MIT licensed. Not published to the Chrome Web Store. Supplied engineering guidel
 
 ## Arrange tabs (0.13)
 
-Open Arrange tabs from the mode dropdown or Commands (search “arrange”, “move”, or “порядок”). First choose the tab by title/URL; then choose left/right, start/end or Move before another tab. The list shows actual one-based Chrome positions, including pinned/grouped labels. Applying a move closes the overlay without activating tabs or navigating. Escape from destinations returns to tab selection; Escape there returns to Search.
+Find an open tab in ordinary Search and use Alt+Left/Right for an immediate move, Alt+Shift+Left/Right (or Alt+Home/End) for start/end. The overlay remains open, refreshes native positions and retains the moved tab’s selection. Type `@` to enter native-order tab browsing or `@query` to filter. Keyboard movement works there too. For precise placement, Enter chooses a tab, then a Move before destination; explicit placement closes the overlay. Escape returns from destinations to tab selection, then Search.
 
 All actions resolve current positions through Chrome immediately before moving. Source and destination must still belong to the source window and have matching pinned/group states. Start/end uses the first/last tab of that section. A one-position move cannot jump over a group/pin boundary. Edges are harmless no-ops. Browser API failures leave the overlay open with an error. Group creation, transfer across groups/windows and multiselection are outside this version. No new permissions or persistent tab-order state.
 
@@ -114,3 +114,7 @@ Normal Search includes a static local catalogue of 20 Chrome destinations, match
 Known catalogue chrome:// URLs resolve as navigation rather than default-provider queries, including Tab-completed addresses. URL/search navigation modifiers remain available. Unknown internal addresses and routes with query strings or fragments are not accepted as catalogue navigation. No restart/quit or other browser-action URLs are included. The same catalogue generates Commands entries; Chrome settings and extension Search settings remain separate. No settings values, passwords or installed-extension details are read.
 
 The Extensions page address is documented in [Chrome’s installation guide](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked). Internal settings subroutes can vary across Chrome releases/platforms; actual installed-version destination checks remain manual.
+
+## Single-input interface (0.15)
+
+No header, mode dropdown, Settings button or close button. The input, results and contextual keyboard hints are the entire overlay. `>` enters Commands, `@` enters Arrange and `<` enters Recently closed from Search, preserving any pasted query after the prefix. Search settings, Edit current URL and Recently closed tabs remain searchable commands. Site names/aliases + Tab enter a site scope. Global Search/Edit shortcuts still work. Escape and empty-input Backspace return through scopes; Escape in Search closes. Pointer users can click results and dismiss via the backdrop. Input accessible labels/hints describe the active scope.
