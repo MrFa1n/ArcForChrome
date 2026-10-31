@@ -149,6 +149,8 @@ Positions are read from the source window in Chrome’s actual tab-strip order. 
 
 ### Group tabs without a toolbar
 
+Grouped tabs have a named color badge and matching side stripe in Search and Arrange, with collapsed state noted. Colors identify the native Chrome group; names keep membership readable without relying on color alone.
+
 In Search or `@`, mark tabs with **Shift+Space** or click the square beside a result. Marks survive query changes so you can collect tabs from different searches; at most 100 tabs per operation. Escape in Search clears marks before closing.
 
 | Action | Shortcut inside Spotlight |

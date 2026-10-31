@@ -329,9 +329,11 @@ try {
       if(message.mode==='group-actions')return {ok:true,suggestions:groupActionRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
       return {ok:true,suggestions:mockTabs.map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};
     };`);
-  const selectableTabs=[{id:81,title:'Alpha',url:'https://alpha.example'},{id:82,title:'Beta',url:'https://beta.example'}];
+  const selectableTabs=[{id:81,title:'Alpha',url:'https://alpha.example',groupTitle:'Work',groupColor:'purple'},{id:82,title:'Beta',url:'https://beta.example'}];
   await mount(selectableTabs,groupContext);
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.equal(await paletteCall(`function(){return this.querySelector('.group-badge').textContent;}`),'Work');
+  assert.equal(await paletteCall(`function(){return this.querySelector('[data-group-color]').dataset.groupColor;}`),'purple');
   await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
   assert.equal(await paletteCall(`function(){return this.querySelectorAll('[aria-checked="true"]').length;}`),2);
   await key('g','KeyG','',4);await send('Input.insertText',{text:'Research'});await key('Enter','Enter');
@@ -474,7 +476,7 @@ try {
     await send('Emulation.setDeviceMetricsOverride',{width:1120,height:720,deviceScaleFactor:1,mobile:false});
     await evaluate(`document.body.innerHTML='<main><small>DEMO WORKSPACE</small><h1>A little more focus.</h1><p>Your page stays right here while you find your next destination.</p><section><article>Reading list<br><span>Ideas worth coming back to</span></article><article>Current project<br><span>One good thing at a time</span></article></section></main>';document.body.style.cssText='margin:0;background:#edf1f7;color:#243048;font:16px system-ui';const style=document.createElement('style');style.textContent='main{max-width:900px;margin:80px auto}small{letter-spacing:.18em;color:#687892}h1{font-size:48px;letter-spacing:-2px;margin:18px 0}p{color:#687892}section{display:flex;gap:20px;margin-top:60px}article{background:#ffffffaa;border:1px solid #dbe2ed;border-radius:18px;padding:28px;width:40%;font-weight:600}article span{display:block;color:#7b879b;font-size:14px;font-weight:400;margin-top:12px}';document.head.append(style);
       globalThis.chrome.runtime.sendMessage=async message=>{if(message.type!=='palette:suggest')return {ok:true};if(message.mode==='commands')return {ok:true,suggestions:commandRows,warnings:[]};return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};};`);
-    const demoTabs=[{id:101,title:'GitHub · Arc for Chrome',url:'https://github.com/example/arc-for-chrome'},{id:102,title:'Chrome Extensions · Documentation',url:'https://developer.chrome.com/docs/extensions'},{id:103,title:'YouTube · Design inspiration',url:'https://www.youtube.com/'}];
+    const demoTabs=[{id:101,title:'GitHub · Arc for Chrome',url:'https://github.com/example/arc-for-chrome',groupTitle:'Development',groupColor:'blue'},{id:102,title:'Chrome Extensions · Documentation',url:'https://developer.chrome.com/docs/extensions',groupTitle:'Development',groupColor:'blue'},{id:103,title:'YouTube · Design inspiration',url:'https://www.youtube.com/',groupTitle:'Inspiration',groupColor:'purple'}];
     await mount(demoTabs,context);
     await screenshot('demo-01');
     await send('Input.insertText',{text:'github'});

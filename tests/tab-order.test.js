@@ -47,3 +47,10 @@ test('destination suggestions exclude other pin/group sections and keep query fi
  assert.deepEqual(rows.map(row=>[row.placement,row.beforeTabId]),[['before',6]]);
  await assert.rejects(()=>orderSuggestions(browser(),2,'',99));
 });
+test('arrange carries native group name/color and keeps its actual tab order',async()=>{
+ const api=browser();api.tabGroups={query:async()=>[{id:7,windowId:2,title:'Research',color:'purple'}]};
+ const rows=await orderSuggestions(api,2,'');
+ assert.equal(rows.find(row=>row.tabId===3).groupTitle,'Research');
+ assert.equal(rows.find(row=>row.tabId===4).groupColor,'purple');
+ assert.deepEqual(rows.map(row=>row.tabId),[1,2,3,4,5,6]);
+});

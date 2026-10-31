@@ -23,14 +23,14 @@ async function selection(api,windowId,ids,allowPinned=false) {
   return tabs;
 }
 export async function groupSuggestions(api,windowId,query) {
-  const existing=(await groups(api,windowId)).map(item=>({kind:'group-add',groupId:item.id,title:item.title || 'Untitled group',url:`Add selected tabs · ${item.color}`})).filter(row=>match(row,query));
+  const existing=(await groups(api,windowId)).map(item=>({kind:'group-add',groupId:item.id,groupColor:item.color,title:item.title || 'Untitled group',url:`Add selected tabs · ${item.color}`})).filter(row=>match(row,query));
   const name=query.trim() || 'New group';
   const create=name.length<=80?[{kind:'group-create',title:`Create group “${name}”`,name,url:'Group selected tabs · Enter create'}]:[];
   const exact=existing.filter(row=>row.title.toLocaleLowerCase()===query.trim().toLocaleLowerCase());
   return [...exact,...create,...existing.filter(row=>!exact.includes(row))];
 }
 export async function manageGroupSuggestions(api,windowId,query) {
-  return (await groups(api,windowId)).map(item=>({kind:'group-manage',groupId:item.id,title:item.title || 'Untitled group',url:`${item.color} · ${item.collapsed?'Collapsed':'Expanded'}`})).filter(row=>match(row,query));
+  return (await groups(api,windowId)).map(item=>({kind:'group-manage',groupId:item.id,groupColor:item.color,title:item.title || 'Untitled group',url:`${item.color} · ${item.collapsed?'Collapsed':'Expanded'}`})).filter(row=>match(row,query));
 }
 export async function groupActionSuggestions(api,windowId,id,query) {
   const item=await group(api,windowId,id);
@@ -71,4 +71,16 @@ export async function changeGroup(api,windowId,message) {
   }
   const update=message.action==='rename'?{title:name}:message.action==='color'?{color:message.color}:{collapsed:!item.collapsed};
   await api.tabGroups.update(item.id,update);
+}
+
+export async function groupMetadata(api,windowId) {
+  try {
+    const items=await api.tabGroups?.query({windowId}) || [];
+    return new Map(items.filter(item=>item.windowId===windowId).map(item=>[item.id,{
+      groupTitle:item.title || 'Untitled group',groupColor:GROUP_COLORS.includes(item.color)?item.color:'grey',groupCollapsed:Boolean(item.collapsed)
+    }]));
+  } catch {return new Map();}
+}
+export function decorateGroup(row,groupId,metadata) {
+  return groupId>=0?{...row,...(metadata.get(groupId) || {groupTitle:'Grouped',groupColor:'grey'})}:row;
 }

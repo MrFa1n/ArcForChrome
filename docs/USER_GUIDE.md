@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.19.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.19.1. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -154,3 +154,7 @@ Shift+Space or the square beside an open tab marks it; marks survive filtering a
 Cmd/Ctrl+Alt+G or Manage tab groups opens source-window groups. Enter a group to rename, choose one of Chrome's nine colors, toggle collapsed state or dissolve its membership with Ungroup · Keep all tabs open. This never invokes tab closure or saved-group deletion APIs. Native sync effects follow Chrome; no promise of preserving a saved copy after native ungrouping is made. Group creation and naming use two Chrome calls: if naming fails after creation, the error explicitly reports that tabs were grouped and can be renamed via Manage. Operations remain open for further work and are recorded as group action metadata in the local journal.
 
 The tabGroups permission is added for group metadata/update; tabs.group/ungroup provides membership. Source-window checks apply to both service-page popup and injected overlay. Ordinary page results show group titles after browser suggestions resolve. Shortcuts are local, not new global command registrations. If an OS/browser intercepts a chord, use # or searchable commands instead.
+
+## Visible group labels (0.19.1)
+
+Search, Arrange and before-placement results carry shared source-window group metadata. Grouped tabs show a named color badge and a matching left border; collapsed state is included. Group pickers also use group colors. Missing metadata falls back to a neutral Grouped badge without dropping tabs. Labels use textContent and truncate visually, retaining the full name in a tooltip. These annotations do not change ranking or native tab order.

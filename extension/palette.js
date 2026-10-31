@@ -53,6 +53,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:12px;width:100%;border:0;
       border-radius:8px;background:transparent;text-align:left;padding:12px}button.result[aria-selected=true]{background:var(--hover)}
       button.result[data-marked=true]{box-shadow:inset 3px 0 Highlight}
+      .result[data-group-color]{border-left:3px solid var(--group-color)}
+      [data-group-color=grey]{--group-color:#80868b}[data-group-color=blue]{--group-color:#4285f4}
+      [data-group-color=red]{--group-color:#ea4335}[data-group-color=yellow]{--group-color:#fbbc04}
+      [data-group-color=green]{--group-color:#34a853}[data-group-color=pink]{--group-color:#e871bd}
+      [data-group-color=purple]{--group-color:#a142f4}[data-group-color=cyan]{--group-color:#24c1e0}
+      [data-group-color=orange]{--group-color:#fa903e}
+      .group-badge{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;padding:1px 7px;margin:3px 0;border-radius:6px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--group-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--group-color) 35%,Canvas)}
+      .group-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--group-color);margin-right:6px;vertical-align:middle}
       .icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
@@ -370,9 +378,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
         const url = document.createElement('span');url.className = 'url';url.textContent = (['navigate','order-tab','move','ai-draft'].includes(choice.kind) || choice.kind.startsWith('group-')) ? choice.url
           : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
-        if(choice.groupTitle)url.textContent+=` · Group: ${choice.groupTitle}`;
+        if(choice.groupColor || choice.groupTitle)row.dataset.groupColor=choice.groupColor || 'grey';
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
-        text.append(title,url);row.append(icon,text);
+        text.append(title);
+        if(choice.groupTitle) {
+          const badge=document.createElement('span');badge.className='group-badge';
+          badge.textContent=choice.groupTitle+(choice.groupCollapsed?' · Collapsed':'');
+          badge.title=`Tab group: ${choice.groupTitle}`;text.append(badge);
+        }
+        text.append(url);row.append(icon,text);
         if (choice.kind !== 'navigate' && !choice.kind.startsWith('group-') && !['command','closed','order-tab','move','ai-draft'].includes(choice.kind)) {
           const hint = document.createElement('span');hint.className = 'hint';hint.textContent = choice.kind==='site-query'?'Enter ↵':'Tab ↹';row.append(hint);
         }

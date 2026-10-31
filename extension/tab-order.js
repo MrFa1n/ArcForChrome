@@ -1,3 +1,4 @@
+import {groupMetadata,decorateGroup} from './tab-groups.js';
 // Resolve positions from Chrome on every request; never trust a stale UI index.
 function sameSection(a,b) {
   return Boolean(a.pinned)===Boolean(b.pinned) && (a.groupId ?? -1)===(b.groupId ?? -1);
@@ -18,13 +19,13 @@ function position(tab) {
   return `Position ${tab.index+1}${tab.pinned?' · Pinned':''}${tab.groupId>=0?' · Grouped':''} · ${tab.url || ''}`;
 }
 export async function orderSuggestions(api,windowId,query,tabId) {
-  const tabs=await windowTabs(api,windowId);
-  if(tabId===undefined) return tabs.map(tab=>({kind:'order-tab',tabId:tab.id,title:tab.title || 'Untitled tab',url:position(tab)})).filter(row=>matches(row,query));
+  const [tabs,metadata]=await Promise.all([windowTabs(api,windowId),groupMetadata(api,windowId)]);
+  if(tabId===undefined) return tabs.map(tab=>decorateGroup({kind:'order-tab',tabId:tab.id,title:tab.title || 'Untitled tab',url:position(tab)},tab.groupId,metadata)).filter(row=>matches(row,query));
   const tab=selectedTab(tabs,tabId);
   const actions=[['left','Move one position left / up'],['right','Move one position right / down'],['start','Move to start'],['end','Move to end']]
     .map(([placement,title])=>({kind:'move',placement,title,url:`${tab.title || 'Selected tab'} · Within its pinned/group section`}));
   const destinations=tabs.filter(other=>other.id!==tabId && sameSection(tab,other))
-    .map(other=>({kind:'move',placement:'before',beforeTabId:other.id,title:`Move before ${other.title || 'Untitled tab'}`,url:position(other)}));
+    .map(other=>decorateGroup({kind:'move',placement:'before',beforeTabId:other.id,title:`Move before ${other.title || 'Untitled tab'}`,url:position(other)},other.groupId,metadata));
   return [...actions,...destinations].filter(row=>matches(row,query));
 }
 export async function moveTab(api,windowId,message) {
