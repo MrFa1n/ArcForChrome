@@ -193,3 +193,13 @@ test('group mutations stay in the validated source window and preserve native ta
  await assert.rejects(()=>paletteAction(api,{type:'palette:group',action:'add',tabIds:[5],groupId:7},{id:'foreign'}));
  assert.equal(changes.length,1);assert.deepEqual(api.calls,[]);
 });
+test('bookmark mutation routes only selected source-window tabs to the requested folder',async()=>{
+ const api=browser();const created=[];
+ api.tabs.get=async id=>({id,windowId:id===9?9:2,title:'Selected',url:'https://selected.example/'});
+ api.bookmarks={getTree:async()=>[{id:'0',children:[{id:'folder',parentId:'0',title:'Work'}]}],getChildren:async()=>[],create:async data=>created.push(data)};
+ await paletteAction(api,{type:'palette:bookmark',operation:'add',folderId:'folder',tabIds:[5]},sender);
+ assert.deepEqual(created,[{parentId:'folder',title:'Selected',url:'https://selected.example/'}]);
+ await assert.rejects(()=>paletteAction(api,{type:'palette:bookmark',operation:'add',folderId:'folder',tabIds:[9]},sender));
+ await assert.rejects(()=>paletteAction(api,{type:'palette:bookmark',operation:'add',folderId:'folder',tabIds:[5]},{id:'foreign'}));
+ assert.equal(created.length,1);assert.deepEqual(api.calls,[]);
+});

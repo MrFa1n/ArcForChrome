@@ -1,5 +1,7 @@
 import {browserPageCommands} from './browser-pages.js';
 export const COMMANDS = [
+  {command:'bookmark-tabs',title:'Bookmark selected tabs in a folder',aliases:'save add bookmarks сохранить закладки добавить папка'},
+  {command:'remove-bookmarks',title:'Remove selected bookmarks from a folder',aliases:'delete bookmarks удалить закладки папка'},
   {command:'group-tabs',title:'Group selected tabs',aliases:'create add group создать группу объединить вкладки добавить'},
   {command:'ungroup-tabs',title:'Remove selected tabs from groups',aliases:'ungroup убрать вкладки из группы'},
   {command:'manage-groups',title:'Manage tab groups',aliases:'rename color collapse dissolve группы переименовать цвет свернуть разгруппировать'},

@@ -171,6 +171,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let orderTabId;
     const markedTabs=new Set();
     let groupTargetIds=[];
+    let bookmarkTargetIds=[];
+    let bookmarkOperation='add';
+    let notice='';
     let managedGroupId;
     let completedAddress = null;
     let pendingQuery = Promise.resolve();
@@ -233,10 +236,22 @@ export function mountPalette(tabs, floating = false, context = {}) {
       return [id];
     }
     function markTab(id) {
-      if(busy)return;
+      if(busy)return;notice='';
       if(markedTabs.has(id))markedTabs.delete(id);
       else if(markedTabs.size<100)markedTabs.add(id);
       else {error.textContent='Select at most 100 tabs';return;}
+      render();
+    }
+    function startBookmarks(operation='add',value='') {
+      if(mode!=='bookmark-folders')bookmarkTargetIds=selectedTabIds();bookmarkOperation=operation;setMode('bookmark-folders',value);
+    }
+    async function performBookmark(folderId,revision) {
+      const response=await chrome.runtime.sendMessage({type:'palette:bookmark',operation:bookmarkOperation,tabIds:bookmarkTargetIds,folderId});
+      if(!response?.ok)throw new Error(response?.error || 'Could not change bookmarks');
+      if(dismissed || closing || revision!==queryRevision)return;
+      const action=bookmarkOperation==='add'?'Saved':'Removed';
+      markedTabs.clear();bookmarkTargetIds=[];setMode('search');
+      notice=`${action} ${response.changed ?? 0}${response.skipped?` · ${response.skipped} already saved`:''} · ${response.folderPath || 'Selected folder'}`;
       render();
     }
     function startGrouping(value='') {groupTargetIds=selectedTabIds();managedGroupId=undefined;setMode('groups',value);}
@@ -254,10 +269,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       finally{busy=false;}
     }
     function setMode(next,value='',tabId,preferredId,keepResults=false) {
-      if(!keepResults)moveQueue.length=0;
+      if(!keepResults){moveQueue.length=0;notice='';}
       orderTabId=next==='order'?tabId:undefined;
       mode=next;completedAddress=null;input.value=value;
-      input.placeholder=mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
+      input.placeholder=mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
         :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
       input.setAttribute('aria-label',input.placeholder);
       if(!keepResults)updateSuggestions(preferredId);input.focus();
@@ -279,6 +294,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(dismissed || closing || actionRevision!==queryRevision) return;
         const choice=choices[selected];
         if(!choice) return;
+        if(choice.command==='bookmark-tabs'){startBookmarks('add');return;}
+        if(choice.command==='remove-bookmarks'){startBookmarks('remove');return;}
+        if(choice.kind==='bookmark-folder'){await performBookmark(choice.folderId,actionRevision);return;}
         if(choice.command==='group-tabs'){startGrouping();return;}
         if(choice.command==='manage-groups'){setMode('group-manage');return;}
         if(choice.command==='ungroup-tabs'){await performGroup({action:'remove',tabIds:selectedTabIds()},actionRevision);return;}
@@ -329,10 +347,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
     function render(preferredId) {
       const oldPositions=new Map([...results.children].map(row=>[row.dataset.key,row.getBoundingClientRect().top]));
       const previous = choices[selected];
-      const previousKey = previous && `${previous.kind}:${previous.groupId ?? previous.color ?? previous.action ?? previous.draftId ?? previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
+      const previousKey = previous && `${previous.kind}:${previous.folderId ?? previous.groupId ?? previous.color ?? previous.action ?? previous.draftId ?? previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
       choices = [...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['tab','browser-page'].includes(item.kind))];
       const query=input.value.trim();
-      if(['commands','closed','order','drafts'].includes(mode) || mode.startsWith('group')) choices=suggestions;
+      if(['commands','closed','order','drafts','bookmark-folders'].includes(mode) || mode.startsWith('group')) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
         const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
@@ -360,8 +378,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(mode.startsWith('group'))footer.textContent=mode==='groups'?`Grouping ${groupTargetIds.length} tabs · Enter create/add · Esc back`:mode==='group-rename'?'Enter rename · Esc back':'Manage groups · Enter choose · Esc back';
       else if(markedTabs.size)footer.textContent=`${markedTabs.size} marked · Shift+Space select · Cmd/Ctrl+G group · Cmd/Ctrl+Shift+G remove`;
       else if(mode==='search')footer.textContent='↑ ↓ select · Shift+Space mark · Cmd/Ctrl+G group · > commands';
+      if(mode==='bookmark-folders')footer.textContent=`${bookmarkOperation==='add'?'Save':'Remove'} bookmarks for ${bookmarkTargetIds.length} tab(s) · Enter choose folder · Esc back`;
+      if(mode==='search' && notice)footer.textContent=notice;
       if(inlineSites.length)footer.textContent=uniqueInline?`Search ${inlineSites[0].site.name} · Enter send query · Tab enter scope · ↓ other results`:'Shared shortcut · ↓ choose site · Enter default search';
-      const retained = choices.findIndex(choice => `${choice.kind}:${choice.groupId ?? choice.color ?? choice.action ?? choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
+      const retained = choices.findIndex(choice => `${choice.kind}:${choice.folderId ?? choice.groupId ?? choice.color ?? choice.action ?? choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
       const preferred=preferredId===undefined?-1:choices.findIndex(choice=>(choice.tabId ?? choice.id)===preferredId);
       selected = preferred>=0?preferred:selectionMoved && retained >= 0 ? retained : 0;
       if(preferred>=0)selectionMoved=true;
@@ -374,9 +394,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕'})[choice.kind];
         if(tabId!==undefined){icon.textContent=markedTabs.has(tabId)?'☑':'☐';icon.title='Select tab · Shift+Space';icon.addEventListener('click',event=>{event.stopPropagation();markTab(tabId);});}
         else if(choice.kind.startsWith('group-'))icon.textContent='▤';
+        else if(choice.kind==='bookmark-folder'){icon.textContent=bookmarkOperation==='add'?'☆':'−';row.title=choice.title;}
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = (['navigate','order-tab','move','ai-draft'].includes(choice.kind) || choice.kind.startsWith('group-')) ? choice.url
+        const url = document.createElement('span');url.className = 'url';url.textContent = (['navigate','order-tab','move','ai-draft','bookmark-folder'].includes(choice.kind) || choice.kind.startsWith('group-')) ? choice.url
           : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
         if(choice.groupColor || choice.groupTitle)row.dataset.groupColor=choice.groupColor || 'grey';
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
@@ -387,7 +408,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           badge.title=`Tab group: ${choice.groupTitle}`;text.append(badge);
         }
         text.append(url);row.append(icon,text);
-        if (choice.kind !== 'navigate' && !choice.kind.startsWith('group-') && !['command','closed','order-tab','move','ai-draft'].includes(choice.kind)) {
+        if (choice.kind !== 'navigate' && !choice.kind.startsWith('group-') && !['command','closed','order-tab','move','ai-draft','bookmark-folder'].includes(choice.kind)) {
           const hint = document.createElement('span');hint.className = 'hint';hint.textContent = choice.kind==='site-query'?'Enter ↵':'Tab ↹';row.append(hint);
         }
         row.addEventListener('click',event => {if(busy)return;selected=index;selectionMoved=true;activate(event);});
@@ -404,6 +425,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function updateSuggestions(preferredId) {
       const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts'}[input.value[0]];
+      if(mode==='search' && input.value.startsWith('*')){try{startBookmarks('add',input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && input.value.startsWith('#')){try{startGrouping(input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && prefixMode) {setMode(prefixMode,input.value.slice(1).trimStart());return;}
       const revision=++queryRevision;
@@ -412,7 +434,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-      suggestions=['commands','closed','order','drafts'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
+      suggestions=['commands','closed','order','drafts','bookmark-folders'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
         :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
@@ -427,7 +449,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(mode.startsWith('site:')) {resolvePending();return;}
       timer=setTimeout(async()=>{
         try {
-          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions'].includes(mode)?{mode}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
+          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions','bookmark-folders'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];
@@ -465,7 +487,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       } catch(failure) {if(!dismissed && !closing && revision===queryRevision)error.textContent=failure.message;}
       finally {moveQueue.length=0;moving=false;busy=false;}
     }
-    input.addEventListener('input',()=>{completedAddress=null;updateSuggestions();});
+    input.addEventListener('input',()=>{notice='';completedAddress=null;updateSuggestions();});
     input.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
     dialog.addEventListener('keydown', event => {
       if (event.isComposing) return;
@@ -485,6 +507,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
         else if(mode!=='search') setMode('search');
         else if(markedTabs.size){markedTabs.clear();render();}
         else close();
+        return;
+      }
+      if((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLocaleLowerCase()==='d') {
+        event.preventDefault();if(busy)return;
+        try{startBookmarks(event.shiftKey?'remove':'add');}catch(failure){error.textContent=failure.message;}
         return;
       }
       if((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase()==='g') {
@@ -530,7 +557,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(!event.shiftKey && event.target===input && choice?.kind==='site-query') {enterSite(sites.find(site=>site.key===choice.site),choice.alias,choice.query);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && site) {enterSite(site);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && !input.value.trim()) {setMode('commands');return;}
-        if (!event.shiftKey && event.target === input && !choice?.kind.startsWith('group-') && !['navigate','command','closed','site','order-tab','move','ai-draft'].includes(choice?.kind) && choice?.url) {
+        if (!event.shiftKey && event.target === input && !choice?.kind.startsWith('group-') && !['navigate','command','closed','site','order-tab','move','ai-draft','bookmark-folder'].includes(choice?.kind) && choice?.url) {
           input.value = choice.url;
           completedAddress = choice.url;
           input.focus();

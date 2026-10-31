@@ -362,6 +362,45 @@ try {
   assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Selected tab was closed');
   await key('Escape','Escape');await key('Escape','Escape');
   assert.deepEqual(await evaluate('pageKeys'),[],'group keys must remain isolated from the page');
+  // Folder-scoped bookmarking reuses marked selection and keeps the palette open.
+  await evaluate(`globalThis.bookmarkFails=false;chrome.runtime.sendMessage=async message=>{
+    if(message.type==='palette:suggest') {
+      if(message.mode==='bookmark-folders')return {ok:true,suggestions:[{kind:'bookmark-folder',folderId:'work',title:'Bookmarks bar / Work',url:message.operation==='remove'?'Remove 2 matching bookmarks here':'Save selected tabs here'}],warnings:[]};
+      if(message.mode==='commands')return {ok:true,suggestions:commandRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
+      return {ok:true,suggestions:mockTabs.map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};
+    }
+    messages.push(message);
+    if(message.type==='palette:bookmark' && bookmarkFails)return {ok:false,error:'Folder was removed'};
+    if(message.type==='palette:bookmark')return {ok:true,changed:message.tabIds.length,skipped:0,folderPath:'Bookmarks bar / Work'};
+    return {ok:true};
+  };`);
+  await mount(selectableTabs,groupContext);
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
+  await key('d','KeyD','',4);
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a folder to save bookmarks…');
+  await send('Input.insertText',{text:'Work'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:bookmark',operation:'add',tabIds:[81,82],folderId:'work'});
+  assert.ok(await paletteCall(`function(){return this.querySelector('footer').textContent.includes('Saved 2');}`));
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('d','KeyD','',10);await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:bookmark',operation:'remove',tabIds:[81],folderId:'work'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('ArrowDown','ArrowDown');await key('d','KeyD','',2);await key('d','KeyD','',10);await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:bookmark',operation:'remove',tabIds:[82],folderId:'work'},'switching save/remove must keep the original chosen tab');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await evaluate('bookmarkFails=true');await key('d','KeyD','',4);await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Folder was removed');
+  await evaluate('bookmarkFails=false');await key('Enter','Enter');
+
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await send('Input.insertText',{text:'*Work'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:bookmark',operation:'add',tabIds:[81],folderId:'work'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('Tab','Tab');await send('Input.insertText',{text:'bookmark selected'});await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a folder to save bookmarks…');
+  await key('Escape','Escape');await key('Escape','Escape');
+  assert.deepEqual(await evaluate('pageKeys'),[],'bookmark keys must not reach the host page');
   // Browser sections participate in ordinary Search and URL completion.
   const chromeRows=browserPageSuggestions('расширения');
   const openChromeRows=mergeBrowserPages([],[{id:71,title:'Localized Chrome page',url:'chrome://extensions/'}],'расширения');
@@ -547,7 +586,7 @@ try {
   await evaluate("document.querySelector('#clear').click()");
   await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
   assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),0);
-  console.log('PASS: real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
+  console.log('PASS: real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, folder-scoped bookmark save/removal, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
   if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();

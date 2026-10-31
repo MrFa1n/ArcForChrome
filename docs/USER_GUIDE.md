@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.19.1. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.20.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -78,7 +78,8 @@ No telemetry, backend, online autocomplete, permanent host access or persistent 
 | --- | --- |
 | `tabs` | Read tab titles/URLs and perform explicit navigation/actions |
 | `activeTab`, `scripting` | Show search after explicit invocation |
-| `history`, `bookmarks` | Read local matching suggestions; never edit/delete these sources |
+| `history` | Read local suggestions without editing history |
+| `bookmarks` | Read suggestions and explicit folder-scoped bookmark edits |
 | `search` | Execute queries through Chrome's selected provider |
 | `sessions` | List and restore recently closed tabs |
 | `storage` | Site overrides/aliases, bounded action journal and temporary AI recovery |
@@ -158,3 +159,11 @@ The tabGroups permission is added for group metadata/update; tabs.group/ungroup 
 ## Visible group labels (0.19.1)
 
 Search, Arrange and before-placement results carry shared source-window group metadata. Grouped tabs show a named color badge and a matching left border; collapsed state is included. Group pickers also use group colors. Missing metadata falls back to a neutral Grouped badge without dropping tabs. Labels use textContent and truncate visually, retaining the full name in a tooltip. These annotations do not change ranking or native tab order.
+
+## Folder-scoped bookmarks (0.20)
+
+Use marked tabs or the highlighted/source tab. Cmd/Ctrl+D opens save-folder selection; Cmd/Ctrl+Shift+D opens removal selection. *path enters save selection directly, with searchable commands as an alternative when Chrome intercepts a chord. Targets freeze on entry and remain unchanged when switching add/remove in that picker. Name/path matching is local, with up to 100 folder results; more specific text can find later folders. Account/device roots are distinguished when Chrome exposes syncing metadata.
+
+The complete path is shown (and available as a hover title). Root/managed folders are excluded. Saving canonicalizes HTTP(S)/known Chrome section URLs, rejects embedded credentials/unsupported schemes, deduplicates selected URLs and skips copies already directly in the destination without overwriting custom titles. Removal lists folders containing selected URLs and shows count; it removes all matching direct bookmark copies, not nested records, folders, unrelated pages or copies elsewhere. No selection action navigates or closes tabs. Native syncing may propagate changes.
+
+Mutation-time revalidation uses fresh tabs/tree/children; selected IDs must be distinct, current-window and bounded to 100. Extension-originated writes serialize to avoid own concurrent duplicate creation. Chrome provides no multi-record transaction: partial API failure reports the completed count and retains those changes. Retry refreshes state and skips successful additions. The footer reports success/skips and chosen path, and the palette stays open. Creating folders and arbitrary saved-bookmark editing are outside this feature. No new permission beyond the existing bookmarks grant.

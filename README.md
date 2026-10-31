@@ -163,6 +163,21 @@ After **Cmd/Ctrl+G**, type a name and Enter to create a group; an exact existing
 
 Group management supports rename, color, collapse/expand and **Ungroup · Keep all tabs open**. No group action closes tabs. This manages open groups in the source window; it does not offer deletion of saved groups on other devices. Pinned tabs must be unpinned explicitly in Chrome before grouping. The `tabGroups` permission supplies names, colors and group state.
 
+### Bookmarks in a chosen folder
+
+Mark tabs using the same **Shift+Space** or result squares, then:
+
+| Action | Shortcut inside Spotlight |
+| --- | --- |
+| Save bookmarks | **Cmd/Ctrl+D** |
+| Remove bookmarks for selected pages | **Cmd/Ctrl+Shift+D** |
+
+Search for a folder by name or full path, such as `Bookmarks bar / Work / AI`, and press Enter. **`*Work`** opens the save picker. Commands include **Bookmark selected tabs in a folder** and **Remove selected bookmarks from a folder**. With no marks, the highlighted open tab or original source tab is used. Switching save/remove while choosing a folder keeps the same targets.
+
+Saving checks the chosen folder and skips existing URLs without overwriting their titles. Removal lists matching folders and counts; it removes all copies of the selected URLs directly inside that folder. Subfolders, unrelated pages and copies elsewhere are preserved. The palette stays open and reports the result.
+
+Root/managed destinations cannot be modified. Web pages and known Chrome sections are supported; creating folders is outside this mode. Native bookmark changes can sync through Chrome. No new permission: the existing bookmarks grant now also supports these explicit edits. If a browser intercepts a chord, use the prefix or commands.
+
 ### Use the browser’s appearance
 
 The overlay follows effective light/dark rendering preferences and uses browser-native colors and scalable type. Custom Chrome wallpaper and profile accents are not imported.
@@ -184,7 +199,8 @@ Suggestions are processed locally. There is **no telemetry, backend, online auto
 | --- | --- |
 | `tabs` | Read tab titles/URLs, activate tabs and perform requested navigation |
 | `activeTab`, `scripting` | Show the overlay when invoked |
-| `history`, `bookmarks` | Read local suggestions; never edit or delete these sources |
+| `history` | Read local suggestions without editing/deleting history |
+| `bookmarks` | Read suggestions and explicitly save/remove selected pages in a chosen folder |
 | `search` | Use Chrome’s chosen default provider |
 | `sessions` | List and restore recently closed tabs |
 | `storage` | Site templates/aliases, local action history and temporary AI prompt recovery |

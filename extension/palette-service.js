@@ -1,3 +1,4 @@
+import {bookmarkFolders,changeBookmarks} from './tab-bookmarks.js';
 import {GROUP_COLORS,groupSuggestions,manageGroupSuggestions,groupActionSuggestions,changeGroup} from './tab-groups.js';
 import {recordActivity} from './activity-store.js';
 import {BUILTIN_SITES} from './search-providers.js';
@@ -87,7 +88,7 @@ async function executeAction(api,context,id) {
   if(browserUrl) return navigate(api,context,browserUrl);
   if(id==='activity') return api.tabs.create({windowId:context.windowId,url:api.runtime.getURL('activity.html')});
   if(id==='clear-prompts') return clearPrompts(api);
-  if(['order-tabs','closed-tabs','edit-url','recover-prompts','group-tabs','manage-groups','ungroup-tabs'].includes(id)) throw new Error('Choose this mode in the command bar');
+  if(['order-tabs','closed-tabs','edit-url','recover-prompts','group-tabs','manage-groups','ungroup-tabs','bookmark-tabs','remove-bookmarks'].includes(id)) throw new Error('Choose this mode in the command bar');
   if(id==='reopen') return restore(api);
   if(id==='settings') return api.runtime.openOptionsPage();
   if(id==='new-window') return api.windows.create({type:'normal'});
@@ -101,6 +102,10 @@ async function executeAction(api,context,id) {
 async function performAction(api,message,context) {
   if(message.type==='palette:suggest') {
     if(typeof message.query!=='string' || message.query.length>8192) throw new Error('Invalid query');
+    if(message.mode==='bookmark-folders') {
+      const suggestions=await bookmarkFolders(api,context.windowId,message.query,message.operation,message.tabIds);
+      return {suggestions,domains:[],warnings:suggestions.length?[]:[message.operation==='remove'?'No matching bookmarks in writable folders':'No matching writable folders']};
+    }
     if(message.mode==='groups')return {suggestions:await groupSuggestions(api,context.windowId,message.query),domains:[],warnings:[]};
     if(message.mode==='group-manage')return {suggestions:await manageGroupSuggestions(api,context.windowId,message.query),domains:[],warnings:[]};
     if(message.mode==='group-actions')return {suggestions:await groupActionSuggestions(api,context.windowId,message.groupId,message.query),domains:[],warnings:[]};
@@ -110,6 +115,7 @@ async function performAction(api,message,context) {
     if(message.mode==='closed') return {suggestions:await closedSuggestions(api,message.query),domains:[],warnings:[]};
     return findSuggestions(api,context.windowId,message.query);
   }
+  if(message.type==='palette:bookmark')return changeBookmarks(api,context.windowId,message);
   if(message.type==='palette:group')return changeGroup(api,context.windowId,message);
   if(message.type==='palette:move') {
     await moveTab(api,context.windowId,message);
@@ -153,6 +159,7 @@ function activityEvent(message,status) {
   if(action==='move')label=`Move tab ${message.tabId} · ${message.placement}`;
   if(action==='activate')label=`Activate tab ${message.tabId}`;
   if(action==='restore')label='Restore closed tab';
+  if(action==='bookmark')label=`Bookmarks · ${message.operation} · ${message.tabIds?.length || 0} tabs`;
   if(action==='group')label=`Tab group · ${message.action}${message.tabIds?` · ${message.tabIds.length} tabs`:''}`;
   if(action==='recover')label='Recover AI prompt';
   return {action,label,status,text:typeof message.query==='string'?message.query:undefined};

@@ -123,3 +123,9 @@ Installed smoke checklist: reload/re-enable with tabGroups permission; mark tabs
 ## Group visuals v0.19.1
 
 Unit regression verifies Arrange includes actual group name/color while preserving tab-strip order. Real browser regression checks the named badge and color attribute alongside multiselect/group actions. Inspect fictional light/dark demo captures for badge readability, multiple group colors, marked-tab contrast and truncation at narrow sizes. Metadata failure must retain grouped tabs with a neutral fallback. No extra permission.
+
+## Folder-scoped bookmark editing v0.20.0
+
+Unit/service checks cover full folder paths, managed/root exclusion, source-window IDs, add deduplication, scoped direct-child removal preserving other folders, partial-error progress, own concurrent-save serialization and sender validation. The browser harness verifies marked multi-tab save, Cmd/Ctrl chords, removal, * prefix, command entry, result notices and host-key isolation with mocked Chrome APIs.
+
+Installed smoke checklist: save two marked tabs in a chosen nested folder, repeat and verify no new copies/title overwrite. Save copies elsewhere, remove from the original folder and confirm unrelated/cross-folder/subfolder entries survive. Check removal counts, empty matches, read-only managed folders, account/local roots, stale source tabs/folders and unsupported URLs. Switch add/remove while the picker is open and confirm target tabs remain the same. Test normal overlay/protected popup and actual shortcut interception, using * or commands if needed. No new permission should be requested. Confirm journal metadata and native Chrome sync behavior without committing personal bookmark fixtures.
