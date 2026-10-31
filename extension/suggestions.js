@@ -1,3 +1,4 @@
+import {mergeBrowserPages} from './browser-pages.js';
 import { matchPage, queryVariants } from './search-match.js';
 
 const LIMIT = 8;
@@ -77,5 +78,5 @@ export async function findSuggestions(api, windowId, input) {
     const [saved,visited]=recent.map(result=>result.status==='fulfilled'?result.value:[]);
     suggestions=rankSuggestions(tabs,[...bookmarks,...saved],[...history,...visited],query);
   }
-  return {suggestions,domains:domainSuggestions(suggestions,query),warnings};
+  return {suggestions:mergeBrowserPages(suggestions,tabs,query),domains:domainSuggestions(suggestions,query),warnings};
 }

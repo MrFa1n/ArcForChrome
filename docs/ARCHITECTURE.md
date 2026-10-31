@@ -48,3 +48,7 @@ The options page shows detected sites separately from manual overrides and suppo
 ## Tab order (0.13)
 
 `tab-order.js` reads source-window tabs afresh for both suggestions and moves. It sorts by native index, validates integer IDs against that window, and resolves relative moves without trusting UI indices. Before-target indices account for removing the source tab. Pin state and group identity must match, and adjacent moves reject boundaries. The worker issues only tabs.move; no activation, navigation, persistence or new permission is involved. The two-stage Arrange UI uses the same debounced/cancelable suggestions and keyboard isolation as Search. Chrome state can still change between query and move; API failures remain visible for retry.
+
+## Browser sections (0.14)
+
+`browser-pages.js` owns the Chrome destination catalogue, translated aliases, ranked matches, reuse of open tabs and command entries. `suggestions.js` adds catalogue results after bounded source matching, independently of source availability. Empty input gets no catalogue rows. `model.destination` resolves only exact catalogue URLs (canonical trailing slash; no credentials, port, query or fragment). Unknown internal addresses retain the ordinary default-provider path. The UI treats catalogue results as explicit navigation, preserving URL completion and navigation modifiers. Browser-section commands resolve through the same catalogue after the command whitelist check. Nothing reads or modifies Chrome settings or password contents.

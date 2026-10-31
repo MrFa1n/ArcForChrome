@@ -118,3 +118,25 @@ test('arranging uses validated source-window tabs and does not activate or navig
  await assert.rejects(()=>paletteAction(api,{type:'palette:move',tabId:8,placement:'end'},{id:'foreign'}));
  await assert.rejects(()=>paletteAction(api,{type:'palette:move',tabId:99,placement:'end'},sender));
 });
+test('browser page suggestions open internal destinations instead of submitting web searches',async()=>{
+ const api=browser();api.tabs.query=async()=>[];
+ const result=await paletteAction(api,{type:'palette:suggest',query:'расширения'},sender);
+ assert.equal(result.suggestions.find(row=>row.kind==='browser-page').url,'chrome://extensions/');
+ await paletteAction(api,{type:'palette:navigate',query:'chrome://extensions/'},sender);
+ assert.deepEqual(api.calls,[['create',{windowId:2,active:true,url:'chrome://extensions/'}]]);
+});
+test('known Chrome addresses retain background/current navigation behavior',async()=>{
+ const api=browser();
+ await paletteAction(api,{type:'palette:navigate',query:'chrome://settings',target:'background'},sender);
+ await paletteAction(api,{type:'palette:navigate',query:'chrome://extensions',target:'current'},sender);
+ assert.deepEqual(api.calls,[['create',{windowId:2,active:false,url:'chrome://settings/'}],['update',5,{url:'chrome://extensions/'}]]);
+});
+
+test('Chrome settings command is distinct from extension Search settings',async()=>{
+ const api=browser();
+ const response=await paletteAction(api,{type:'palette:suggest',query:'настройки',mode:'commands'},sender);
+ assert.ok(response.suggestions.some(row=>row.command==='browser:settings'));
+ await paletteAction(api,{type:'palette:command',command:'browser:settings'},sender);
+ assert.deepEqual(api.calls,[['create',{windowId:2,active:true,url:'chrome://settings/'}]]);
+ await assert.rejects(()=>paletteAction(api,{type:'palette:command',command:'browser:quit'},sender));
+});

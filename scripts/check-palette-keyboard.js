@@ -1,3 +1,4 @@
+import {browserPageSuggestions,mergeBrowserPages} from '../extension/browser-pages.js';
 import {orderSuggestions} from '../extension/tab-order.js';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -207,6 +208,25 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://fast.example/'},'early Enter must wait for final suggestions, not provisional raw navigation');
   await mount([],context);await send('Input.insertText',{text:'reload'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'reload'},'ordinary searches must not execute commands');
+  // Browser sections participate in ordinary Search and URL completion.
+  const chromeRows=browserPageSuggestions('расширения');
+  const openChromeRows=mergeBrowserPages([],[{id:71,title:'Localized Chrome page',url:'chrome://extensions/'}],'расширения');
+  await evaluate(`globalThis.chromeRows=${JSON.stringify(chromeRows)};globalThis.openChromeRows=${JSON.stringify(openChromeRows)};globalThis.useOpenChrome=false;
+    globalThis.chrome.runtime.sendMessage=async message=>{
+      if(message.type==='palette:suggest')return {ok:true,suggestions:useOpenChrome?openChromeRows:chromeRows,warnings:[]};
+      messages.push(message);return {ok:true};
+    };`);
+  await mount([],context);await send('Input.insertText',{text:'расширения'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.ok(await paletteCall(`function(){return this.querySelector('#results').textContent.includes('Chrome page');}`));
+  await key('Tab','Tab');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'chrome://extensions/');
+  await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'chrome://extensions/'});
+  await evaluate('useOpenChrome=true');
+  await mount([],context);await send('Input.insertText',{text:'расширения'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:activate',tabId:71});
+  assert.deepEqual(await evaluate('pageKeys'),[],'Chrome page search must isolate host shortcuts');
   // Arrange is a two-step action: choosing a tab never activates/navigates it.
   const arrangeApi={tabs:{query:async()=>[
     {id:41,windowId:2,index:0,title:'Alpha',url:'https://alpha.example'},
@@ -295,7 +315,7 @@ try {
   assert.match(await evaluate("document.querySelector('#status').textContent"),/HTTP/,'settings reject unsafe templates');
   await send('Emulation.setDeviceMetricsOverride',{width:900,height:1100,deviceScaleFactor:1,mobile:false});
   await screenshot('options');
-  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
+  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
   if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();

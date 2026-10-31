@@ -1,7 +1,10 @@
+import {browserPageUrl} from './browser-pages.js';
 export function destination(input) {
   if(typeof input!=='string' || input.length>8192) throw new Error('Invalid query');
   const value=input.trim();
   if(!value) return null;
+  const internal=browserPageUrl(value);
+  if(internal) return {type:'url',url:internal};
   const hasScheme=/^[a-z][a-z\d+.-]*:/i.test(value) && !/^[\w.-]+:\d+(?:\/|$)/.test(value);
   try {
     const url=new URL(hasScheme?value:`https://${value}`);

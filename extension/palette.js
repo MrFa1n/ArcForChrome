@@ -104,7 +104,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let timer;
     let suggestions = [];
     let domains = [];
-    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search'};
+    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page'};
     const heldKeys = new Set();
     let closing = false;
     function close() {
@@ -206,7 +206,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     function render() {
       const previous = choices[selected];
       const previousKey = previous && `${previous.kind}:${previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
-      choices = [...suggestions.filter(item => item.kind === 'tab'), ...domains, ...suggestions.filter(item => item.kind !== 'tab')];
+      choices = [...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['tab','browser-page'].includes(item.kind))];
       const query=input.value.trim();
       if(['commands','closed','order'].includes(mode)) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
@@ -226,7 +226,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
         row.setAttribute('role','option');row.tabIndex = -1;
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔'})[choice.kind];
+        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','browser-page':'⚙'})[choice.kind];
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
         const url = document.createElement('span');url.className = 'url';url.textContent = ['navigate','order-tab','move'].includes(choice.kind) ? choice.url

@@ -11,3 +11,5 @@ Storage contains only optional Site Search overrides and explicitly confirmed sh
 The overlay is injected through activeTab/scripting on invocation. No host permissions, persistent content scripts, remote code, telemetry or backend are present. Its iframe isolates normal keyboard events from host page handlers; it does not protect against hostile sites removing the overlay DOM.
 
 Changes introducing external services, wider permissions or persistent browsing data need documentation and review.
+
+Browser-section navigation uses a static allowlist of internal Chrome destinations. It opens their UI without reading settings, passwords or installed-extension details. Arbitrary browser-action URLs (for example restart/quit) are not accepted as direct catalogue navigation.

@@ -1,3 +1,4 @@
+import {browserPageCommands} from './browser-pages.js';
 export const COMMANDS = [
   {command:'order-tabs',title:'Arrange tabs',aliases:'move reorder position порядок вкладки переместить расположить'},
   {command:'reload',title:'Reload current page',aliases:'refresh перезагрузить обновить'},
@@ -7,7 +8,8 @@ export const COMMANDS = [
   {command:'downloads',title:'Open downloads',aliases:'загрузки'},
   {command:'reopen',title:'Reopen last closed tab',aliases:'restore восстановить закрытую'},
   {command:'settings',title:'Search settings',aliases:'site search настройки поиск'},
-  {command:'new-window',title:'New browser window',aliases:'новое окно'}
+  {command:'new-window',title:'New browser window',aliases:'новое окно'},
+  ...browserPageCommands()
 ];
 
 export function commandSuggestions(query) {

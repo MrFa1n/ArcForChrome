@@ -87,6 +87,14 @@ Settings shows detected sites, lets you clear learned shortcuts and offers optio
 
 A saved `example.com/articles/some-page` can produce both the original page and an **Open example.com** action. Open tabs in the source window stay first. Shared URLs are merged so the same destination is not repeated across history and bookmarks.
 
+### Search Chrome itself
+
+Type **extensions**, **settings**, **passwords**, **bookmarks** or their Russian names directly in Search. Chrome sections appear with a **Chrome page** label; Enter opens the selected section, and an already open section in the source window is offered as a tab instead. Tab completes its internal address for editing.
+
+The catalogue includes extensions and their shortcuts, browser settings, history, downloads, bookmarks, Password Manager, privacy/security, site permissions, appearance, search engines, languages, accessibility, performance, startup, default browser, autofill, About Chrome, version information and Chrome’s internal-page directory. These destinations also appear in Commands; **Open Chrome settings** is separate from the extension’s **Search settings**.
+
+Known catalogue addresses such as `chrome://extensions` also open directly. Only listed internal routes are recognized; this is navigation to browser pages, not a search inside their private contents or automatic modification of settings. No new permissions are required.
+
 ### Put tabs in order
 
 Choose **Arrange tabs** from the mode dropdown, or type `>` and find **Arrange tabs**. Search for the tab to move and press Enter. Then choose one position left/right, start/end, or search another tab and select **Move before…**. Enter applies the move without activating or reopening either tab; Esc returns to tab selection before leaving the mode.

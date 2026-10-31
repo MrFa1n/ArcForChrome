@@ -1,3 +1,4 @@
+import {browserCommandUrl} from './browser-pages.js';
 import {orderSuggestions,moveTab} from './tab-order.js';
 import { destination } from './model.js';
 import { findSuggestions } from './suggestions.js';
@@ -70,6 +71,8 @@ async function restore(api,sessionId) {
 
 async function executeAction(api,context,id) {
   if(!COMMANDS.some(item=>item.command===id)) throw new Error('Unknown command');
+  const browserUrl=browserCommandUrl(id);
+  if(browserUrl) return navigate(api,context,browserUrl);
   if(id==='order-tabs') throw new Error('Choose Arrange tabs in the command bar');
   if(id==='reopen') return restore(api);
   if(id==='settings') return api.runtime.openOptionsPage();

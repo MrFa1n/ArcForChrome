@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.13.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.14.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -106,3 +106,11 @@ MIT licensed. Not published to the Chrome Web Store. Supplied engineering guidel
 Open Arrange tabs from the mode dropdown or Commands (search “arrange”, “move”, or “порядок”). First choose the tab by title/URL; then choose left/right, start/end or Move before another tab. The list shows actual one-based Chrome positions, including pinned/grouped labels. Applying a move closes the overlay without activating tabs or navigating. Escape from destinations returns to tab selection; Escape there returns to Search.
 
 All actions resolve current positions through Chrome immediately before moving. Source and destination must still belong to the source window and have matching pinned/group states. Start/end uses the first/last tab of that section. A one-position move cannot jump over a group/pin boundary. Edges are harmless no-ops. Browser API failures leave the overlay open with an error. Group creation, transfer across groups/windows and multiselection are outside this version. No new permissions or persistent tab-order state.
+
+## Chrome sections (0.14)
+
+Normal Search includes a static local catalogue of 20 Chrome destinations, matched by English/Russian names, aliases, keyboard-layout variants and typo tolerance. Matching browser sections (up to five) follow open tabs, precede homepage/bookmark/history rows, and are labelled Chrome page. Site scopes can still be offered after open tabs. An already open matching destination in the source window is reused, including when the live title does not match the translated alias. Empty search still lists only tabs.
+
+Known catalogue chrome:// URLs resolve as navigation rather than default-provider queries, including Tab-completed addresses. URL/search navigation modifiers remain available. Unknown internal addresses and routes with query strings or fragments are not accepted as catalogue navigation. No restart/quit or other browser-action URLs are included. The same catalogue generates Commands entries; Chrome settings and extension Search settings remain separate. No settings values, passwords or installed-extension details are read.
+
+The Extensions page address is documented in [Chrome’s installation guide](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked). Internal settings subroutes can vary across Chrome releases/platforms; actual installed-version destination checks remain manual.
