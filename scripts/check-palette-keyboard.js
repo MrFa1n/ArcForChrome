@@ -1,3 +1,4 @@
+import {orderSuggestions} from '../extension/tab-order.js';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -206,6 +207,38 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://fast.example/'},'early Enter must wait for final suggestions, not provisional raw navigation');
   await mount([],context);await send('Input.insertText',{text:'reload'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'reload'},'ordinary searches must not execute commands');
+  // Arrange is a two-step action: choosing a tab never activates/navigates it.
+  const arrangeApi={tabs:{query:async()=>[
+    {id:41,windowId:2,index:0,title:'Alpha',url:'https://alpha.example'},
+    {id:42,windowId:2,index:1,title:'Beta',url:'https://beta.example'}]}};
+  const arrangeRows=await orderSuggestions(arrangeApi,2,'');
+  const moveRows=await orderSuggestions(arrangeApi,2,'',41);
+  await evaluate(`globalThis.arrangeRows=${JSON.stringify(arrangeRows)};globalThis.moveRows=${JSON.stringify(moveRows)};globalThis.failMove=true;
+    globalThis.chrome.runtime.sendMessage=async message=>{
+      if(message.type==='palette:suggest') {
+        const rows=message.mode==='order'?(message.tabId===undefined?arrangeRows:moveRows):message.mode==='commands'?commandRows:[];
+        return {ok:true,suggestions:rows.filter(row=>(row.title+' '+row.url).toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
+      }
+      messages.push(message);
+      if(message.type==='palette:move' && failMove)return {ok:false,error:'Tab changed; choose again'};
+      return {ok:true};
+    };`);
+  await mount([],context);await key('Tab','Tab');
+  await send('Input.insertText',{text:'arrange'});await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('select').value;}`),'order');
+  await key('Tab','Tab');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'','Tab in Arrange must move focus, never insert a position label');
+  await key('Tab','Tab',undefined,8);
+  await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a position or a destination tab…');
+  await key('Escape','Escape');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a tab to move…');
+  await key('Enter','Enter');await send('Input.insertText',{text:'before Beta'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:41,placement:'before',beforeTabId:42});
+  assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Tab changed; choose again');
+  await evaluate('failMove=false');await key('Enter','Enter');
+  assert.equal(await evaluate("document.querySelector('[data-arc-command-palette]') === null"),true);
+  assert.deepEqual(await evaluate('pageKeys'),[],'arrange mode must also isolate page shortcuts');
   // Optional documentation demo: real palette DOM, fictional tabs, disposable profile.
   if (process.env.PALETTE_SCREENSHOT_DIR) {
     await key('Escape','Escape');

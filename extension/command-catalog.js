@@ -1,4 +1,5 @@
 export const COMMANDS = [
+  {command:'order-tabs',title:'Arrange tabs',aliases:'move reorder position порядок вкладки переместить расположить'},
   {command:'reload',title:'Reload current page',aliases:'refresh перезагрузить обновить'},
   {command:'duplicate',title:'Duplicate current tab',aliases:'дублировать копия'},
   {command:'copy-url',title:'Copy current URL',aliases:'скопировать адрес ссылку'},

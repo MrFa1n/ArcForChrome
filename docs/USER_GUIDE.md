@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.12.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.13.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -18,6 +18,7 @@ Chrome can preserve older assignments or reject conflicts. Check `chrome://exten
 | Edit current URL | Cmd+L / dropdown | Select the source URL for editing; Enter replaces that page, unchanged URL reloads |
 | Commands | Tab on empty Search input, `>` prefix, or dropdown | Search explicit browser actions; ordinary search text never executes a command |
 | Site Search | A detected site name/shortcut + Tab; or dropdown | Search using a template observed in your browsing data |
+| Arrange tabs | Dropdown or Commands → Arrange tabs | Choose a tab, then a relative move or destination in the same window |
 | Recently closed | Dropdown | Search and restore a recently closed tab with its original browser session |
 
 Escape returns from a scoped mode to Search; Escape in Search closes. Repeating Cmd+T closes the overlay; repeating the edit command in Edit mode closes it. Backspace on an empty site query returns to the site's keyword.
@@ -99,3 +100,9 @@ The browser regression launches a separate headless Chrome with a disposable pro
 Actual installed-extension permissions, provider selection, session restoration, clipboard access and shortcut conflicts have a [manual checklist](TESTING.md). See [architecture](ARCHITECTURE.md), [shortcut guide](KEYBOARD_REMAPPING.md), [historical Arc audit](ARC_COMMAND_BAR_AUDIT.md), [work log](WORK_LOG.md), [contribution guide](../CONTRIBUTING.md) and [security policy](../SECURITY.md).
 
 MIT licensed. Not published to the Chrome Web Store. Supplied engineering guidelines are preserved in [SKILL.md](../SKILL.md) and [docs/ub-mode.md](ub-mode.md).
+
+## Arrange tabs (0.13)
+
+Open Arrange tabs from the mode dropdown or Commands (search “arrange”, “move”, or “порядок”). First choose the tab by title/URL; then choose left/right, start/end or Move before another tab. The list shows actual one-based Chrome positions, including pinned/grouped labels. Applying a move closes the overlay without activating tabs or navigating. Escape from destinations returns to tab selection; Escape there returns to Search.
+
+All actions resolve current positions through Chrome immediately before moving. Source and destination must still belong to the source window and have matching pinned/group states. Start/end uses the first/last tab of that section. A one-position move cannot jump over a group/pin boundary. Edges are harmless no-ops. Browser API failures leave the overlay open with an error. Group creation, transfer across groups/windows and multiselection are outside this version. No new permissions or persistent tab-order state.

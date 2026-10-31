@@ -23,3 +23,5 @@ Inside the palette:
 Navigation modifiers are an explicit extension contract, not verified exact copies of every Arc variant. Native tab-management shortcuts, sidebar/pin commands and global MRU are not implemented here.
 
 Reference: https://developer.chrome.com/docs/extensions/reference/api/commands
+
+Arrange tabs: select the mode from the dropdown or find it in Commands. Enter chooses a tab, then applies the chosen move. Arrow keys select; Tab moves between controls. Esc returns from destinations to tab selection, then Search. No browser-level shortcut was added.

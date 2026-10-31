@@ -1,3 +1,4 @@
+import {orderSuggestions,moveTab} from './tab-order.js';
 import { destination } from './model.js';
 import { findSuggestions } from './suggestions.js';
 import { loadSites,siteDestination,rememberSite } from './site-search.js';
@@ -69,6 +70,7 @@ async function restore(api,sessionId) {
 
 async function executeAction(api,context,id) {
   if(!COMMANDS.some(item=>item.command===id)) throw new Error('Unknown command');
+  if(id==='order-tabs') throw new Error('Choose Arrange tabs in the command bar');
   if(id==='reopen') return restore(api);
   if(id==='settings') return api.runtime.openOptionsPage();
   if(id==='new-window') return api.windows.create({type:'normal'});
@@ -83,10 +85,12 @@ export async function paletteAction(api,message,sender) {
   const context=sourceContext(api,sender);
   if(message.type==='palette:suggest') {
     if(typeof message.query!=='string' || message.query.length>8192) throw new Error('Invalid query');
+    if(message.mode==='order') return {suggestions:await orderSuggestions(api,context.windowId,message.query,message.tabId),domains:[],warnings:[]};
     if(message.mode==='commands') return {suggestions:commandSuggestions(message.query),domains:[],warnings:[]};
     if(message.mode==='closed') return {suggestions:await closedSuggestions(api,message.query),domains:[],warnings:[]};
     return findSuggestions(api,context.windowId,message.query);
   }
+  if(message.type==='palette:move') return moveTab(api,context.windowId,message);
   if(message.type==='palette:activate') {
     if(!Number.isInteger(message.tabId)) throw new Error('Invalid tab');
     const tab=await api.tabs.get(message.tabId);

@@ -87,6 +87,12 @@ Settings shows detected sites, lets you clear learned shortcuts and offers optio
 
 A saved `example.com/articles/some-page` can produce both the original page and an **Open example.com** action. Open tabs in the source window stay first. Shared URLs are merged so the same destination is not repeated across history and bookmarks.
 
+### Put tabs in order
+
+Choose **Arrange tabs** from the mode dropdown, or type `>` and find **Arrange tabs**. Search for the tab to move and press Enter. Then choose one position left/right, start/end, or search another tab and select **Move before…**. Enter applies the move without activating or reopening either tab; Esc returns to tab selection before leaving the mode.
+
+Positions are read from the source window in Chrome’s actual tab-strip order. Start/end stays within the same pinned state and group. Moving before another tab requires the same pinned state and group; a one-position move cannot cross their boundary. This release changes order only, with no automatic regrouping or cross-window moves.
+
 ### Use the browser’s appearance
 
 The overlay follows effective light/dark rendering preferences and uses browser-native colors and scalable type. Custom Chrome wallpaper and profile accents are not imported.

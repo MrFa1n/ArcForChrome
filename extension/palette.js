@@ -85,13 +85,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const footer = document.createElement('footer');footer.textContent = '↑ ↓ select · Tab complete address · Enter open · Esc return';
     const modes = document.createElement('select');modes.setAttribute('aria-label','Search mode');
     const sites = Array.isArray(context.sites) ? context.sites : [];
-    for(const [value,label] of [['search','Search · new tab'],['edit','Edit current URL'],['commands','Commands'],['closed','Recently closed'],...sites.map(site=>[`site:${site.key}`,`Search ${site.name}`])]) {
+    for(const [value,label] of [['search','Search · new tab'],['edit','Edit current URL'],['commands','Commands'],['closed','Recently closed'],['order','Arrange tabs'],...sites.map(site=>[`site:${site.key}`,`Search ${site.name}`])]) {
       const option = document.createElement('option');option.value=value;option.textContent=label;modes.append(option);
     }
     const settings = document.createElement('button');settings.textContent='Settings';settings.type='button';
     const nav = document.createElement('nav');nav.append(modes,settings);
     dialog.append(header,nav,input,results,error,footer); root.append(dialog);document.documentElement.append(host);
     let mode = context.mode === 'edit' ? 'edit' : 'search';
+    let orderTabId;
     let completedAddress = null;
     let pendingQuery = Promise.resolve();
     let finishPending = () => {};
@@ -142,9 +143,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(alias.trim()) chrome.runtime.sendMessage({type:'palette:remember-site',site:site.key,alias}).catch(()=>{});
       setMode(`site:${site.key}`);
     }
-    function setMode(next,value='') {
+    function setMode(next,value='',tabId) {
+      orderTabId=next==='order'?tabId:undefined;
       mode=next;completedAddress=null;modes.value=mode;input.value=value;
-      input.placeholder=mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
+      input.placeholder=mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
         :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
       updateSuggestions();input.focus();
       if(mode==='edit') input.select();
@@ -166,11 +168,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(dismissed || closing || actionRevision!==queryRevision) return;
         const choice=choices[selected];
         if(!choice) return;
+        if(choice.kind==='order-tab') {setMode('order','',choice.tabId);return;}
+        if(choice.kind==='command' && choice.command==='order-tabs') {setMode('order');return;}
         if(choice.kind==='site') {enterSite(sites.find(site=>site.key===choice.site));return;}
         const target=event.altKey?'current':event.shiftKey?'background':(mode==='edit' && !(event.metaKey||event.ctrlKey))?'current':'new';
         const targetField=target==='new'?{}:{target};
         let message;
-        if(choice.kind==='command') message={type:'palette:command',command:choice.command};
+        if(choice.kind==='move') message={type:'palette:move',tabId:orderTabId,placement:choice.placement,...(choice.beforeTabId===undefined?{}:{beforeTabId:choice.beforeTabId})};
+        else if(choice.kind==='command') message={type:'palette:command',command:choice.command};
         else if(choice.kind==='closed') message={type:'palette:restore',sessionId:choice.sessionId};
         else if(mode.startsWith('site:')) message={type:'palette:site',site:mode.slice(5),query:input.value,...targetField};
         else if(choice.id!==undefined && mode!=='edit' && !event.altKey && !event.shiftKey && !event.metaKey && !event.ctrlKey)
@@ -200,10 +205,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function render() {
       const previous = choices[selected];
-      const previousKey = previous && `${previous.kind}:${previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
+      const previousKey = previous && `${previous.kind}:${previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
       choices = [...suggestions.filter(item => item.kind === 'tab'), ...domains, ...suggestions.filter(item => item.kind !== 'tab')];
       const query=input.value.trim();
-      if(mode==='commands' || mode==='closed') choices=suggestions;
+      if(['commands','closed','order'].includes(mode)) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
         const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
@@ -214,21 +219,21 @@ export function mountPalette(tabs, floating = false, context = {}) {
           choices=[...open,...siteRows,...choices.filter(item=>item.kind!=='tab')];
         }
       }
-      footer.textContent=mode==='commands'?'Commands only · Esc back':mode==='closed'?'Enter restores the original session · Esc back'
+      footer.textContent=mode==='order'?(orderTabId===undefined?'Choose a tab · Enter to choose its position · Esc back':'Enter moves without activating · Keeps pins/groups · Esc back'):mode==='commands'?'Commands only · Esc back':mode==='closed'?'Enter restores the original session · Esc back'
         : '↑ ↓ select · Tab complete / mode · Shift+Enter background · Alt+Enter current';
-      const retained = choices.findIndex(choice => `${choice.kind}:${choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
+      const retained = choices.findIndex(choice => `${choice.kind}:${choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
       selected = selectionMoved && retained >= 0 ? retained : 0;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
         row.setAttribute('role','option');row.tabIndex = -1;
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕'})[choice.kind];
+        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔'})[choice.kind];
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = choice.kind === 'navigate' ? choice.url
+        const url = document.createElement('span');url.className = 'url';url.textContent = ['navigate','order-tab','move'].includes(choice.kind) ? choice.url
           : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title,url);row.append(icon,text);
-        if (choice.kind !== 'navigate' && !['command','closed'].includes(choice.kind)) {
+        if (choice.kind !== 'navigate' && !['command','closed','order-tab','move'].includes(choice.kind)) {
           const hint = document.createElement('span');hint.className = 'hint';hint.textContent = 'Tab ↹';row.append(hint);
         }
         row.addEventListener('click',event => {if(busy)return;selected=index;selectionMoved=true;activate(event);});
@@ -244,14 +249,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-      suggestions=['commands','closed'].includes(mode) || mode.startsWith('site:')?[]
+      suggestions=['commands','closed','order'].includes(mode) || mode.startsWith('site:')?[]
         :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render();
       if(mode.startsWith('site:')) {resolvePending();return;}
       timer=setTimeout(async()=>{
         try {
-          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed'].includes(mode)?{mode}:{})});
+          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order'].includes(mode)?{mode}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];
@@ -267,7 +272,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (event.isComposing) return;
       if (event.key === 'Escape') {
         event.preventDefault();event.stopPropagation();
-        if(mode!=='search') setMode('search'); else close();
+        if(mode==='order' && orderTabId!==undefined) setMode('order');
+        else if(mode!=='search') setMode('search'); else close();
         return;
       }
       if(busy) {event.preventDefault();return;}
@@ -289,7 +295,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           :matches.length && (matches.length===1 || matches[0].score>matches[1].score)?matches[0].site:null;
         if(!event.shiftKey && event.target===input && mode==='search' && site) {enterSite(site);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && !input.value.trim()) {setMode('commands');return;}
-        if (!event.shiftKey && event.target === input && !['navigate','command','closed','site'].includes(choice?.kind) && choice?.url) {
+        if (!event.shiftKey && event.target === input && !['navigate','command','closed','site','order-tab','move'].includes(choice?.kind) && choice?.url) {
           input.value = choice.url;
           completedAddress = choice.url;
           input.focus();

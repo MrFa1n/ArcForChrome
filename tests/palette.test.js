@@ -107,3 +107,14 @@ test('custom saved Site Search definitions are used rather than hard-coded provi
   await paletteAction(api,{type:'palette:site',site:'docs',query:'two words',target:'background'},sender);
   assert.deepEqual(api.calls,[['create',{windowId:2,active:false,url:'https://docs.example/find/two%20words'}]]);
 });
+test('arranging uses validated source-window tabs and does not activate or navigate',async()=>{
+ const api=browser();const moves=[];
+ api.tabs.query=async({windowId})=>[{id:7,windowId,index:0},{id:8,windowId,index:1}];
+ api.tabs.move=async(...args)=>moves.push(args);
+ const response=await paletteAction(api,{type:'palette:suggest',mode:'order',query:''},sender);
+ assert.deepEqual(response.suggestions.map(row=>row.tabId),[7,8]);
+ await paletteAction(api,{type:'palette:move',tabId:8,placement:'start'},sender);
+ assert.deepEqual(moves,[[8,{index:0}]]);assert.deepEqual(api.calls,[]);
+ await assert.rejects(()=>paletteAction(api,{type:'palette:move',tabId:8,placement:'end'},{id:'foreign'}));
+ await assert.rejects(()=>paletteAction(api,{type:'palette:move',tabId:99,placement:'end'},sender));
+});

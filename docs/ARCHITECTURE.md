@@ -4,7 +4,7 @@ Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bo
 
 ## Components
 
-- `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts six typed message actions: suggest, activate, navigate, site, command and restore.
+- `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts eight typed message actions: suggest, activate, navigate, site, command, restore, remember-site and move.
 - `palette-service.js` validates sender and source context, queries tabs/settings, and injects the self-contained `mountPalette` function. Protected pages use `palette-page.js` with the original window/tab IDs in the popup URL. Source tab identity is taken from the browser sender or the validated extension popup URL, never an arbitrary message field.
 - `model.js` distinguishes HTTP(S) URLs from search text. It does not construct a provider-specific search URL. `chrome.search.query` handles text against a newly created or explicitly selected source tab.
 - `site-search.js` validates optional custom keywords, names and HTTP(S) templates. Queries are encoded once, replacing exactly one `%s`. `options.js` saves validated definitions to storage.local. No browsing history or choice log is persisted.
@@ -44,3 +44,7 @@ Unit tests exercise APIs through fakes; real headless Chrome exercises DOM, keyb
 The UI derives name/domain-prefix/initials/ordered-letter candidates. Open tabs keep priority. Ambiguous matches remain explicit alternatives. Entering a site through a typed alias sends a validated remember-site action. Each alias is stored in its own storage.local key, avoiding a shared read-modify-write map across windows. A learned alias gets stronger priority than inferred aliases; only associations with currently known sites are accepted. Automatically inferred templates are kept in memory and revalidated from current source data on use.
 
 The options page shows detected sites separately from manual overrides and supports clearing learned associations. Existing user-defined templates remain valid. There is no fixed default provider list, automatic network discovery, persistent browsing index or import of Chrome's protected keyword configuration.
+
+## Tab order (0.13)
+
+`tab-order.js` reads source-window tabs afresh for both suggestions and moves. It sorts by native index, validates integer IDs against that window, and resolves relative moves without trusting UI indices. Before-target indices account for removing the source tab. Pin state and group identity must match, and adjacent moves reject boundaries. The worker issues only tabs.move; no activation, navigation, persistence or new permission is involved. The two-stage Arrange UI uses the same debounced/cancelable suggestions and keyboard isolation as Search. Chrome state can still change between query and move; API failures remain visible for retry.

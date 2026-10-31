@@ -77,3 +77,9 @@ Unit tests cover conservative URL inference, unsafe/ambiguous URL rejection, ori
 ## README demonstration
 
 Set `PALETTE_SCREENSHOT_DIR` to an existing directory when running the browser harness to capture the actual palette in Search, filtered tabs, Site Search, Commands and dark mode. Documentation captures use fictional page/tab data and stubbed browser APIs, not personal browsing history. See [assets/README.md](assets/README.md) for reproduction.
+
+## Arrange tabs v0.13.0
+
+Unit checks cover actual-order suggestions, destination filtering, source-removal index arithmetic in both directions, start/end, adjacent moves, pin/group boundaries, missing/foreign IDs and source-window message validation. The real-interface harness verifies Commands → Arrange, two-stage selection, Tab focus without inserting row metadata, Esc back, move payload, API error/retry and host-key isolation. Browser APIs in this harness remain mocked.
+
+Manual installed-extension checks: reorder in both directions with active and inactive tabs; verify neither activation nor navigation changes. Test pins, groups and ungrouped tabs separated by groups; start/end must preserve membership, before must use the chosen tab, and adjacent moves must not cross boundaries. Close/move a candidate while the overlay is open and check errors. Repeat via protected-page popup and while dragging a native tab (Chrome can temporarily reject moves). No additional permissions should be requested.
