@@ -113,3 +113,9 @@ Chrome regression checks native backdropFilter is none, actual corner pointer re
 ## Popup resize feedback and vertical keys v0.18.1
 
 Capture window errors from both the palette frame and parent document. Exercise pointer/keyboard min/max size, then switch popup-like viewport dimensions while explicit sizing is active; assert no ResizeObserver loop or other window error. Verify Alt+Up/Down submits previous/next, Shift+Up/Down start/end, with horizontal keys and Ctrl+Alt overlay movement retained. Actual browser action-popup sizing should be rechecked after update; clear historical entries from Chrome's extension Errors page first.
+
+## Group management v0.19.0
+
+Unit checks cover create/add/remove/dissolve/rename/color/collapse, title/color validation, duplicate/stale/foreign/pinned selection rejection before mutation, source-window message validation and preserving unrelated tabs. Browser regression exercises two-result marking, Cmd and Ctrl group entry, naming, existing-group selection, remove shortcut, Manage → rename/color/dissolve, # entry, error display and host-page keyboard isolation. Browser APIs remain stubbed.
+
+Installed smoke checklist: reload/re-enable with tabGroups permission; mark tabs across different queries and confirm marked count, source/highlight fallback and Escape clearing. Create and add native groups, remove only selected members, rename/recolor/collapse/expand, and dissolve without closing any tab. Test grouped/pinned tabs, stale members, two windows and source-context fallback popup. Verify group titles in results, continued vertical/horizontal tab movement and journal metadata. Saved-group deletion is not offered; observe Chrome's own syncing/empty-group behavior. Native shortcut interception is a manual check; # and searchable commands remain fallback entry paths.

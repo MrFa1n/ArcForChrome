@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.18.1. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.19.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -83,6 +83,7 @@ No telemetry, backend, online autocomplete, permanent host access or persistent 
 | `sessions` | List and restore recently closed tabs |
 | `storage` | Site overrides/aliases, bounded action journal and temporary AI recovery |
 | `alarms` | Schedule history expiry while Chrome runs |
+| `tabGroups` | Group metadata, colors, titles and collapsed state |
 | `clipboardWrite` | Explicit Copy current URL action; clipboard contents are not read |
 
 No sidebar, spaces UI, global tab cycling, MRU tracking or numbered pin commands. Native Chrome pins/groups/tabs are retained. Session restoration uses Chrome's original session destination, which can belong to a different window. A failed default-provider query can leave its newly created blank tab; the original page is unaffected.
@@ -106,7 +107,7 @@ MIT licensed. Not published to the Chrome Web Store. Supplied engineering guidel
 
 Find an open tab in ordinary Search and use Alt+Left/Right for an immediate move, Alt+Shift+Left/Right (or Alt+Home/End) for start/end. The overlay remains open, refreshes native positions and retains the moved tab’s selection. Type `@` to enter native-order tab browsing or `@query` to filter. Keyboard movement works there too. For precise placement, Enter chooses a tab, then a Move before destination; explicit placement closes the overlay. Escape returns from destinations to tab selection, then Search.
 
-All actions resolve current positions through Chrome immediately before moving. Source and destination must still belong to the source window and have matching pinned/group states. Start/end uses the first/last tab of that section. A one-position move cannot jump over a group/pin boundary. Edges are harmless no-ops. Browser API failures leave the overlay open with an error. Group creation, transfer across groups/windows and multiselection are outside this version. No new permissions or persistent tab-order state.
+All actions resolve current positions through Chrome immediately before moving. Source and destination must still belong to the source window and have matching pinned/group states. Start/end uses the first/last tab of that section. A one-position move cannot jump over a group/pin boundary. Edges are harmless no-ops. Browser API failures leave the overlay open with an error. Tab-movement keys do not change membership. Group creation/membership and marked selection are described in 0.19; cross-window transfer remains outside scope. No new permissions or persistent tab-order state.
 
 ## Chrome sections (0.14)
 
@@ -145,3 +146,11 @@ Protected-page fallback uses [action.openPopup](https://developer.chrome.com/doc
 ResizeObserver callbacks now only schedule one coalesced requestAnimationFrame. Geometry writes happen afterward and skip unchanged inline values. This removes synchronous read/write feedback during popup/manual-size changes instead of hiding the browser error. The observer belongs to the frame and disconnects on pagehide. ResizeObserver errors are collected in both documents by the browser regression.
 
 Tab order accepts Alt+Left/Right or Alt+Up/Down (previous/next); Shift maps both pairs to start/end. Native orientation is not exposed through the public tab/window APIs used here, so both pairs work without a setting. Chrome's Errors page retains previous errors; clear the old list after reloading before checking for recurrence.
+
+## Tab groups and marked selection (0.19)
+
+Shift+Space or the square beside an open tab marks it; marks survive filtering and mode changes until a successful group action, Search+Escape or dismissal. Cmd/Ctrl+G and # open group creation/addition; typing a name offers exact existing groups first, then Create and other matching groups. Cmd/Ctrl+Shift+G removes marked/highlighted tabs from their groups. If no tabs are marked, a highlighted Search/Arrange tab is used, falling back to the original page tab (especially through Commands). Up to 100 distinct tabs per mutation; stale, foreign-window and pinned group targets are rejected before any mutation. Grouping may naturally remove emptied old groups through Chrome.
+
+Cmd/Ctrl+Alt+G or Manage tab groups opens source-window groups. Enter a group to rename, choose one of Chrome's nine colors, toggle collapsed state or dissolve its membership with Ungroup · Keep all tabs open. This never invokes tab closure or saved-group deletion APIs. Native sync effects follow Chrome; no promise of preserving a saved copy after native ungrouping is made. Group creation and naming use two Chrome calls: if naming fails after creation, the error explicitly reports that tabs were grouped and can be renamed via Manage. Operations remain open for further work and are recorded as group action metadata in the local journal.
+
+The tabGroups permission is added for group metadata/update; tabs.group/ungroup provides membership. Source-window checks apply to both service-page popup and injected overlay. Ordinary page results show group titles after browser suggestions resolve. Shortcuts are local, not new global command registrations. If an OS/browser intercepts a chord, use # or searchable commands instead.

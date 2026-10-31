@@ -145,7 +145,21 @@ Find an open tab in ordinary Search, select it with ↑/↓ and press **Alt/Opti
 
 Type **`@`** to see tabs in their actual strip order; **`@github`** filters that list. Use the same move keys directly. For an exact destination, press Enter on a tab and choose **Move before…**. That explicit placement closes the overlay after applying; Esc returns to tab selection. Commands → Arrange tabs remains available.
 
-Positions are read from the source window in Chrome’s actual tab-strip order. Start/end stays within the same pinned state and group. Moving before another tab requires the same pinned state and group; a one-position move cannot cross their boundary. This release changes order only, with no automatic regrouping or cross-window moves.
+Positions are read from the source window in Chrome’s actual tab-strip order. Start/end stays within the same pinned state and group. Moving before another tab requires the same pinned state and group; a one-position move cannot cross their boundary. Movement keys only change order; use the separate group actions below to change membership. Cross-window transfer is not implemented.
+
+### Group tabs without a toolbar
+
+In Search or `@`, mark tabs with **Shift+Space** or click the square beside a result. Marks survive query changes so you can collect tabs from different searches; at most 100 tabs per operation. Escape in Search clears marks before closing.
+
+| Action | Shortcut inside Spotlight |
+| --- | --- |
+| Create / add to a group | **Cmd/Ctrl+G** |
+| Remove marked tabs from groups | **Cmd/Ctrl+Shift+G** |
+| Manage groups | **Cmd/Ctrl+Alt+G** or `> Manage tab groups` |
+
+After **Cmd/Ctrl+G**, type a name and Enter to create a group; an exact existing name is offered first so Enter adds to that group. Choose other matching groups with ↓ and Enter, or select Create explicitly for a duplicate name. **`#Work`** opens the same picker. With no marks, the highlighted open tab is used, or the original page tab when entering through Commands.
+
+Group management supports rename, color, collapse/expand and **Ungroup · Keep all tabs open**. No group action closes tabs. This manages open groups in the source window; it does not offer deletion of saved groups on other devices. Pinned tabs must be unpinned explicitly in Chrome before grouping. The `tabGroups` permission supplies names, colors and group state.
 
 ### Use the browser’s appearance
 
@@ -173,6 +187,7 @@ Suggestions are processed locally. There is **no telemetry, backend, online auto
 | `sessions` | List and restore recently closed tabs |
 | `storage` | Site templates/aliases, local action history and temporary AI prompt recovery |
 | `alarms` | Automatically expire action-history entries |
+| `tabGroups` | Read and update source-window group names, colors and state |
 | `clipboardWrite` | Copy the current URL on request; never read the clipboard |
 
 No permanent host access is requested. Automatically inferred site templates are not persisted; ordinary typed text is not saved while composing. Executed action metadata is stored locally with automatic limits; query/prompt text in that journal is opt-in. AI prompt recovery uses separate temporary session storage. [Security policy →](SECURITY.md)

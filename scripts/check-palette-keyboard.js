@@ -1,3 +1,4 @@
+import {GROUP_COLORS,groupSuggestions,manageGroupSuggestions,groupActionSuggestions} from '../extension/tab-groups.js';
 import {BUILTIN_SITES} from '../extension/search-providers.js';
 import {browserPageSuggestions,mergeBrowserPages} from '../extension/browser-pages.js';
 import {orderSuggestions} from '../extension/tab-order.js';
@@ -312,6 +313,53 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://fast.example/'},'early Enter must wait for final suggestions, not provisional raw navigation');
   await mount([],context);await send('Input.insertText',{text:'reload'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'reload'},'ordinary searches must not execute commands');
+  // Mark multiple results, group them, then manage groups without a toolbar.
+  const groupApi={tabGroups:{query:async()=>[{id:7,windowId:2,title:'Work',color:'blue',collapsed:false}],get:async()=>({id:7,windowId:2,title:'Work',color:'blue',collapsed:false})}};
+  const groupContext={...context,sourceTabId:81,groupColors:GROUP_COLORS};
+  const groupRows=await groupSuggestions(groupApi,2,'');
+  const workRows=await groupSuggestions(groupApi,2,'Work');
+  const manageRows=await manageGroupSuggestions(groupApi,2,'');
+  const actionRows=await groupActionSuggestions(groupApi,2,7,'');
+  await evaluate(`globalThis.workRows=${JSON.stringify(workRows)};globalThis.groupRows=${JSON.stringify(groupRows)};globalThis.manageRows=${JSON.stringify(manageRows)};globalThis.groupActionRows=${JSON.stringify(actionRows)};globalThis.groupFails=false;
+    chrome.runtime.sendMessage=async message=>{
+      if(message.type!=='palette:suggest'){messages.push(message);if(message.type==='palette:group' && groupFails)return {ok:false,error:'Selected tab was closed'};return {ok:true};}
+      if(message.mode==='groups' && message.query==='Work')return {ok:true,suggestions:workRows,warnings:[]};
+      if(message.mode==='groups')return {ok:true,suggestions:[{...groupRows[0],name:message.query || 'New group',title:'Create group'},...groupRows.slice(1).filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase()))],warnings:[]};
+      if(message.mode==='group-manage')return {ok:true,suggestions:manageRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
+      if(message.mode==='group-actions')return {ok:true,suggestions:groupActionRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
+      return {ok:true,suggestions:mockTabs.map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};
+    };`);
+  const selectableTabs=[{id:81,title:'Alpha',url:'https://alpha.example'},{id:82,title:'Beta',url:'https://beta.example'}];
+  await mount(selectableTabs,groupContext);
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
+  assert.equal(await paletteCall(`function(){return this.querySelectorAll('[aria-checked="true"]').length;}`),2);
+  await key('g','KeyG','',4);await send('Input.insertText',{text:'Research'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:group',action:'create',tabIds:[81,82],title:'Research'});
+  assert.ok(await paletteCall(`function(){return this.querySelector('input').isConnected;}`),'grouping must keep the palette open');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('g','KeyG','',2);await send('Input.insertText',{text:'Work'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:group',action:'add',tabIds:[81],groupId:7});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('g','KeyG','',12);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:group',action:'remove',tabIds:[81]});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('g','KeyG','',5);await key('Enter','Enter');await key('Enter','Enter');
+  await send('Input.insertText',{text:'Renamed'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:group',action:'rename',groupId:7,title:'Renamed'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('g','KeyG','',3);await key('Enter','Enter');await send('Input.insertText',{text:'color'});await key('Enter','Enter');
+  await send('Input.insertText',{text:'purple'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:group',action:'color',groupId:7,color:'purple'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('g','KeyG','',5);await key('Enter','Enter');await send('Input.insertText',{text:'ungroup'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:group',action:'dissolve',groupId:7});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await send('Input.insertText',{text:'#Broken'});await evaluate('groupFails=true');await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Selected tab was closed');
+  await key('Escape','Escape');await key('Escape','Escape');
+  assert.deepEqual(await evaluate('pageKeys'),[],'group keys must remain isolated from the page');
   // Browser sections participate in ordinary Search and URL completion.
   const chromeRows=browserPageSuggestions('расширения');
   const openChromeRows=mergeBrowserPages([],[{id:71,title:'Localized Chrome page',url:'chrome://extensions/'}],'расширения');
@@ -497,7 +545,7 @@ try {
   await evaluate("document.querySelector('#clear').click()");
   await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
   assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),0);
-  console.log('PASS: real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
+  console.log('PASS: real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
   if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();

@@ -4,7 +4,7 @@ Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bo
 
 ## Components
 
-- `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts nine typed message actions: suggest, activate, navigate, site, command, restore, remember-site, move and recover.
+- `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts ten typed message actions: suggest, activate, navigate, site, command, restore, remember-site, move, recover and group.
 - `palette-service.js` validates sender and source context, queries tabs/settings, and injects the self-contained `mountPalette` function. Protected pages use `palette-page.js` with the original window/tab IDs in the popup URL. Source tab identity is taken from the browser sender or the validated extension popup URL, never an arbitrary message field.
 - `model.js` distinguishes HTTP(S) URLs from search text. It does not construct a provider-specific search URL. `chrome.search.query` handles text against a newly created or explicitly selected source tab.
 - `site-search.js` validates optional custom keywords, names and HTTP(S) templates. Queries are encoded once, replacing exactly one `%s`. `options.js` saves validated definitions to storage.local. No browsing history or choice log is persisted.
@@ -76,3 +76,9 @@ Quick moves preserve rendered rows, enqueue every key intent with the tab ID, an
 Injection failures try a tab-specific action popup with source context in its URL, then clear the temporary popup setting in finally. palette-page.css supplies a 680×560 action-popup viewport; palette-page.js marks that surface before mounting. If action.openPopup is unavailable or rejects, the original native window path is retained. No privilege bypass, debugger permission or replacement of Chrome's built-in pages is attempted.
 
 0.18.1 geometry fix: frame ResizeObserver and window resize events schedule coalesced frame-local rAF work, never write layout in the observer delivery itself. applyGeometry avoids rewriting equal inline values; sized-state attributes are only added once. pagehide disconnects the observer and cancels scheduled work. Vertical tab keys normalize to the existing previous/next placements, retaining one worker ordering model and the same FIFO/cancellation rules.
+
+## Open group management (0.19)
+
+`tab-groups.js` owns allowed colors, title validation (1–80 chars), selection validation (1–100 distinct integer IDs), source-window group queries and native mutations. All selected tabs are resolved before mutating; create/add rejects pins. Group get validates window ownership for membership/update/dissolve. Dissolve queries only that group's current members and calls tabs.ungroup, never remove/close. A naming failure after native group creation reports the partial result explicitly.
+
+The serialized UI receives GROUP_COLORS and sourceTabId in context, retaining a Set of marked tab IDs across queries. Marking is keyboard-accessible and also available through the result icon; aria-checked represents marks separately from the active combobox option. Group-picker targets are frozen on entry. Group-management scopes support action/name/color selection without a toolbar. The worker alone validates and executes group actions, and the journal stores action/count metadata. Group names are appended to normal tab suggestions using a parallel source-window metadata query; metadata failures do not discard ordinary results. No selection or duplicate group model is persisted.

@@ -62,6 +62,7 @@ async function sourceCandidates(api, source, query) {
 export async function findSuggestions(api, windowId, input) {
   if (typeof input !== 'string' || input.length > 8192) throw new Error('Invalid query');
   const query = input.trim();
+  const groups=Promise.resolve().then(()=>api.tabGroups?.query({windowId}) || []).catch(()=>[]);
   const requests = [() => api.tabs.query({windowId})];
   if (query) requests.push(() => sourceCandidates(api,'bookmarks',query), () => sourceCandidates(api,'history',query));
   const results = await Promise.allSettled(requests.map(request => Promise.resolve().then(request)));
@@ -78,5 +79,10 @@ export async function findSuggestions(api, windowId, input) {
     const [saved,visited]=recent.map(result=>result.status==='fulfilled'?result.value:[]);
     suggestions=rankSuggestions(tabs,[...bookmarks,...saved],[...history,...visited],query);
   }
-  return {suggestions:mergeBrowserPages(suggestions,tabs,query),domains:domainSuggestions(suggestions,query),warnings};
+  const namesById=new Map((await groups).map(group=>[group.id,group.title || 'Untitled group']));
+  const rows=mergeBrowserPages(suggestions,tabs,query).map(row=>{
+    const tab=row.kind==='tab'?tabs.find(tab=>tab.id===row.id):null;
+    return tab?.groupId>=0?{...row,groupTitle:namesById.get(tab.groupId) || 'Grouped'}:row;
+  });
+  return {suggestions:rows,domains:domainSuggestions(suggestions,query),warnings};
 }

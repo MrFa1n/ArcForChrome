@@ -1,5 +1,8 @@
 import {browserPageCommands} from './browser-pages.js';
 export const COMMANDS = [
+  {command:'group-tabs',title:'Group selected tabs',aliases:'create add group создать группу объединить вкладки добавить'},
+  {command:'ungroup-tabs',title:'Remove selected tabs from groups',aliases:'ungroup убрать вкладки из группы'},
+  {command:'manage-groups',title:'Manage tab groups',aliases:'rename color collapse dissolve группы переименовать цвет свернуть разгруппировать'},
   {command:'activity',title:'Spotlight activity history',aliases:'action log journal история действия журнал spotlight'},
   {command:'recover-prompts',title:'Recover AI prompts',aliases:'restore retry draft last query восстановить промпт запрос последний черновики повторить'},
   {command:'clear-prompts',title:'Clear saved AI prompts',aliases:'forget очистить удалить промпты черновики'},

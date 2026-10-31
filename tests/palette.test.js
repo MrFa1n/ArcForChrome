@@ -182,3 +182,14 @@ test('native popup failure restores toolbar behavior before legacy fallback',asy
  assert.deepEqual(api.calls[1],['setPopup',{tabId:5,popup:''}]);
  assert.equal(api.calls[2][0],'popup');
 });
+test('group mutations stay in the validated source window and preserve native tabs',async()=>{
+ const api=browser();const changes=[];
+ api.tabs.get=async id=>({id,windowId:id===9?9:2,pinned:false,groupId:7});
+ api.tabs.group=async options=>{changes.push(options);return 7;};
+ api.tabGroups={get:async()=>({id:7,windowId:2}),update:async()=>{}};
+ await paletteAction(api,{type:'palette:group',action:'add',tabIds:[5],groupId:7},sender);
+ assert.deepEqual(changes,[{tabIds:[5],groupId:7}]);
+ await assert.rejects(()=>paletteAction(api,{type:'palette:group',action:'add',tabIds:[9],groupId:7},sender));
+ await assert.rejects(()=>paletteAction(api,{type:'palette:group',action:'add',tabIds:[5],groupId:7},{id:'foreign'}));
+ assert.equal(changes.length,1);assert.deepEqual(api.calls,[]);
+});

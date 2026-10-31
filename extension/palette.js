@@ -52,6 +52,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       #results{padding:6px 10px;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:12px;width:100%;border:0;
       border-radius:8px;background:transparent;text-align:left;padding:12px}button.result[aria-selected=true]{background:var(--hover)}
+      button.result[data-marked=true]{box-shadow:inset 3px 0 Highlight}
       .icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
@@ -160,6 +161,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
     view.addEventListener('pagehide',()=>{view.cancelAnimationFrame(layoutFrame);sizeObserver.disconnect();},{once:true});
     let mode = context.mode === 'edit' ? 'edit' : 'search';
     let orderTabId;
+    const markedTabs=new Set();
+    let groupTargetIds=[];
+    let managedGroupId;
     let completedAddress = null;
     let pendingQuery = Promise.resolve();
     let finishPending = () => {};
@@ -213,15 +217,43 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(alias.trim()) chrome.runtime.sendMessage({type:'palette:remember-site',site:site.key,alias}).catch(()=>{});
       setMode(`site:${site.key}`,value);
     }
+    function selectedTabIds() {
+      if(markedTabs.size)return [...markedTabs];
+      const choice=choices[selected];
+      const id=choice?.kind==='order-tab'?choice.tabId:choice?.kind==='tab'?choice.id:context.sourceTabId;
+      if(!Number.isInteger(id))throw new Error('Choose an open tab or mark tabs with Shift+Space');
+      return [id];
+    }
+    function markTab(id) {
+      if(busy)return;
+      if(markedTabs.has(id))markedTabs.delete(id);
+      else if(markedTabs.size<100)markedTabs.add(id);
+      else {error.textContent='Select at most 100 tabs';return;}
+      render();
+    }
+    function startGrouping(value='') {groupTargetIds=selectedTabIds();managedGroupId=undefined;setMode('groups',value);}
+    async function performGroup(message,revision=queryRevision) {
+      const response=await chrome.runtime.sendMessage({type:'palette:group',...message});
+      if(!response?.ok)throw new Error(response?.error || 'Could not change group');
+      if(dismissed || closing || revision!==queryRevision)return;
+      markedTabs.clear();groupTargetIds=[];setMode('search');
+    }
+    async function removeFromGroups() {
+      if(busy)return;
+      busy=true;const revision=queryRevision;
+      try {await performGroup({action:'remove',tabIds:selectedTabIds()},revision);}
+      catch(failure){if(revision===queryRevision)error.textContent=failure.message;}
+      finally{busy=false;}
+    }
     function setMode(next,value='',tabId,preferredId,keepResults=false) {
       if(!keepResults)moveQueue.length=0;
       orderTabId=next==='order'?tabId:undefined;
       mode=next;completedAddress=null;input.value=value;
-      input.placeholder=mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
+      input.placeholder=mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
         :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
       input.setAttribute('aria-label',input.placeholder);
       if(!keepResults)updateSuggestions(preferredId);input.focus();
-      if(mode==='edit') input.select();
+      if(mode==='edit' || mode==='group-rename') input.select();
     }
     async function copyText(value) {
       if(navigator.clipboard?.writeText) {await navigator.clipboard.writeText(value);return;}
@@ -239,6 +271,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(dismissed || closing || actionRevision!==queryRevision) return;
         const choice=choices[selected];
         if(!choice) return;
+        if(choice.command==='group-tabs'){startGrouping();return;}
+        if(choice.command==='manage-groups'){setMode('group-manage');return;}
+        if(choice.command==='ungroup-tabs'){await performGroup({action:'remove',tabIds:selectedTabIds()},actionRevision);return;}
+        if(choice.kind==='group-create'){await performGroup({action:'create',tabIds:groupTargetIds,title:choice.name},actionRevision);return;}
+        if(choice.kind==='group-add'){await performGroup({action:'add',tabIds:groupTargetIds,groupId:choice.groupId},actionRevision);return;}
+        if(choice.kind==='group-manage'){managedGroupId=choice.groupId;setMode('group-actions');return;}
+        if(choice.kind==='group-rename'){setMode('group-rename',choice.name);return;}
+        if(choice.kind==='group-colors'){setMode('group-colors');return;}
+        if(choice.kind==='group-change'){await performGroup({action:choice.action,groupId:managedGroupId,...(choice.color?{color:choice.color}:{}),...(choice.name?{title:choice.name}:{})},actionRevision);return;}
         if(choice.kind==='order-tab') {setMode('order','',choice.tabId);return;}
         const commandMode={'order-tabs':'order','closed-tabs':'closed','edit-url':'edit','recover-prompts':'drafts'}[choice.command];
         if(choice.kind==='command' && commandMode) {setMode(commandMode,commandMode==='edit'?context.sourceUrl || '':'');return;}
@@ -280,10 +321,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
     function render(preferredId) {
       const oldPositions=new Map([...results.children].map(row=>[row.dataset.key,row.getBoundingClientRect().top]));
       const previous = choices[selected];
-      const previousKey = previous && `${previous.kind}:${previous.draftId ?? previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
+      const previousKey = previous && `${previous.kind}:${previous.groupId ?? previous.color ?? previous.action ?? previous.draftId ?? previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
       choices = [...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['tab','browser-page'].includes(item.kind))];
       const query=input.value.trim();
-      if(['commands','closed','order','drafts'].includes(mode)) choices=suggestions;
+      if(['commands','closed','order','drafts'].includes(mode) || mode.startsWith('group')) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
         const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
@@ -308,22 +349,31 @@ export function mountPalette(tabs, floating = false, context = {}) {
         :mode==='closed'?'Recently closed · Enter restore · Esc back':mode==='edit'?'Edit URL · Enter replace · Cmd/Ctrl+Enter new tab · Esc back'
         :mode.startsWith('site:')?`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'} · Enter search · Esc back`
         :'↑ ↓ select · Alt+arrows move tab · > commands · @ arrange · ? prompts';
+      if(mode.startsWith('group'))footer.textContent=mode==='groups'?`Grouping ${groupTargetIds.length} tabs · Enter create/add · Esc back`:mode==='group-rename'?'Enter rename · Esc back':'Manage groups · Enter choose · Esc back';
+      else if(markedTabs.size)footer.textContent=`${markedTabs.size} marked · Shift+Space select · Cmd/Ctrl+G group · Cmd/Ctrl+Shift+G remove`;
+      else if(mode==='search')footer.textContent='↑ ↓ select · Shift+Space mark · Cmd/Ctrl+G group · > commands';
       if(inlineSites.length)footer.textContent=uniqueInline?`Search ${inlineSites[0].site.name} · Enter send query · Tab enter scope · ↓ other results`:'Shared shortcut · ↓ choose site · Enter default search';
-      const retained = choices.findIndex(choice => `${choice.kind}:${choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
+      const retained = choices.findIndex(choice => `${choice.kind}:${choice.groupId ?? choice.color ?? choice.action ?? choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
       const preferred=preferredId===undefined?-1:choices.findIndex(choice=>(choice.tabId ?? choice.id)===preferredId);
       selected = preferred>=0?preferred:selectionMoved && retained >= 0 ? retained : 0;
       if(preferred>=0)selectionMoved=true;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
-        row.setAttribute('role','option');row.tabIndex = -1;row.dataset.key=String(choice.tabId ?? choice.id ?? `other:${index}`);
+        row.setAttribute('role','option');
+        const tabId=choice.kind==='tab'?choice.id:choice.kind==='order-tab'?choice.tabId:undefined;
+        if(tabId!==undefined){row.dataset.marked=String(markedTabs.has(tabId));row.setAttribute('aria-checked',String(markedTabs.has(tabId)));}
+        row.tabIndex = -1;row.dataset.key=String(choice.tabId ?? choice.id ?? `other:${index}`);
         const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕'})[choice.kind];
+        if(tabId!==undefined){icon.textContent=markedTabs.has(tabId)?'☑':'☐';icon.title='Select tab · Shift+Space';icon.addEventListener('click',event=>{event.stopPropagation();markTab(tabId);});}
+        else if(choice.kind.startsWith('group-'))icon.textContent='▤';
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = ['navigate','order-tab','move','ai-draft'].includes(choice.kind) ? choice.url
+        const url = document.createElement('span');url.className = 'url';url.textContent = (['navigate','order-tab','move','ai-draft'].includes(choice.kind) || choice.kind.startsWith('group-')) ? choice.url
           : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
+        if(choice.groupTitle)url.textContent+=` · Group: ${choice.groupTitle}`;
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title,url);row.append(icon,text);
-        if (choice.kind !== 'navigate' && !['command','closed','order-tab','move','ai-draft'].includes(choice.kind)) {
+        if (choice.kind !== 'navigate' && !choice.kind.startsWith('group-') && !['command','closed','order-tab','move','ai-draft'].includes(choice.kind)) {
           const hint = document.createElement('span');hint.className = 'hint';hint.textContent = choice.kind==='site-query'?'Enter ↵':'Tab ↹';row.append(hint);
         }
         row.addEventListener('click',event => {if(busy)return;selected=index;selectionMoved=true;activate(event);});
@@ -340,6 +390,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function updateSuggestions(preferredId) {
       const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts'}[input.value[0]];
+      if(mode==='search' && input.value.startsWith('#')){try{startGrouping(input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && prefixMode) {setMode(prefixMode,input.value.slice(1).trimStart());return;}
       const revision=++queryRevision;
       clearTimeout(timer);finishPending();
@@ -347,14 +398,22 @@ export function mountPalette(tabs, floating = false, context = {}) {
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-      suggestions=['commands','closed','order','drafts'].includes(mode) || mode.startsWith('site:')?[]
+      suggestions=['commands','closed','order','drafts'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
         :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
+      if(mode==='group-rename') {
+        suggestions=query && query.length<=80?[{kind:'group-change',action:'rename',name:query,title:`Rename group to “${query}”`,url:'Enter apply name'}]:[];
+        render();resolvePending();return;
+      }
+      if(mode==='group-colors') {
+        suggestions=(context.groupColors || []).filter(color=>color.includes(query.toLocaleLowerCase())).map(color=>({kind:'group-change',action:'color',color,title:color,url:'Apply group color'}));
+        render();resolvePending();return;
+      }
       if(mode.startsWith('site:')) {resolvePending();return;}
       timer=setTimeout(async()=>{
         try {
-          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts'].includes(mode)?{mode}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
+          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions'].includes(mode)?{mode}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];
@@ -406,9 +465,27 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       if (event.key === 'Escape') {
         event.preventDefault();event.stopPropagation();
-        if(mode==='order' && orderTabId!==undefined) setMode('order');
-        else if(mode!=='search') setMode('search'); else close();
+        if(['group-rename','group-colors'].includes(mode))setMode('group-actions');
+        else if(mode==='group-actions')setMode('group-manage');
+        else if(mode==='order' && orderTabId!==undefined) setMode('order');
+        else if(mode!=='search') setMode('search');
+        else if(markedTabs.size){markedTabs.clear();render();}
+        else close();
         return;
+      }
+      if((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase()==='g') {
+        event.preventDefault();if(busy)return;
+        try {
+          if(event.altKey)setMode('group-manage');
+          else if(event.shiftKey)removeFromGroups();
+          else startGrouping();
+        }catch(failure){error.textContent=failure.message;}
+        return;
+      }
+      if(event.key===' ' && event.target===input && event.shiftKey && !event.altKey && !event.metaKey && !event.ctrlKey) {
+        const choice=choices[selected];
+        const id=choice?.kind==='tab'?choice.id:choice?.kind==='order-tab'?choice.tabId:undefined;
+        if(id!==undefined){event.preventDefault();if(!event.repeat)markTab(id);}return;
       }
       const moveKey={ArrowLeft:'left',ArrowUp:'left',ArrowRight:'right',ArrowDown:'right',Home:'start',End:'end'}[event.key];
       if(event.altKey && !event.ctrlKey && !event.metaKey && moveKey && (orderTabId!==undefined || ['tab','order-tab'].includes(choices[selected]?.kind))) {
@@ -439,7 +516,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(!event.shiftKey && event.target===input && choice?.kind==='site-query') {enterSite(sites.find(site=>site.key===choice.site),choice.alias,choice.query);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && site) {enterSite(site);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && !input.value.trim()) {setMode('commands');return;}
-        if (!event.shiftKey && event.target === input && !['navigate','command','closed','site','order-tab','move','ai-draft'].includes(choice?.kind) && choice?.url) {
+        if (!event.shiftKey && event.target === input && !choice?.kind.startsWith('group-') && !['navigate','command','closed','site','order-tab','move','ai-draft'].includes(choice?.kind) && choice?.url) {
           input.value = choice.url;
           completedAddress = choice.url;
           input.focus();
