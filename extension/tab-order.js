@@ -21,7 +21,7 @@ export async function orderSuggestions(api,windowId,query,tabId) {
   const tabs=await windowTabs(api,windowId);
   if(tabId===undefined) return tabs.map(tab=>({kind:'order-tab',tabId:tab.id,title:tab.title || 'Untitled tab',url:position(tab)})).filter(row=>matches(row,query));
   const tab=selectedTab(tabs,tabId);
-  const actions=[['left','Move one position left'],['right','Move one position right'],['start','Move to start'],['end','Move to end']]
+  const actions=[['left','Move one position left / up'],['right','Move one position right / down'],['start','Move to start'],['end','Move to end']]
     .map(([placement,title])=>({kind:'move',placement,title,url:`${tab.title || 'Selected tab'} · Within its pinned/group section`}));
   const destinations=tabs.filter(other=>other.id!==tabId && sameSection(tab,other))
     .map(other=>({kind:'move',placement:'before',beforeTabId:other.id,title:`Move before ${other.title || 'Untitled tab'}`,url:position(other)}));

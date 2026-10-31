@@ -33,3 +33,5 @@ Prefixes from Search: `>` commands, `@` arrange tabs, `<` recently closed. The r
 0.17: drag the footer/hint strip to position Spotlight within its viewport. Ctrl+Alt+arrows move it 16px; Ctrl+Alt+Shift+arrows move it 64px; Ctrl+Alt+0 resets. These shortcuts are local to the open palette and distinct from Alt+arrows tab reordering. Position is not persisted after closing.
 
 0.18: the bottom-right resize handle supports pointer dragging. Shift+Tab reaches it; arrows resize, Shift gives 64px steps, Enter resets size. Ctrl+Alt+0 resets size and position. Quick Alt-arrow tab moves now queue repeated presses without clearing the result list. Browser-service response time still applies; unrelated actions wait until the move queue finishes.
+
+0.18.1: Alt/Option+Up/Down now maps to previous/next tab positions, alongside Left/Right. Add Shift for first/last. Plain Up/Down still selects results; Ctrl+Alt+Up/Down still moves the overlay. Both orientation-friendly pairs are available simultaneously; no unsupported native tab-strip orientation inference is required.

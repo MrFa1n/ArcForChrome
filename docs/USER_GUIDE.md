@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.18.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.18.1. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -139,3 +139,9 @@ The corner handle resizes width/height within 360×220 and 1000×800 CSS pixels,
 Quick tab moves queue all incoming key repeats, serialize mutations and retain the current list until the next authoritative snapshot. The worker returns updated native-order rows with each move. There is no 150ms suggestion debounce or empty-list render between moves, and journal recording does not block the move response. Rows use a 120ms FLIP animation unless reduced motion is preferred. Escape/mode changes discard pending moves; a move already sent to Chrome cannot be undone by cancellation. Native Chrome tab-strip animation is controlled by Chrome.
 
 Protected-page fallback uses [action.openPopup](https://developer.chrome.com/docs/extensions/reference/api/action#method-openPopup), generally available from Chrome 127. It is browser UI anchored at the toolbar, not a DOM overlay inside a privileged page. The [activeTab documentation](https://developer.chrome.com/docs/extensions/develop/concepts/activeTab?abtest=true) documents restricted-page exclusion. Existing source-window/tab validation is retained. Temporary tab-specific popup configuration is cleared after opening/failure so future toolbar invocations keep normal behavior. Legacy window fallback remains for unsupported/failed popup API.
+
+## ResizeObserver correction and vertical directions (0.18.1)
+
+ResizeObserver callbacks now only schedule one coalesced requestAnimationFrame. Geometry writes happen afterward and skip unchanged inline values. This removes synchronous read/write feedback during popup/manual-size changes instead of hiding the browser error. The observer belongs to the frame and disconnects on pagehide. ResizeObserver errors are collected in both documents by the browser regression.
+
+Tab order accepts Alt+Left/Right or Alt+Up/Down (previous/next); Shift maps both pairs to start/end. Native orientation is not exposed through the public tab/window APIs used here, so both pairs work without a setting. Chrome's Errors page retains previous errors; clear the old list after reloading before checking for recurrence.

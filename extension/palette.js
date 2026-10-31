@@ -91,11 +91,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let drag=null;
     let suppressDragClick=false;
     const view=document.defaultView;
+    function applyGeometry(values) {
+      for(const [property,value] of Object.entries(values))if(dialog.style[property]!==value)dialog.style[property]=value;
+    }
     function place(left,top) {
       const bounds=dialog.getBoundingClientRect();
       const x=Math.max(16,Math.min(left,view.innerWidth-bounds.width-16));
       const y=Math.max(16,Math.min(top,view.innerHeight-bounds.height-16));
-      Object.assign(dialog.style,{position:'fixed',margin:'0',left:`${x}px`,top:`${y}px`,right:'auto',bottom:'auto'});
+      applyGeometry({position:'fixed',margin:'0px',left:`${x}px`,top:`${y}px`,right:'auto',bottom:'auto'});
       positioned=true;
     }
     function move(dx,dy) {
@@ -105,8 +108,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       const maxWidth=Math.min(1000,view.innerWidth-32),maxHeight=Math.min(800,view.innerHeight-32);
       const bounds=dialog.getBoundingClientRect();
       customSize={width:Math.max(Math.min(360,maxWidth),Math.min(width,maxWidth)),height:Math.max(Math.min(220,maxHeight),Math.min(height,maxHeight))};
-      dialog.dataset.sized='';
-      Object.assign(dialog.style,{width:`${customSize.width}px`,height:`${customSize.height}px`,maxHeight:'none'});
+      if(!dialog.hasAttribute('data-sized'))dialog.dataset.sized='';
+      applyGeometry({width:`${customSize.width}px`,height:`${customSize.height}px`,maxHeight:'none'});
       place(bounds.left,bounds.top);
     }
     function resetSize() {
@@ -146,8 +149,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(customSize){resize(customSize.width,customSize.height);return;}
       if(positioned){const bounds=dialog.getBoundingClientRect();place(bounds.left,bounds.top);}
     }
-    view.addEventListener('resize',keepVisible);
-    new ResizeObserver(keepVisible).observe(dialog);
+    let layoutFrame=0;
+    function scheduleKeepVisible() {
+      if(layoutFrame || dismissed)return;
+      layoutFrame=view.requestAnimationFrame(()=>{layoutFrame=0;if(!dismissed)keepVisible();});
+    }
+    view.addEventListener('resize',scheduleKeepVisible);
+    // Observer notifications only schedule work; geometry writes happen in the next frame.
+    const sizeObserver=new view.ResizeObserver(scheduleKeepVisible);sizeObserver.observe(dialog);
+    view.addEventListener('pagehide',()=>{view.cancelAnimationFrame(layoutFrame);sizeObserver.disconnect();},{once:true});
     let mode = context.mode === 'edit' ? 'edit' : 'search';
     let orderTabId;
     let completedAddress = null;
@@ -293,11 +303,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(uniqueInline)choices=[...siteRows,...choices];
         else choices=[...choices.filter(choice=>choice.kind==='navigate'),...siteRows,...choices.filter(choice=>choice.kind!=='navigate')];
       }
-      footer.textContent=mode==='drafts'?'Saved AI prompts · Enter recover · Edit shortcut to redirect · Esc back':mode==='order'?(orderTabId===undefined?'Arrange tabs · Alt+←/→ move · +Shift first/last · Enter place'
+      footer.textContent=mode==='drafts'?'Saved AI prompts · Enter recover · Edit shortcut to redirect · Esc back':mode==='order'?(orderTabId===undefined?'Arrange tabs · Alt+←/→ or ↑/↓ move · +Shift first/last · Enter place'
         :'Choose a destination · Enter move · Esc back'):mode==='commands'?'Commands · ↑ ↓ select · Enter run · Esc back'
         :mode==='closed'?'Recently closed · Enter restore · Esc back':mode==='edit'?'Edit URL · Enter replace · Cmd/Ctrl+Enter new tab · Esc back'
         :mode.startsWith('site:')?`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'} · Enter search · Esc back`
-        :'↑ ↓ select · Alt+←/→ move tab · > commands · @ arrange · ? prompts';
+        :'↑ ↓ select · Alt+arrows move tab · > commands · @ arrange · ? prompts';
       if(inlineSites.length)footer.textContent=uniqueInline?`Search ${inlineSites[0].site.name} · Enter send query · Tab enter scope · ↓ other results`:'Shared shortcut · ↓ choose site · Enter default search';
       const retained = choices.findIndex(choice => `${choice.kind}:${choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
       const preferred=preferredId===undefined?-1:choices.findIndex(choice=>(choice.tabId ?? choice.id)===preferredId);
@@ -400,7 +410,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         else if(mode!=='search') setMode('search'); else close();
         return;
       }
-      const moveKey={ArrowLeft:'left',ArrowRight:'right',Home:'start',End:'end'}[event.key];
+      const moveKey={ArrowLeft:'left',ArrowUp:'left',ArrowRight:'right',ArrowDown:'right',Home:'start',End:'end'}[event.key];
       if(event.altKey && !event.ctrlKey && !event.metaKey && moveKey && (orderTabId!==undefined || ['tab','order-tab'].includes(choices[selected]?.kind))) {
         event.preventDefault();quickMove(event.shiftKey && ['left','right'].includes(moveKey)?(moveKey==='left'?'start':'end'):moveKey);return;
       }

@@ -109,3 +109,7 @@ A failing real-browser test reproduced that Ctrl+Alt+Right did not move the over
 ## Resize, blur removal, repeat ordering and protected surfaces v0.18.0
 
 Chrome regression checks native backdropFilter is none, actual corner pointer resizing, focused-handle arrow resizing, 360×220 minimum and viewport-limited maximum, plus existing drag/shrink/reset/isolation checks. Burst test sends four moves during artificial latency, checks all survive with the same tab ID, max one mutation in flight and no empty list. Service tests verify native action popup preference, original window context, temporary-setting cleanup and legacy fallback on rejection. APIs remain stubbed in the browser harness: real toolbar-popup anchoring/clearing on chrome://extensions and source navigation must be smoke-tested in the installed Chrome (127+), including unpinned toolbar action and multiple windows. Check reduced-motion animation and actual pin/group boundaries while holding move keys. No native tab-strip animation guarantee.
+
+## Popup resize feedback and vertical keys v0.18.1
+
+Capture window errors from both the palette frame and parent document. Exercise pointer/keyboard min/max size, then switch popup-like viewport dimensions while explicit sizing is active; assert no ResizeObserver loop or other window error. Verify Alt+Up/Down submits previous/next, Shift+Up/Down start/end, with horizontal keys and Ctrl+Alt overlay movement retained. Actual browser action-popup sizing should be rechecked after update; clear historical entries from Chrome's extension Errors page first.

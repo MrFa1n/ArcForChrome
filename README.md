@@ -141,7 +141,7 @@ Known catalogue addresses such as `chrome://extensions` also open directly. Only
 
 ### Put tabs in order
 
-Find an open tab in ordinary Search, select it with ↑/↓ and press **Alt/Option+← or →** to move it immediately. Add **Shift** to move to the start/end instead (**Alt+Home/End** also works). The overlay stays open and keeps that tab selected. Fast repeat presses are queued without discarded inputs or an empty-list refresh pause; rows animate between positions, respecting reduced-motion preferences.
+Find an open tab in ordinary Search, select it with ↑/↓ and press **Alt/Option+←/→** for horizontal tabs or **Alt/Option+↑/↓** for vertical tabs to move it immediately. Both pairs are available without browser-orientation detection. Add **Shift** to move to the start/end instead (**Alt+Home/End** also works). The overlay stays open and keeps that tab selected. Fast repeat presses are queued without discarded inputs or an empty-list refresh pause; rows animate between positions, respecting reduced-motion preferences.
 
 Type **`@`** to see tabs in their actual strip order; **`@github`** filters that list. Use the same move keys directly. For an exact destination, press Enter on a tab and choose **Move before…**. That explicit placement closes the overlay after applying; Esc returns to tab selection. Commands → Arrange tabs remains available.
 

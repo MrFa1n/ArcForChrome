@@ -101,6 +101,8 @@ try {
   assert.equal(light.color,light.canvasText);
   assert.equal(await paletteCall(`function(){return this.ownerDocument.defaultView.getComputedStyle(this,'::backdrop').backdropFilter;}`),'none','backdrop must not blur the page');
   await screenshot('light');
+  await evaluate("globalThis.paletteErrors=[];window.addEventListener('error',event=>paletteErrors.push(event.message));");
+  await paletteCall(`function(){this.ownerDocument.defaultView.addEventListener('error',event=>this.ownerDocument.defaultView.parent.paletteErrors.push(event.message));}`);
   const initialPosition=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
   await key('ArrowRight','ArrowRight',undefined,3);
   const nudgedPosition=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
@@ -151,7 +153,15 @@ try {
   for(let index=0;index<20;index++)await key('ArrowDown','ArrowDown',undefined,8);
   const maximumSize=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
   assert.ok(maximumSize.width<=Math.min(1000,viewport.width-32)+1 && maximumSize.height<=Math.min(800,viewport.height-32)+1);
+  // Popup-like viewport changes while an explicit size is active used to feed geometry back into ResizeObserver.
+  for(const dimensions of [{width:680,height:560},{width:500,height:350},viewport]) {
+    await send('Emulation.setDeviceMetricsOverride',{...dimensions,deviceScaleFactor:1,mobile:false});
+    await evaluate('new Promise(resolve=>setTimeout(resolve,70))');
+  }
+
   await key('0','Digit0','',3);await key('Tab','Tab',undefined,8);
+  await evaluate('new Promise(resolve=>setTimeout(resolve,100))');
+  assert.deepEqual(await evaluate('paletteErrors'),[],'resize/clamping must not produce ResizeObserver feedback errors');
 
 
 
@@ -379,6 +389,15 @@ try {
   assert.equal(burst.length,4,'every repeated move must be retained');
   assert.ok(burst.every(message=>message.tabId===42));assert.equal(await evaluate('maxMovesInFlight'),1);
   await evaluate('chrome.runtime.sendMessage=quickSend');
+  await key('ArrowUp','ArrowUp',undefined,1);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'left'},'Alt+Up must move to the previous vertical position');
+  await key('ArrowDown','ArrowDown',undefined,1);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'right'},'Alt+Down must move to the next vertical position');
+  await key('ArrowUp','ArrowUp',undefined,9);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'start'});
+  await key('ArrowDown','ArrowDown',undefined,9);
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'end'});
+
 
   await key('ArrowRight','ArrowRight',undefined,9);
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:42,placement:'end'});
