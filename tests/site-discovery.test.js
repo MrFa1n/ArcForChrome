@@ -21,7 +21,7 @@ test('saved aliases adapt discovery and manual definitions remain optional overr
   const api={storage:{local:{get:async()=>({'siteAlias:work':'auto:https://docs.example.com'})}},
     tabs:{query:async()=>[{title:'Docs',url:'https://docs.example.com/search?q=work'}]},bookmarks:{getRecent:async()=>[]},history:{search:async()=>[]}};
   const sites=await loadSites(api,2);
-  assert.ok(sites[0].aliases.includes('work'));
+  assert.ok(sites.find(site=>site.key==='auto:https://docs.example.com').aliases.includes('work'));
 });
 test('learned shortcuts store only an explicit association with a currently known site',async()=>{
   const {rememberSite}=await import('../extension/site-search.js');

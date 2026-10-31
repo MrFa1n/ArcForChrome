@@ -1,5 +1,8 @@
 import {browserPageCommands} from './browser-pages.js';
 export const COMMANDS = [
+  {command:'activity',title:'Spotlight activity history',aliases:'action log journal история действия журнал spotlight'},
+  {command:'recover-prompts',title:'Recover AI prompts',aliases:'restore retry draft last query восстановить промпт запрос последний черновики повторить'},
+  {command:'clear-prompts',title:'Clear saved AI prompts',aliases:'forget очистить удалить промпты черновики'},
   {command:'closed-tabs',title:'Recently closed tabs',aliases:'recent closed sessions недавно закрытые вкладки'},
   {command:'edit-url',title:'Edit current URL',aliases:'address edit изменить адрес текущей вкладки'},
   {command:'order-tabs',title:'Arrange tabs',aliases:'move reorder position порядок вкладки переместить расположить'},

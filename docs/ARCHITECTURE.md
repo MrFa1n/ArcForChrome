@@ -1,10 +1,10 @@
 # Command Bar architecture
 
-Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bookmarks/sessions. Only optional Site Search overrides and confirmed alias-to-site associations are stored by the extension.
+Manifest V3, native ES modules, no runtime packages. Chrome owns tabs/history/bookmarks/sessions. Local storage holds site overrides/aliases, action settings and bounded action metadata; session storage holds temporary AI recovery copies.
 
 ## Components
 
-- `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts eight typed message actions: suggest, activate, navigate, site, command, restore, remember-site and move.
+- `worker.js` registers `search-controller.js` synchronously at worker evaluation. Toolbar clicks/open-search invoke Search; edit-address invokes Edit. The controller accepts nine typed message actions: suggest, activate, navigate, site, command, restore, remember-site, move and recover.
 - `palette-service.js` validates sender and source context, queries tabs/settings, and injects the self-contained `mountPalette` function. Protected pages use `palette-page.js` with the original window/tab IDs in the popup URL. Source tab identity is taken from the browser sender or the validated extension popup URL, never an arbitrary message field.
 - `model.js` distinguishes HTTP(S) URLs from search text. It does not construct a provider-specific search URL. `chrome.search.query` handles text against a newly created or explicitly selected source tab.
 - `site-search.js` validates optional custom keywords, names and HTTP(S) templates. Queries are encoded once, replacing exactly one `%s`. `options.js` saves validated definitions to storage.local. No browsing history or choice log is persisted.
@@ -43,7 +43,7 @@ Unit tests exercise APIs through fakes; real headless Chrome exercises DOM, keyb
 
 The UI derives name/domain-prefix/initials/ordered-letter candidates. Open tabs keep priority. Ambiguous matches remain explicit alternatives. Entering a site through a typed alias sends a validated remember-site action. Each alias is stored in its own storage.local key, avoiding a shared read-modify-write map across windows. A learned alias gets stronger priority than inferred aliases; only associations with currently known sites are accepted. Automatically inferred templates are kept in memory and revalidated from current source data on use.
 
-The options page shows detected sites separately from manual overrides and supports clearing learned associations. Existing user-defined templates remain valid. There is no fixed default provider list, automatic network discovery, persistent browsing index or import of Chrome's protected keyword configuration.
+The options page shows detected sites separately from manual overrides and supports clearing learned associations. Existing user-defined templates remain valid. Requested web/AI providers now have explicit templates in search-providers.js; other sites retain inference. There is no automatic network discovery, persistent browsing index or import of Chrome's protected keyword configuration.
 
 ## Tab order (0.13)
 
@@ -56,3 +56,9 @@ The options page shows detected sites separately from manual overrides and suppo
 ## Direct movement (0.15)
 
 Alt+Left/Right and Alt+Shift+Left/Right (plus Alt+Home/End) move the currently selected open tab in Search/Arrange, or the source in destination mode. The action waits for final suggestions, validates cancellation revisions and uses the same worker move path. On success it returns to Arrange, retains any Arrange-list filter, and refreshes actual positions with the moved ID as preferred selection. The overlay stays open for repeated moves. Pending operations block additional mutations; dismissal/mode changes cannot be overwritten by a late move response. Explicit before-placement retains its close-on-success behavior.
+
+## Provider requests and recovery (0.16)
+
+Inline aliases are exact-match only (single-character aliases included), with learned preference breaking ties. No guessing occurs for tied aliases. Explicit inline site intent precedes normal page suggestions; the default raw action remains available. The worker revalidates the destination using loadSites and encodes once. Before AI navigation, prompt-recovery.js writes independent UUID keys to memory-backed session storage. Cleanup uses one observed snapshot so concurrent new keys are not swept accidentally. Up to 20 copies remain; entries older than 24h cannot be listed/recovered. Restore validates ID and returns query/known alias, with no navigation. A missing provider returns query only. Login and provider URL behavior are outside extension control.
+
+activity-store.js writes independent local keys after mutation success/failure, with optional text and configurable age/count retention. Suggestions and learned-alias writes are excluded; opening the history UI is excluded to avoid noise. Default labels include operation/provider/host or tab ID, omitting URL path/query. Settings validation bounds retention and count. Snapshot cleanup does not touch site settings or prompts. worker.js registers alarm/startup cleanup synchronously and rechecks on wake. Activity logging failures do not undo navigation; AI recovery save failures block the AI request. activity.html/js renders entries through textContent and provides search, settings and manual clearing; it has no host access.

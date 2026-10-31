@@ -140,3 +140,29 @@ test('Chrome settings command is distinct from extension Search settings',async(
  assert.deepEqual(api.calls,[['create',{windowId:2,active:true,url:'chrome://settings/'}]]);
  await assert.rejects(()=>paletteAction(api,{type:'palette:command',command:'browser:quit'},sender));
 });
+
+test('an AI prompt is recoverable even when destination navigation fails',async()=>{
+ const api=browser();const saved={};
+ api.storage={session:{get:async()=>({...saved}),set:async value=>Object.assign(saved,value),remove:async keys=>keys.forEach(key=>delete saved[key])}};
+ api.tabs.create=async()=>{assert.ok(Object.values(saved).some(row=>row.query==='Keep my prompt'));throw Error('Could not open destination');};
+ await assert.rejects(()=>paletteAction(api,{type:'palette:site',site:'provider:gemini',query:'Keep my prompt'},sender));
+ const result=await paletteAction(api,{type:'palette:suggest',mode:'drafts',query:''},sender);
+ assert.equal(result.suggestions.length,1);
+ const recovered=await paletteAction(api,{type:'palette:recover',draftId:result.suggestions[0].draftId},sender);
+ assert.deepEqual(recovered,{query:'Keep my prompt',alias:'gem'});
+ await paletteAction(api,{type:'palette:command',command:'clear-prompts'},sender);
+ assert.deepEqual(saved,{});
+});
+test('AI navigation stops if its recovery copy cannot be saved',async()=>{
+ const api=browser();
+ await assert.rejects(()=>paletteAction(api,{type:'palette:site',site:'provider:claude',query:'Keep my prompt'},sender),/recovery/);
+ assert.deepEqual(api.calls,[]);
+});
+test('executed actions log metadata without URL query/path content by default',async()=>{
+ const api=browser();const saved={};
+ api.storage={local:{get:async()=>({...saved}),set:async value=>Object.assign(saved,value),remove:async keys=>keys.forEach(key=>delete saved[key])}};
+ await paletteAction(api,{type:'palette:navigate',query:'https://example.com/private?token=fixture'},sender);
+ const rows=Object.entries(saved).filter(([key])=>key.startsWith('activity:entry:')).map(([,row])=>row);
+ assert.equal(rows.length,1);assert.equal(rows[0].label,'Open example.com');assert.equal(rows[0].status,'ok');
+ assert.ok(!JSON.stringify(rows).includes('token'));assert.equal(rows[0].text,undefined);
+});

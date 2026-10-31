@@ -63,7 +63,7 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 
 In Search, Enter activates an existing tab or opens a new one. In **Edit current URL**, Enter replaces the source page; submitting its unchanged URL reloads it. Navigation modifiers apply to URL/search results; commands and session restoration keep their explicit actions.
 
-**Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
+**Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed · `?` recover AI prompts. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
 
 **Tab does three useful things:**
 
@@ -86,6 +86,38 @@ Search on a website once, then reopen the command bar. If its search URL is reco
 For example, an observed YouTube search can offer **`yt` → Tab → `minimal interface design` → Enter**. Names and aliases depend on the observed data. When you confirm a typed shortcut, the extension saves that association locally and prioritizes it next time.
 
 Settings shows detected sites, lets you clear learned shortcuts and offers optional manual templates for unusual websites. Detection is conservative: it uses a bounded recent sample and recognized query formats; it does not invent endpoints or read Chrome’s internal Site Search settings.
+
+### Shortcut + query, including AI
+
+Type a shortcut, a space and your request, then press Enter—no Tab needed:
+
+| Input | Destination |
+| --- | --- |
+| `g browser extensions` | Google |
+| `ya погода завтра` or `я погода завтра` | Yandex |
+| `gpt explain closures` | ChatGPT |
+| `gem explain closures` | Gemini |
+| `claude review this idea` | Claude |
+| `grok explain this topic` | Grok |
+| `pplx compare the options` | Perplexity |
+
+These providers are built in. Other exact known/learned site shortcuts work too, for example `yt design` after YouTube is discovered. The top result names the destination; unknown shortcuts remain ordinary searches. Equal-priority shared aliases require choosing a site with ↓. Shortcut + Tab still works. Manual overrides can replace built-in destinations or take ownership of their shortcuts.
+
+AI requests are handed to the provider’s web URL, without API keys, model selection, extra helpers or scripts injected into the chat. Sign-in, prefill and final submission depend on the provider. Claude/Grok web-link behavior and authenticated prompt delivery need installed-profile verification; this is not a guarantee of auto-send.
+
+### Recover a prompt when a page fails
+
+Before opening an AI destination, Spotlight keeps a copy in memory-backed session storage. Type **`?`**, select a request and press Enter to restore it without resending. Only the service shortcut is selected: type another shortcut to redirect the same prompt, or press Enter to retry. **`> Recover AI prompts`** opens the same list; **`> Clear saved AI prompts`** clears it.
+
+Recovery keeps up to 20 prompts, available for 24 hours within the current extension/browser session. Browser restart or extension reload/update/disable clears them. It does not automatically detect failed page loads or replay requests. If a recovery copy cannot be saved, the AI navigation is stopped with an error.
+
+### Your Spotlight activity history
+
+[Preview the history page](docs/assets/spotlight-activity.png).
+
+Open **`> Spotlight activity history`** (or the link in Search settings) to review successful/failed actions, search the journal and change retention. Defaults: **7 days, at most 500 actions**, with query/prompt text excluded. You can disable recording, opt into text recording, choose another age/count limit or clear everything manually. Turning text recording off does not erase older text; clear the history to remove it.
+
+History stays on this device in extension-local storage. A Chrome alarm expires entries while the browser is running; age/count checks also run on activity and when the journal opens. The maximum configurable count is 5,000; zero hours disables age expiry but keeps the count cap. Status reflects Chrome accepting an operation, not whether a website loaded or an AI answered. Recovery prompts remain separate from the journal and its text-recording setting.
 
 ### Find the page, or just its homepage
 
@@ -131,10 +163,11 @@ Suggestions are processed locally. There is **no telemetry, backend, online auto
 | `history`, `bookmarks` | Read local suggestions; never edit or delete these sources |
 | `search` | Use Chrome’s chosen default provider |
 | `sessions` | List and restore recently closed tabs |
-| `storage` | Keep optional site templates and confirmed shortcut associations locally |
+| `storage` | Site templates/aliases, local action history and temporary AI prompt recovery |
+| `alarms` | Automatically expire action-history entries |
 | `clipboardWrite` | Copy the current URL on request; never read the clipboard |
 
-No permanent host access is requested. Automatically inferred site templates are not persisted; search text and browsing activity logs are not stored by the extension. [Security policy →](SECURITY.md)
+No permanent host access is requested. Automatically inferred site templates are not persisted; ordinary typed text is not saved while composing. Executed action metadata is stored locally with automatic limits; query/prompt text in that journal is opt-in. AI prompt recovery uses separate temporary session storage. [Security policy →](SECURITY.md)
 
 ## What to expect
 

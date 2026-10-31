@@ -16,4 +16,6 @@ frames[0].save(output / 'spotlight-demo.gif', save_all=True,
                loop=0, optimize=True)
 shutil.copyfile(source / 'arc-spotlight-demo-02.png', output / 'spotlight-light.png')
 shutil.copyfile(source / 'arc-spotlight-demo-dark.png', output / 'spotlight-dark.png')
+if (source / 'arc-spotlight-activity.png').exists():
+    shutil.copyfile(source / 'arc-spotlight-activity.png', output / 'spotlight-activity.png')
 print(f'Wrote demo and light/dark captures to {output}')

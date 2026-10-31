@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.15.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.16.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -52,9 +52,9 @@ Commands mode includes **Reload current page**, **Duplicate current tab**, **Cop
 
 You do not need to define sites or shortcuts first. On opening the palette, the extension inspects open tabs, 100 recent bookmarks and 250 recent history records for actual search URLs. It recognizes common query parameters on search/results/find pages and derives a template from the observed URL. Site names, domain prefixes, brand initials (such as YouTube → yt, GitHub → gh when that name is available) and short ordered-letter matches can offer a site scope.
 
-Type a name or abbreviation and choose the suggested site with Tab. If several sites match, choose explicitly with the arrows rather than relying on a guessed destination. Your confirmed alias-to-site association is saved locally and receives priority next time. No query text or browsing activity log is saved. Sites are rediscovered on the next open; previously unseen sites with no observed search URL have a homepage action but no invented search endpoint.
+Type a name or abbreviation and choose the suggested site with Tab. If several sites match, choose explicitly with the arrows rather than relying on a guessed destination. Your confirmed alias-to-site association is saved locally and receives priority next time. Typed suggestions are not logged. Executed action metadata and separate temporary AI recovery copies follow the policy below. Sites are rediscovered on the next open; previously unseen sites with no observed search URL have a homepage action but no invented search endpoint.
 
-Use **`> Search settings`** to see automatically detected sites or clear learned shortcuts. Manual definitions remain optional overrides for unusual search formats. Add up to 20 overrides with a name, unique keyword and HTTP(S) URL containing one `%s`, e.g. `https://example.com/search?q=%s`. Defaults are empty; there is no hard-coded list of search providers. An override replaces an automatically detected template for the same origin. Reopen search after changes.
+Use **`> Search settings`** to see automatically detected sites or clear learned shortcuts. Manual definitions remain optional overrides for unusual search formats. Add up to 20 overrides with a name, unique keyword and HTTP(S) URL containing one `%s`, e.g. `https://example.com/search?q=%s`. Manual overrides default to empty. Google, Yandex, ChatGPT, Gemini, Claude, Grok and Perplexity are built in; other sites remain automatically discovered. An override replaces an automatically detected template for the same origin. Reopen search after changes.
 
 Chrome's internal Site Search settings are not read, and automatic detection is a conservative heuristic, not support for every website or all historical records. Credential-bearing/ambiguous URLs are excluded, and no website is contacted during discovery.
 
@@ -81,7 +81,8 @@ No telemetry, backend, online autocomplete, permanent host access or persistent 
 | `history`, `bookmarks` | Read local matching suggestions; never edit/delete these sources |
 | `search` | Execute queries through Chrome's selected provider |
 | `sessions` | List and restore recently closed tabs |
-| `storage` | Save optional site overrides and explicitly learned alias-to-site associations locally |
+| `storage` | Site overrides/aliases, bounded action journal and temporary AI recovery |
+| `alarms` | Schedule history expiry while Chrome runs |
 | `clipboardWrite` | Explicit Copy current URL action; clipboard contents are not read |
 
 No sidebar, spaces UI, global tab cycling, MRU tracking or numbered pin commands. Native Chrome pins/groups/tabs are retained. Session restoration uses Chrome's original session destination, which can belong to a different window. A failed default-provider query can leave its newly created blank tab; the original page is unaffected.
@@ -118,3 +119,11 @@ The Extensions page address is documented in [Chrome’s installation guide](htt
 ## Single-input interface (0.15)
 
 No header, mode dropdown, Settings button or close button. The input, results and contextual keyboard hints are the entire overlay. `>` enters Commands, `@` enters Arrange and `<` enters Recently closed from Search, preserving any pasted query after the prefix. Search settings, Edit current URL and Recently closed tabs remain searchable commands. Site names/aliases + Tab enter a site scope. Global Search/Edit shortcuts still work. Escape and empty-input Backspace return through scopes; Escape in Search closes. Pointer users can click results and dismiss via the backdrop. Input accessible labels/hints describe the active scope.
+
+## Inline providers, recovery and action history (0.16)
+
+An exact known/learned alias followed by whitespace and a nonempty query offers site-query results. A unique best alias is first; ties default to ordinary search until a site row is chosen. Loose/fuzzy matches do not route inline requests. Modifiers carry through, and Tab converts the row to a site scope without losing text. Provider URL templates live in search-providers.js; custom aliases/origins override defaults. Provider-side login/prefill/auto-send must be verified in the installed profile, especially Claude/Grok; no API integration or guaranteed auto-send is claimed. Gemini's q template is evidenced by [Chromium starter pack source](https://chromium.googlesource.com/chromium/src/%2B/refs/tags/134.0.6998.179/components/search_engines/template_url_starter_pack_data.cc).
+
+AI prompts are copied before navigation into storage.session, at most 20 available for 24 hours in the loaded session. `?` or Recover AI prompts lists them; Enter restores text and selects the alias so a different service can be typed. Recovery does not submit until the next explicit action. Browser restart/extension reload/update/disable clears session storage. Clear saved AI prompts removes copies manually. See [Chrome storage lifecycle](https://developer.chrome.com/docs/extensions/reference/api/storage#property-session).
+
+Spotlight activity history opens an extension page via Commands or Search settings. Defaults: enabled, 168 hours, 500 entries, no query text. Controls allow disabling recording, opting into text, 0–8760 hours (0 disables age expiry), 1–5000 records and immediate manual clearing. Older opt-in text is not scrubbed by disabling future text capture. Cleanup applies on writes/reads/startup and a Chrome expiry alarm. Results describe Chrome operation success/failure, not site-load or AI-answer status. AI recovery is separate and unaffected by journal text preferences. Data stays on-device; submitted URL queries can also appear in normal browser history/provider records.

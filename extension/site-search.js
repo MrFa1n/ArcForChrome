@@ -1,3 +1,4 @@
+import {BUILTIN_SITES} from './search-providers.js';
 import {discoverSites} from './site-discovery.js';
 
 export function parseSites(value) {
@@ -21,14 +22,19 @@ export async function loadCustomSites(api) {
 
 export async function loadSites(api,windowId) {
   const [custom,detected,saved]=await Promise.all([loadCustomSites(api),discoverSites(api,windowId),api.storage?.local?.get(null)]);
-  const manual=custom.map(site=>({...site,aliases:[site.key],detected:false}));
+  const manual=custom.map(site=>({...site,aliases:[site.key],detected:false,ai:BUILTIN_SITES.some(provider=>provider.ai && new URL(provider.template.replace('%s','query')).origin===new URL(site.template.replace('%s','query')).origin)}));
   const origins=new Set(custom.map(site=>new URL(site.template.replace('%s','query')).origin));
-  const sites=[...manual,...detected.filter(site=>!origins.has(new URL(site.template.replace('%s','query')).origin))];
+  const origin=site=>new URL(site.template.replace('%s','query')).origin;
+  const customAliases=new Set(custom.map(site=>site.key));
+  const builtins=BUILTIN_SITES.filter(site=>!origins.has(origin(site))).map(site=>({...site,builtin:true,detected:false,
+    aliases:site.aliases.filter(alias=>!customAliases.has(alias))}));
+  for(const site of builtins)origins.add(origin(site));
+  const sites=[...manual,...builtins,...detected.filter(site=>!origins.has(origin(site)))];
   for(const [key,value] of Object.entries(saved || {})) {
     if(!key.startsWith('siteAlias:') || typeof value!=='string') continue;
     try {
       const alias=decodeURIComponent(key.slice(10));
-      const site=sites.find(item=>item.key===value);
+      const site=sites.find(item=>item.key===value || value===`auto:${origin(item)}`);
       if(site && /^[\p{L}\d.-]{2,32}$/u.test(alias)) {
         if(!site.aliases.includes(alias))site.aliases.unshift(alias);
         site.learnedAliases=[...(site.learnedAliases || []),alias];

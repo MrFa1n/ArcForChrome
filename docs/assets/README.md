@@ -11,3 +11,5 @@ python3 scripts/build-readme-demo.py /tmp/arc-readme-captures
 ```
 
 Set `CHROME_BINARY` if Chrome is not installed at the standard macOS path. The capture directory must already exist. The script also produces regression screenshots that are not bundled in the README. The GIF is assembled from four unmodified captures, with deliberately readable pauses. Static light/dark PNGs are included for readers who prefer no animation.
+
+The activity-history preview uses two fictional action records. The current GIF includes inline shortcut + query; no live prompt is sent during capture.

@@ -11,3 +11,24 @@ test('custom site templates reject unsafe schemes, duplicate keywords and ambigu
   assert.throws(()=>parseSites([site,site]));
   assert.throws(()=>siteDestination([],'unknown','x'));
 });
+test('requested web and AI providers work without browsing history or manual setup',async()=>{
+  const {loadSites}=await import('../extension/site-search.js');
+  const sites=await loadSites({});
+  for(const [key,alias,url] of [
+    ['provider:google','g','https://www.google.com/search?q='],
+    ['provider:yandex','ya','https://yandex.ru/search/?text='],
+    ['provider:chatgpt','gpt','https://chatgpt.com/?q='],
+    ['provider:gemini','gem','https://gemini.google.com/app?q='],
+    ['provider:claude','claude','https://claude.ai/new?q='],
+    ['provider:grok','grok','https://grok.com/?q='],
+    ['provider:perplexity','pplx','https://www.perplexity.ai/search?q=']]) {
+    assert.ok(sites.find(site=>site.key===key)?.aliases.includes(alias));
+    assert.equal(siteDestination(sites,key,'Привет & +\nworld'),url+encodeURIComponent('Привет & +\nworld'));
+  }
+});
+test('manual overrides replace built-in destinations and take ownership of matching shortcuts',async()=>{
+  const {loadSites}=await import('../extension/site-search.js');
+  const sites=await loadSites({storage:{local:{get:async()=>({sites:[{key:'g',name:'My search',template:'https://custom.example/?q=%s'}]})}}});
+  assert.ok(sites.find(site=>site.key==='g').aliases.includes('g'));
+  assert.ok(!sites.find(site=>site.key==='provider:google').aliases.includes('g'));
+});

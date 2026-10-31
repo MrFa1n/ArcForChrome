@@ -112,9 +112,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (closing) dismiss();
     });
     requestClose = close;
-    function siteMatches(value) {
+    function siteMatches(value,exact=false) {
       const query=value.trim().toLocaleLowerCase();
-      if(!/^[\p{L}\d-]{2,32}$/u.test(query)) return [];
+      if(!/^[\p{L}\d.-]{1,32}$/u.test(query)) return [];
       return sites.map(site=>{
         const aliases=[site.key,...(site.aliases || [])].map(alias=>alias.toLocaleLowerCase());
         let score=(site.learnedAliases || []).includes(query)?120:aliases.includes(query)?100:aliases.some(alias=>alias.startsWith(query))?70:0;
@@ -124,17 +124,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
           if(index===query.length)score=30;
         }
         return {site,score};
-      }).filter(item=>item.score).sort((a,b)=>b.score-a.score).slice(0,3);
+      }).filter(item=>(exact || query.length===1)?item.score>=100:item.score).sort((a,b)=>b.score-a.score).slice(0,3);
     }
-    function enterSite(site,alias=input.value) {
+    function enterSite(site,alias=input.value,value='') {
       // Remember only an explicitly chosen site association, not browsing activity or search queries.
       if(alias.trim()) chrome.runtime.sendMessage({type:'palette:remember-site',site:site.key,alias}).catch(()=>{});
-      setMode(`site:${site.key}`);
+      setMode(`site:${site.key}`,value);
     }
     function setMode(next,value='',tabId,preferredId) {
       orderTabId=next==='order'?tabId:undefined;
       mode=next;completedAddress=null;input.value=value;
-      input.placeholder=mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
+      input.placeholder=mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
         :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
       input.setAttribute('aria-label',input.placeholder);
       updateSuggestions(preferredId);input.focus();
@@ -157,8 +157,16 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const choice=choices[selected];
         if(!choice) return;
         if(choice.kind==='order-tab') {setMode('order','',choice.tabId);return;}
-        const commandMode={'order-tabs':'order','closed-tabs':'closed','edit-url':'edit'}[choice.command];
+        const commandMode={'order-tabs':'order','closed-tabs':'closed','edit-url':'edit','recover-prompts':'drafts'}[choice.command];
         if(choice.kind==='command' && commandMode) {setMode(commandMode,commandMode==='edit'?context.sourceUrl || '':'');return;}
+        if(choice.kind==='ai-draft') {
+          const response=await chrome.runtime.sendMessage({type:'palette:recover',draftId:choice.draftId});
+          if(!response?.ok)throw new Error(response?.error || 'Could not recover prompt');
+          if(dismissed || closing || actionRevision!==queryRevision)return;
+          setMode('search',response.alias?`${response.alias} ${response.query}`:response.query);
+          if(response.alias)input.setSelectionRange(0,response.alias.length);
+          return;
+        }
         if(choice.kind==='site') {enterSite(sites.find(site=>site.key===choice.site));return;}
         const target=event.altKey?'current':event.shiftKey?'background':(mode==='edit' && !(event.metaKey||event.ctrlKey))?'current':'new';
         const targetField=target==='new'?{}:{target};
@@ -166,12 +174,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(choice.kind==='move') message={type:'palette:move',tabId:orderTabId,placement:choice.placement,...(choice.beforeTabId===undefined?{}:{beforeTabId:choice.beforeTabId})};
         else if(choice.kind==='command') message={type:'palette:command',command:choice.command};
         else if(choice.kind==='closed') message={type:'palette:restore',sessionId:choice.sessionId};
+        else if(choice.kind==='site-query') message={type:'palette:site',site:choice.site,query:choice.query,...targetField};
         else if(mode.startsWith('site:')) message={type:'palette:site',site:mode.slice(5),query:input.value,...targetField};
         else if(choice.id!==undefined && mode!=='edit' && !event.altKey && !event.shiftKey && !event.metaKey && !event.ctrlKey)
           message={type:'palette:activate',tabId:choice.id};
         else message={type:'palette:navigate',query:choice.kind==='navigate'?input.value:choice.url,...targetField};
         const response=await chrome.runtime.sendMessage(message);
         if(!response?.ok) throw new Error(response?.error || 'Could not open result');
+        if(choice.kind==='site-query')chrome.runtime.sendMessage({type:'palette:remember-site',site:choice.site,alias:choice.alias}).catch(()=>{});
         if(response.copyText!==undefined) await copyText(response.copyText);
         close();
       } catch(failure) {error.textContent=failure.message;}
@@ -186,10 +196,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function render(preferredId) {
       const previous = choices[selected];
-      const previousKey = previous && `${previous.kind}:${previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
+      const previousKey = previous && `${previous.kind}:${previous.draftId ?? previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
       choices = [...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['tab','browser-page'].includes(item.kind))];
       const query=input.value.trim();
-      if(['commands','closed','order'].includes(mode)) choices=suggestions;
+      if(['commands','closed','order','drafts'].includes(mode)) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
         const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
@@ -200,27 +210,37 @@ export function mountPalette(tabs, floating = false, context = {}) {
           choices=[...open,...siteRows,...choices.filter(item=>item.kind!=='tab')];
         }
       }
-      footer.textContent=mode==='order'?(orderTabId===undefined?'Arrange tabs · Alt+←/→ move · +Shift first/last · Enter place'
+      const inline=mode==='search' && completedAddress!==query?query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/us):null;
+      const inlineSites=inline?siteMatches(inline[1],true):[];
+      const uniqueInline=inlineSites.length && (inlineSites.length===1 || inlineSites[0].score>inlineSites[1].score);
+      if(inlineSites.length) {
+        const siteRows=inlineSites.map(({site})=>({kind:'site-query',site:site.key,query:inline[2],alias:inline[1].toLocaleLowerCase(),
+          title:`Search ${site.name}: ${inline[2]}`,url:new URL(site.template.replace('%s','query')).origin,sources:['site']}));
+        if(uniqueInline)choices=[...siteRows,...choices];
+        else choices=[...choices.filter(choice=>choice.kind==='navigate'),...siteRows,...choices.filter(choice=>choice.kind!=='navigate')];
+      }
+      footer.textContent=mode==='drafts'?'Saved AI prompts · Enter recover · Edit shortcut to redirect · Esc back':mode==='order'?(orderTabId===undefined?'Arrange tabs · Alt+←/→ move · +Shift first/last · Enter place'
         :'Choose a destination · Enter move · Esc back'):mode==='commands'?'Commands · ↑ ↓ select · Enter run · Esc back'
         :mode==='closed'?'Recently closed · Enter restore · Esc back':mode==='edit'?'Edit URL · Enter replace · Cmd/Ctrl+Enter new tab · Esc back'
         :mode.startsWith('site:')?`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'} · Enter search · Esc back`
-        :'↑ ↓ select · Alt+←/→ move tab · > commands · @ arrange · < closed';
-      const retained = choices.findIndex(choice => `${choice.kind}:${choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
+        :'↑ ↓ select · Alt+←/→ move tab · > commands · @ arrange · ? prompts';
+      if(inlineSites.length)footer.textContent=uniqueInline?`Search ${inlineSites[0].site.name} · Enter send query · Tab enter scope · ↓ other results`:'Shared shortcut · ↓ choose site · Enter default search';
+      const retained = choices.findIndex(choice => `${choice.kind}:${choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
       const preferred=preferredId===undefined?-1:choices.findIndex(choice=>(choice.tabId ?? choice.id)===preferredId);
       selected = preferred>=0?preferred:selectionMoved && retained >= 0 ? retained : 0;
       if(preferred>=0)selectionMoved=true;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
         row.setAttribute('role','option');row.tabIndex = -1;
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','browser-page':'⚙'})[choice.kind];
+        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕'})[choice.kind];
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = ['navigate','order-tab','move'].includes(choice.kind) ? choice.url
+        const url = document.createElement('span');url.className = 'url';url.textContent = ['navigate','order-tab','move','ai-draft'].includes(choice.kind) ? choice.url
           : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title,url);row.append(icon,text);
-        if (choice.kind !== 'navigate' && !['command','closed','order-tab','move'].includes(choice.kind)) {
-          const hint = document.createElement('span');hint.className = 'hint';hint.textContent = 'Tab ↹';row.append(hint);
+        if (choice.kind !== 'navigate' && !['command','closed','order-tab','move','ai-draft'].includes(choice.kind)) {
+          const hint = document.createElement('span');hint.className = 'hint';hint.textContent = choice.kind==='site-query'?'Enter ↵':'Tab ↹';row.append(hint);
         }
         row.addEventListener('click',event => {if(busy)return;selected=index;selectionMoved=true;activate(event);});
         row.addEventListener('mousemove',() => {if(!busy){selected=index;selectionMoved=true;highlight();}});
@@ -228,7 +248,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }));highlight();
     }
     function updateSuggestions(preferredId) {
-      const prefixMode={'>':'commands','@':'order','<':'closed'}[input.value[0]];
+      const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts'}[input.value[0]];
       if(mode==='search' && prefixMode) {setMode(prefixMode,input.value.slice(1).trimStart());return;}
       const revision=++queryRevision;
       clearTimeout(timer);finishPending();
@@ -236,14 +256,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-      suggestions=['commands','closed','order'].includes(mode) || mode.startsWith('site:')?[]
+      suggestions=['commands','closed','order','drafts'].includes(mode) || mode.startsWith('site:')?[]
         :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
       if(mode.startsWith('site:')) {resolvePending();return;}
       timer=setTimeout(async()=>{
         try {
-          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order'].includes(mode)?{mode}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
+          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts'].includes(mode)?{mode}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];
@@ -301,9 +321,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const matches=siteMatches(input.value);
         const site=choice?.kind==='site'?sites.find(site=>site.key===choice.site)
           :matches.length && (matches.length===1 || matches[0].score>matches[1].score)?matches[0].site:null;
+        if(!event.shiftKey && event.target===input && choice?.kind==='site-query') {enterSite(sites.find(site=>site.key===choice.site),choice.alias,choice.query);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && site) {enterSite(site);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && !input.value.trim()) {setMode('commands');return;}
-        if (!event.shiftKey && event.target === input && !['navigate','command','closed','site','order-tab','move'].includes(choice?.kind) && choice?.url) {
+        if (!event.shiftKey && event.target === input && !['navigate','command','closed','site','order-tab','move','ai-draft'].includes(choice?.kind) && choice?.url) {
           input.value = choice.url;
           completedAddress = choice.url;
           input.focus();

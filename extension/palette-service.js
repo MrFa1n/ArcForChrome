@@ -1,3 +1,6 @@
+import {recordActivity} from './activity-store.js';
+import {BUILTIN_SITES} from './search-providers.js';
+import {savePrompt,listPrompts,recoverPrompt,clearPrompts} from './prompt-recovery.js';
 import {browserCommandUrl} from './browser-pages.js';
 import {orderSuggestions,moveTab} from './tab-order.js';
 import { destination } from './model.js';
@@ -73,7 +76,9 @@ async function executeAction(api,context,id) {
   if(!COMMANDS.some(item=>item.command===id)) throw new Error('Unknown command');
   const browserUrl=browserCommandUrl(id);
   if(browserUrl) return navigate(api,context,browserUrl);
-  if(['order-tabs','closed-tabs','edit-url'].includes(id)) throw new Error('Choose this mode in the command bar');
+  if(id==='activity') return api.tabs.create({windowId:context.windowId,url:api.runtime.getURL('activity.html')});
+  if(id==='clear-prompts') return clearPrompts(api);
+  if(['order-tabs','closed-tabs','edit-url','recover-prompts'].includes(id)) throw new Error('Choose this mode in the command bar');
   if(id==='reopen') return restore(api);
   if(id==='settings') return api.runtime.openOptionsPage();
   if(id==='new-window') return api.windows.create({type:'normal'});
@@ -84,10 +89,10 @@ async function executeAction(api,context,id) {
   if(id==='copy-url') return {copyText:tab.url || ''};
 }
 
-export async function paletteAction(api,message,sender) {
-  const context=sourceContext(api,sender);
+async function performAction(api,message,context) {
   if(message.type==='palette:suggest') {
     if(typeof message.query!=='string' || message.query.length>8192) throw new Error('Invalid query');
+    if(message.mode==='drafts') return {suggestions:await listPrompts(api,message.query),domains:[],warnings:[]};
     if(message.mode==='order') return {suggestions:await orderSuggestions(api,context.windowId,message.query,message.tabId),domains:[],warnings:[]};
     if(message.mode==='commands') return {suggestions:commandSuggestions(message.query),domains:[],warnings:[]};
     if(message.mode==='closed') return {suggestions:await closedSuggestions(api,message.query),domains:[],warnings:[]};
@@ -101,7 +106,15 @@ export async function paletteAction(api,message,sender) {
     await api.tabs.update(tab.id,{active:true});await api.windows.update(context.windowId,{focused:true});return;
   }
   if(message.type==='palette:navigate') return navigate(api,context,message.query,message.target);
-  if(message.type==='palette:site') return navigate(api,context,siteDestination(await loadSites(api,context.windowId),message.site,message.query),message.target);
+  if(message.type==='palette:site') {
+    const sites=await loadSites(api,context.windowId);
+    const url=siteDestination(sites,message.site,message.query);
+    if(!['new','background','current',undefined].includes(message.target))throw new Error('Invalid navigation target');
+    const site=sites.find(site=>site.key===message.site);
+    if(site.ai)await savePrompt(api,site,message.query);
+    return navigate(api,context,url,message.target);
+  }
+  if(message.type==='palette:recover') return recoverPrompt(api,message.draftId,await loadSites(api,context.windowId));
   if(message.type==='palette:remember-site') return rememberSite(api,context.windowId,message.site,message.alias);
   if(message.type==='palette:command') return executeAction(api,context,message.command);
   if(message.type==='palette:restore') {
@@ -109,4 +122,33 @@ export async function paletteAction(api,message,sender) {
     return restore(api,message.sessionId);
   }
   throw new Error('Unknown search action');
+}
+
+function activityEvent(message,status) {
+  const action=message.type.slice(8);
+  const provider=BUILTIN_SITES.find(site=>site.key===message.site);
+  let label=action;
+  if(action==='site')label=`Search ${provider?.name || message.site}`;
+  if(action==='navigate') {
+    const parsed=destination(message.query);
+    label=parsed?.type==='url'?`Open ${new URL(parsed.url).hostname}`:'Web search';
+  }
+  if(action==='command')label=COMMANDS.find(item=>item.command===message.command)?.title || 'Browser command';
+  if(action==='move')label=`Move tab ${message.tabId} · ${message.placement}`;
+  if(action==='activate')label=`Activate tab ${message.tabId}`;
+  if(action==='restore')label='Restore closed tab';
+  if(action==='recover')label='Recover AI prompt';
+  return {action,label,status,text:typeof message.query==='string'?message.query:undefined};
+}
+export async function paletteAction(api,message,sender) {
+  const context=sourceContext(api,sender);
+  const logged=!['palette:suggest','palette:remember-site'].includes(message.type) && message.command!=='activity';
+  try {
+    const result=await performAction(api,message,context);
+    if(logged)await recordActivity(api,activityEvent(message,'ok')).catch(()=>{});
+    return result;
+  } catch(error) {
+    if(logged)await Promise.resolve().then(()=>recordActivity(api,activityEvent(message,'error'))).catch(()=>{});
+    throw error;
+  }
 }

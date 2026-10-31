@@ -1,3 +1,4 @@
+import {BUILTIN_SITES} from '../extension/search-providers.js';
 import {browserPageSuggestions,mergeBrowserPages} from '../extension/browser-pages.js';
 import {orderSuggestions} from '../extension/tab-order.js';
 import assert from 'node:assert/strict';
@@ -179,6 +180,43 @@ try {
     return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};
   }`);
   const context={sites:DISCOVERED_SITES,sourceUrl:'https://current.example/page'};
+  await mount([],context);await send('Input.insertText',{text:'yt cats & dogs'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).filter(message=>message.type!=='palette:remember-site').at(-1),
+    {type:'palette:site',site:'auto:https://www.youtube.com',query:'cats & dogs'},'inline shortcut + query must search its site without Tab');
+  const lastAction=async()=> (await evaluate('messages')).filter(message=>message.type!=='palette:remember-site').at(-1);
+  const providerContext={...context,sites:[...context.sites,...BUILTIN_SITES]};
+  for(const [alias,provider] of [['g','google'],['я','yandex'],['gpt','chatgpt'],['gem','gemini'],['claude','claude'],['grok','grok'],['pplx','perplexity']]) {
+    await mount([],providerContext);await send('Input.insertText',{text:`${alias} Привет & + second line`});await key('Enter','Enter');
+    assert.deepEqual(await lastAction(),{type:'palette:site',site:`provider:${provider}`,query:'Привет & + second line'});
+  }
+  await mount([],providerContext);await send('Input.insertText',{text:'GEM   explain closures'});await key('Enter','Enter',undefined,8);
+  assert.deepEqual(await lastAction(),{type:'palette:site',site:'provider:gemini',query:'explain closures',target:'background'});
+  await mount([],providerContext);await send('Input.insertText',{text:'g explain closures'});
+  await key('Tab','Tab');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'explain closures');
+  await key('Enter','Enter');assert.deepEqual(await lastAction(),{type:'palette:site',site:'provider:google',query:'explain closures'});
+  await mount([],providerContext);await send('Input.insertText',{text:'unknownalias plain request'});await key('Enter','Enter');
+  assert.deepEqual(await lastAction(),{type:'palette:navigate',query:'unknownalias plain request'});
+  const shared=[{key:'first',name:'First',aliases:['same'],template:'https://one.example/?q=%s'},
+    {key:'second',name:'Second',aliases:['same'],template:'https://two.example/?q=%s'}];
+  await mount([],{...context,sites:shared});await send('Input.insertText',{text:'same query'});await key('Enter','Enter');
+  assert.deepEqual(await lastAction(),{type:'palette:navigate',query:'same query'},'shared exact shortcuts must not silently pick a provider');
+  await mount([],{...context,sites:shared});await send('Input.insertText',{text:'same query'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');await key('ArrowDown','ArrowDown');await key('Enter','Enter');
+  assert.deepEqual(await lastAction(),{type:'palette:site',site:'first',query:'query'});
+
+
+  await evaluate(`const previousSend=chrome.runtime.sendMessage;chrome.runtime.sendMessage=async message=>{
+    if(message.type==='palette:suggest' && message.mode==='drafts')return {ok:true,suggestions:[{kind:'ai-draft',draftId:'saved-1',title:'Gemini: Original prompt',url:'Recover prompt'}],warnings:[]};
+    if(message.type==='palette:recover'){messages.push(message);return {ok:true,alias:'gem',query:'Original prompt'};}
+    return previousSend(message);
+  };`);
+  await mount([],providerContext);await send('Input.insertText',{text:'?'});await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'gem Original prompt');
+  assert.deepEqual(await lastAction(),{type:'palette:recover',draftId:'saved-1'},'recovery must not immediately navigate or resubmit');
+  // Only the shortcut is selected so another AI can be chosen without losing the prompt.
+  await send('Input.insertText',{text:'gpt'});await key('Enter','Enter');
+  assert.deepEqual(await lastAction(),{type:'palette:site',site:'provider:chatgpt',query:'Original prompt'});
   await mount([],context);
   await key('Tab','Tab');
   await send('Input.insertText',{text:'reload'});
@@ -306,8 +344,7 @@ try {
     await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     await screenshot('demo-02');
     await key('Escape','Escape');await mount([],context);
-    await send('Input.insertText',{text:'yt'});await key('Tab','Tab');
-    await send('Input.insertText',{text:'minimal interface design'});
+    await send('Input.insertText',{text:'yt minimal interface design'});
     await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     await screenshot('demo-03');
     await key('Escape','Escape');await key('Escape','Escape');
@@ -321,7 +358,7 @@ try {
     await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'light'}]});
   }
   // Serve the actual settings files; only Chrome APIs are stubbed, not form logic.
-  const allowed=new Set(['options.html','options.js','options.css','site-search.js','site-discovery.js','icons/icon-32.png','icons/icon-48.png']);
+  const allowed=new Set(['options.html','options.js','options.css','site-search.js','site-discovery.js','search-providers.js','activity.html','activity.js','activity.css','activity-store.js','icons/icon-32.png','icons/icon-48.png']);
   server=createServer(async(request,response)=>{
     const path=new URL(request.url,'http://localhost').pathname.slice(1);
     if(!allowed.has(path)){response.writeHead(404);response.end();return;}
@@ -349,7 +386,29 @@ try {
   assert.match(await evaluate("document.querySelector('#status').textContent"),/HTTP/,'settings reject unsafe templates');
   await send('Emulation.setDeviceMetricsOverride',{width:900,height:1100,deviceScaleFactor:1,mobile:false});
   await screenshot('options');
-  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
+  // Real activity page: limits, filtering, privacy setting and manual deletion.
+  await send('Page.addScriptToEvaluateOnNewDocument',{source:`globalThis.activityData={
+    'activity:entry:first':{time:Date.now()-60000,action:'command',label:'Open Extensions',status:'ok'},
+    'activity:entry:second':{time:Date.now(),action:'site',label:'Search Gemini',status:'error'}};
+    globalThis.chrome={storage:{local:{get:async()=>({...activityData}),set:async rows=>Object.assign(activityData,rows),remove:async keys=>keys.forEach(key=>delete activityData[key])},onChanged:{addListener:()=>{}}}};`});
+  const activityLoaded=new Promise(resolve=>{
+    const listener=event=>{if(JSON.parse(event.data).method==='Page.loadEventFired'){socket.removeEventListener('message',listener);resolve();}};
+    socket.addEventListener('message',listener);
+  });
+  await send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/activity.html`});await activityLoaded;
+  assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),2);
+  assert.equal(await evaluate("document.querySelector('[name=includeText]').checked"),false);
+  await screenshot('activity');
+  await evaluate("const field=document.querySelector('#filter');field.value='gemini';field.dispatchEvent(new Event('input'));");
+  assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),1);
+  await evaluate("document.querySelector('[name=maxEntries]').value=1;document.querySelector('[name=includeText]').checked=true;document.querySelector('button[type=submit]').click();");
+  await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
+  assert.equal(await evaluate("activityData['activity:settings'].includeText"),true);
+  assert.equal(await evaluate("Object.keys(activityData).filter(key=>key.startsWith('activity:entry:')).length"),1);
+  await evaluate("document.querySelector('#clear').click()");
+  await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
+  assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),0);
+  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
   if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();
