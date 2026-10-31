@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.16.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.16.1. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -122,7 +122,7 @@ No header, mode dropdown, Settings button or close button. The input, results an
 
 ## Inline providers, recovery and action history (0.16)
 
-An exact known/learned alias followed by whitespace and a nonempty query offers site-query results. A unique best alias is first; ties default to ordinary search until a site row is chosen. Loose/fuzzy matches do not route inline requests. Modifiers carry through, and Tab converts the row to a site scope without losing text. Provider URL templates live in search-providers.js; custom aliases/origins override defaults. Provider-side login/prefill/auto-send must be verified in the installed profile, especially Claude/Grok; no API integration or guaranteed auto-send is claimed. Gemini's q template is evidenced by [Chromium starter pack source](https://chromium.googlesource.com/chromium/src/%2B/refs/tags/134.0.6998.179/components/search_engines/template_url_starter_pack_data.cc).
+An exact known/learned alias followed by whitespace and a nonempty query offers site-query results. A unique best alias is first; ties default to ordinary search until a site row is chosen. Loose/fuzzy matches do not route inline requests. Modifiers carry through, and Tab converts the row to a site scope without losing text. Provider URL templates live in search-providers.js; custom aliases/origins override defaults. Provider-side login/prefill/auto-send must be verified in the installed profile, especially Claude/Grok; no API integration or guaranteed auto-send is claimed. At the user's request, gem/gemini now targets Google Search dialogue/AI Mode with https://www.google.com/search?udm=50&q=%s, rather than the separate Gemini app. Tracking/session parameters from copied links are omitted. Google web search and AI Mode remain distinct even when a normal Google override exists.
 
 AI prompts are copied before navigation into storage.session, at most 20 available for 24 hours in the loaded session. `?` or Recover AI prompts lists them; Enter restores text and selects the alias so a different service can be typed. Recovery does not submit until the next explicit action. Browser restart/extension reload/update/disable clears session storage. Clear saved AI prompts removes copies manually. See [Chrome storage lifecycle](https://developer.chrome.com/docs/extensions/reference/api/storage#property-session).
 

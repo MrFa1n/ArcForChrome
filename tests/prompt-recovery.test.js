@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {savePrompt,listPrompts,recoverPrompt} from '../extension/prompt-recovery.js';
 function browser(){const data={};return {data,storage:{session:{get:async()=>({...data}),set:async row=>Object.assign(data,row),remove:async keys=>keys.forEach(key=>delete data[key])}}};}
-const site={key:'provider:gemini',name:'Gemini',aliases:['gem'],template:'https://gemini.google.com/app?q=%s'};
+const site={key:'provider:gemini',name:'Gemini',aliases:['gem'],template:'https://www.google.com/search?udm=50&q=%s'};
 test('prompt recovery keeps a session copy before navigation and restores text without sending it',async()=>{
  const api=browser();await savePrompt(api,site,'Привет & + world');
  const rows=await listPrompts(api,'gemini');assert.equal(rows.length,1);

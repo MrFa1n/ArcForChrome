@@ -20,13 +20,20 @@ export async function loadCustomSites(api) {
   return saved?.sites===undefined?[]:parseSites(saved.sites);
 }
 
+// Google web search and its dialogue mode share an origin but are separate providers.
+function providerScope(site) {
+  const url=new URL(site.template.replace('%s','query'));
+  return `${url.origin}${url.hostname==='www.google.com' && url.pathname.replace(/\/$/,'')==='/search'?`|udm=${url.searchParams.get('udm') || ''}`:''}`;
+}
+
 export async function loadSites(api,windowId) {
   const [custom,detected,saved]=await Promise.all([loadCustomSites(api),discoverSites(api,windowId),api.storage?.local?.get(null)]);
-  const manual=custom.map(site=>({...site,aliases:[site.key],detected:false,ai:BUILTIN_SITES.some(provider=>provider.ai && new URL(provider.template.replace('%s','query')).origin===new URL(site.template.replace('%s','query')).origin)}));
+  const manual=custom.map(site=>({...site,aliases:[site.key],detected:false,ai:BUILTIN_SITES.some(provider=>provider.ai && providerScope(provider)===providerScope(site))}));
   const origins=new Set(custom.map(site=>new URL(site.template.replace('%s','query')).origin));
   const origin=site=>new URL(site.template.replace('%s','query')).origin;
   const customAliases=new Set(custom.map(site=>site.key));
-  const builtins=BUILTIN_SITES.filter(site=>!origins.has(origin(site))).map(site=>({...site,builtin:true,detected:false,
+  const overridden=new Set(custom.map(providerScope));
+  const builtins=BUILTIN_SITES.filter(site=>!overridden.has(providerScope(site))).map(site=>({...site,builtin:true,detected:false,
     aliases:site.aliases.filter(alias=>!customAliases.has(alias))}));
   for(const site of builtins)origins.add(origin(site));
   const sites=[...manual,...builtins,...detected.filter(site=>!origins.has(origin(site)))];

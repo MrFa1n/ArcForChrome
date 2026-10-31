@@ -96,7 +96,7 @@ Type a shortcut, a space and your request, then press Enter—no Tab needed:
 | `g browser extensions` | Google |
 | `ya погода завтра` or `я погода завтра` | Yandex |
 | `gpt explain closures` | ChatGPT |
-| `gem explain closures` | Gemini |
+| `gem explain closures` | Google AI Mode (dialogue) |
 | `claude review this idea` | Claude |
 | `grok explain this topic` | Grok |
 | `pplx compare the options` | Perplexity |
