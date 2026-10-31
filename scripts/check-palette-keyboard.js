@@ -100,6 +100,39 @@ try {
   assert.equal(light.background,light.canvas,'palette should use native browser Canvas color');
   assert.equal(light.color,light.canvasText);
   await screenshot('light');
+  const initialPosition=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  await key('ArrowRight','ArrowRight',undefined,3);
+  const nudgedPosition=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.equal(Math.round(nudgedPosition.x-initialPosition.x),16,'Ctrl+Alt+Right should move the palette without moving a tab');
+  await key('ArrowDown','ArrowDown',undefined,11);
+  const largerMove=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.equal(Math.round(largerMove.y-nudgedPosition.y),64);
+  await key('0','Digit0','',3);
+  const reset=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.equal(Math.round(reset.x),Math.round(initialPosition.x));assert.equal(Math.round(reset.y),Math.round(initialPosition.y));
+  const footerBounds=await paletteCall(`function(){return this.querySelector('footer').getBoundingClientRect().toJSON();}`);
+  const dragX=footerBounds.x+footerBounds.width/2,dragY=footerBounds.y+footerBounds.height/2;
+  await send('Input.dispatchMouseEvent',{type:'mousePressed',x:dragX,y:dragY,button:'left',buttons:1,clickCount:1});
+  await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:dragX+35,y:dragY+30,buttons:1});
+  await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:dragX+35,y:dragY+30,button:'left',buttons:0,clickCount:1});
+  const dragged=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.equal(Math.round(dragged.x-reset.x),35);assert.equal(Math.round(dragged.y-reset.y),30);
+  const viewport=await evaluate('({width:innerWidth,height:innerHeight})');
+  const nextFooter=await paletteCall(`function(){return this.querySelector('footer').getBoundingClientRect().toJSON();}`);
+  await send('Input.dispatchMouseEvent',{type:'mousePressed',x:nextFooter.x+30,y:nextFooter.y+15,button:'left',buttons:1,clickCount:1});
+  await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:viewport.width-1,y:viewport.height-1,buttons:1});
+  await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:viewport.width-1,y:viewport.height-1,button:'left',buttons:0,clickCount:1});
+  const clamped=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.ok(clamped.right<=viewport.width-15 && clamped.bottom<=viewport.height-15,'drag must keep the palette on screen');
+  await send('Emulation.setDeviceMetricsOverride',{width:500,height:350,deviceScaleFactor:1,mobile:false});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,50))');
+  const resized=await paletteCall(`function(){return this.getBoundingClientRect().toJSON();}`);
+  assert.ok(resized.x>=15 && resized.y>=15 && resized.right<=485 && resized.bottom<=335,'resize must keep the moved palette visible');
+  await send('Emulation.setDeviceMetricsOverride',{...viewport,deviceScaleFactor:1,mobile:false});
+  await key('0','Digit0','',3);
+  assert.deepEqual(await evaluate('messages'),[],'moving the palette must not navigate or reorder tabs');
+
+
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
   const dark=await paletteStyles();
   assert.equal(dark.background,dark.canvas);assert.notEqual(dark.background,light.background,'open palette should react to theme changes');
@@ -408,7 +441,7 @@ try {
   await evaluate("document.querySelector('#clear').click()");
   await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
   assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),0);
-  console.log('PASS: real Chrome capture listeners isolated; text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
+  console.log('PASS: real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
   if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();

@@ -75,6 +75,10 @@ For ambiguous site matches, choose a site explicitly with the arrows. Repeating 
 
 ## Search that gets out of your way
 
+### Position the overlay
+
+Drag the bottom hint strip to move Spotlight within the browser viewport. **Ctrl+Alt+arrow keys** move it by 16 pixels; add **Shift** for 64-pixel steps. **Ctrl+Alt+0** resets its position. These keys act only while Spotlight is open; Option/Alt+Left/Right still rearranges tabs. Position remains visible as results or window size change and resets on the next open. On protected pages this moves the palette inside its fallback window; use the native title bar to move that window on the desktop.
+
 ### Keep your place
 
 The current page stays open beneath the overlay. Page and video shortcuts are isolated while you type, then focus returns when you dismiss it. On protected pages where Chrome blocks injection, a small separate search window keeps the original tab’s context.

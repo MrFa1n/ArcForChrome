@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.16.1. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.17.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -127,3 +127,7 @@ An exact known/learned alias followed by whitespace and a nonempty query offers 
 AI prompts are copied before navigation into storage.session, at most 20 available for 24 hours in the loaded session. `?` or Recover AI prompts lists them; Enter restores text and selects the alias so a different service can be typed. Recovery does not submit until the next explicit action. Browser restart/extension reload/update/disable clears session storage. Clear saved AI prompts removes copies manually. See [Chrome storage lifecycle](https://developer.chrome.com/docs/extensions/reference/api/storage#property-session).
 
 Spotlight activity history opens an extension page via Commands or Search settings. Defaults: enabled, 168 hours, 500 entries, no query text. Controls allow disabling recording, opting into text, 0–8760 hours (0 disables age expiry), 1–5000 records and immediate manual clearing. Older opt-in text is not scrubbed by disabling future text capture. Cleanup applies on writes/reads/startup and a Chrome expiry alarm. Results describe Chrome operation success/failure, not site-load or AI-answer status. AI recovery is separate and unaffected by journal text preferences. Data stays on-device; submitted URL queries can also appear in normal browser history/provider records.
+
+## Overlay position (0.17)
+
+The footer is a draggable handle (grab cursor) without adding a toolbar. Ctrl+Alt+arrows move the overlay 16px, Shift increases the step to 64px, and Ctrl+Alt+0 restores default centered placement. No tab action or navigation is performed. Position is clamped to a 16px viewport gutter and rechecked on window/dialog resize. New opens start at the default position. Protected-page fallback movement stays inside its native window; the OS title bar moves the whole window. No saved position or extra permissions.

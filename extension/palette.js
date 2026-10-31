@@ -55,7 +55,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       .icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
-      footer{padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
+      footer{cursor:grab;touch-action:none;user-select:none;padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
+      footer.dragging{cursor:grabbing}
       #error{color:#b3261e;padding:0 22px;font-size:.75rem}
       button:focus-visible{outline:2px solid Highlight;outline-offset:-2px}
       @media(prefers-color-scheme:dark){#error{color:#f2b8b5}}
@@ -77,8 +78,53 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const error = document.createElement('p'); error.id = 'error'; error.setAttribute('role','status');
     const footer = document.createElement('footer');footer.textContent = '↑ ↓ select · Tab complete address · Enter open · Esc return';
     const sites = Array.isArray(context.sites) ? context.sites : [];
+    footer.title='Drag to move · Ctrl+Alt+arrows move · Shift for larger steps · Ctrl+Alt+0 reset';
     footer.id='hints';input.setAttribute('aria-describedby','hints');
     dialog.append(input,results,error,footer); root.append(dialog);document.documentElement.append(host);
+    let positioned=false;
+    let drag=null;
+    let suppressDragClick=false;
+    const view=document.defaultView;
+    function place(left,top) {
+      const bounds=dialog.getBoundingClientRect();
+      const x=Math.max(16,Math.min(left,view.innerWidth-bounds.width-16));
+      const y=Math.max(16,Math.min(top,view.innerHeight-bounds.height-16));
+      Object.assign(dialog.style,{position:'fixed',margin:'0',left:`${x}px`,top:`${y}px`,right:'auto',bottom:'auto'});
+      positioned=true;
+    }
+    function move(dx,dy) {
+      const bounds=dialog.getBoundingClientRect();place(bounds.left+dx,bounds.top+dy);
+    }
+    function resetPosition() {dialog.removeAttribute('style');positioned=false;}
+    document.addEventListener('pointerdown',()=>{suppressDragClick=false;},true);
+    footer.addEventListener('pointerdown',event=>{
+      if(event.button!==0 || !event.isPrimary)return;
+      event.preventDefault();
+      const bounds=dialog.getBoundingClientRect();
+      drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:bounds.left,top:bounds.top};
+      footer.setPointerCapture(event.pointerId);footer.classList.add('dragging');
+    });
+    // Track the frame document too: modal backdrop retargeting can bypass the handle.
+    document.addEventListener('pointermove',event=>{
+      if(!drag || drag.id!==event.pointerId)return;
+      if(Math.abs(event.clientX-drag.x)+Math.abs(event.clientY-drag.y)>3)drag.moved=true;
+      place(drag.left+event.clientX-drag.x,drag.top+event.clientY-drag.y);
+    });
+    function stopDrag(event) {
+      if(event.type==='pointerup' && drag?.moved)suppressDragClick=true;
+      drag=null;footer.classList.remove('dragging');
+    }
+    dialog.addEventListener('click',event=>{
+      if(suppressDragClick){suppressDragClick=false;event.preventDefault();event.stopImmediatePropagation();}
+    },true);
+    document.addEventListener('pointerup',stopDrag,true);
+    document.addEventListener('pointercancel',stopDrag,true);
+    view.addEventListener('blur',()=>stopDrag({type:'blur'}));
+    function keepVisible() {
+      if(positioned){const bounds=dialog.getBoundingClientRect();place(bounds.left,bounds.top);}
+    }
+    view.addEventListener('resize',keepVisible);
+    new ResizeObserver(keepVisible).observe(dialog);
     let mode = context.mode === 'edit' ? 'edit' : 'search';
     let orderTabId;
     let completedAddress = null;
@@ -294,6 +340,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
     input.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
     dialog.addEventListener('keydown', event => {
       if (event.isComposing) return;
+      if(event.ctrlKey && event.altKey && !event.metaKey) {
+        const directions={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+        if(directions[event.key]) {
+          event.preventDefault();const [x,y]=directions[event.key];const step=event.shiftKey?64:16;
+          move(x*step,y*step);return;
+        }
+        if(event.key==='0') {event.preventDefault();resetPosition();return;}
+      }
       if (event.key === 'Escape') {
         event.preventDefault();event.stopPropagation();
         if(mode==='order' && orderTabId!==undefined) setMode('order');
