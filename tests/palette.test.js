@@ -232,3 +232,10 @@ test('contextual duplicate validates selected tab and source window before mutat
   await assert.rejects(()=>paletteAction(api,{type:'palette:tab-action',action:'close',tabId:8},sender));
   assert.equal(api.calls.length,1);
 });
+
+
+test('empty launcher labels starter commands accurately without history',async()=>{
+  const api=browser();const response=await paletteAction(api,{type:'palette:suggest',query:''},sender);
+  const commands=response.suggestions.filter(row=>row.kind==='command');
+  assert.equal(commands.length,3);assert.ok(commands.every(row=>row.section==='Commands'));
+});

@@ -129,7 +129,9 @@ async function performAction(api,message,context) {
       const counts=new Map();
       for(const row of history.filter(row=>row.action==='command' && row.status==='ok'))counts.set(row.label,(counts.get(row.label) || 0)+1);
       recent=commandSuggestions('').filter(row=>counts.has(row.title)).sort((a,b)=>counts.get(b.title)-counts.get(a.title)).slice(0,3);
-      if(!recent.length)recent=commandSuggestions('').filter(row=>['quicklinks','save-quicklink','search-with','order-tabs','closed-tabs','settings'].includes(row.command));
+      const hasFrequent=recent.length>0;
+      if(!hasFrequent)recent=commandSuggestions('').filter(row=>['order-tabs','closed-tabs','settings'].includes(row.command));
+      recent=recent.map(row=>({...row,section:hasFrequent?'Frequent commands':'Commands'}));
     }
     const rows=found.suggestions.slice(),remaining=[];
     for(const link of links.slice(0,8)) {

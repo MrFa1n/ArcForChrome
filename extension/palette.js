@@ -224,7 +224,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(busy)return;
       if(mode==='actions'){leaveActions();return;}
       if(!choices[selected])return;
-      actionTarget=choices[selected];actionReturn={mode,value:input.value,orderTabId};
+      actionTarget=choices[selected];actionReturn={mode,value:input.value,placeholder:input.placeholder,maxLength:input.maxLength,orderTabId,suggestions:suggestions.slice(),domains:domains.slice(),completedAddress};
       actionIds=markedTabs.size?[...markedTabs]:actionTarget.kind==='tab'?[actionTarget.id]:actionTarget.kind==='order-tab'?[actionTarget.tabId]:[];
       setMode('actions');
     }
@@ -361,7 +361,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function setMode(next,value='',tabId,preferredId,keepResults=false) {
       if(!keepResults){moveQueue.length=0;notice='';}
-      if(mode==='search' && !['search','edit'].includes(next))lastSearchQuery=input.value;
+      if(mode==='search' && !['search','edit'].includes(next) && !'>@<?$#*'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;
       orderTabId=next==='order'?tabId:undefined;
       mode=next;completedAddress=null;input.maxLength=mode==='quicklink-name'?80:8192;input.value=value;
       input.placeholder=mode==='actions'?`Actions · ${actionTarget?.title || 'Selected result'}`:mode==='providers'?`Search with… · ${providerQuery.slice(0,80)}`:mode==='quicklink-name'?'Name this quicklink…':mode==='quicklinks'?'Find a quicklink…':mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
@@ -389,7 +389,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(!choice) return;
         if(choice.kind==='result-action') {
           if(!['open','new','background'].includes(choice.actionId)){await runAction(choice.actionId);return;}
-          fromActions=true;const actionId=choice.actionId;choice=actionTarget;mode=actionReturn.mode;input.value=actionReturn.value;
+          fromActions=true;const actionId=choice.actionId;choice=actionTarget;mode=actionReturn.mode;orderTabId=actionReturn.orderTabId;input.value=actionReturn.value;input.placeholder=actionReturn.placeholder;input.maxLength=actionReturn.maxLength;input.setAttribute('aria-label',input.placeholder);
+          suggestions=actionReturn.suggestions;domains=actionReturn.domains;completedAddress=actionReturn.completedAddress;returnKey=choiceKey(choice);render();
           event=actionId==='background'?{shiftKey:true}:actionId==='new'?{ctrlKey:true}:{};
         }
         if(choice.kind==='calculator') {await copyText(choice.copyText);if(dismissed || closing || actionRevision!==queryRevision)return;if(fromActions)setMode(actionReturn.mode,actionReturn.value);notice=`Copied ${choice.copyText}`;render();return;}
@@ -645,7 +646,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       } catch(failure) {if(!dismissed && !closing && revision===queryRevision)error.textContent=failure.message;}
       finally {moveQueue.length=0;moving=false;busy=false;}
     }
-    input.addEventListener('input',()=>{notice='';completedAddress=null;updateSuggestions();});
+    input.addEventListener('input',()=>{notice='';completedAddress=null;if(mode==='search' && !'>@<?$#*'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;updateSuggestions();});
     input.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
     dialog.addEventListener('keydown', event => {
       if (event.isComposing) return;

@@ -452,9 +452,10 @@ try {
   assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a position or a destination tab…');
   await key('Escape','Escape');
   assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a tab to move…');
-  await key('Enter','Enter');await send('Input.insertText',{text:'before Beta'});await key('Enter','Enter');
+  await key('Enter','Enter');await send('Input.insertText',{text:'before Beta'});await key('k','KeyK','',4);await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:move',tabId:41,placement:'before',beforeTabId:42});
   assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Tab changed; choose again');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'before Beta','failed contextual placement restores its source input');
   await evaluate('failMove=false');await key('Enter','Enter');
   assert.equal(await evaluate("document.querySelector('[data-arc-command-palette]') === null"),true);
   assert.deepEqual(await evaluate('pageKeys'),[],'arrange mode must also isolate page shortcuts');
@@ -519,6 +520,7 @@ try {
   await evaluate(`globalThis.savedLinks=[];globalThis.copiedValues=[];
     chrome.runtime.sendMessage=async message=>{
       if(message.type==='palette:suggest') {
+        if(message.mode==='commands')return {ok:true,suggestions:commandRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
         if(message.mode==='quicklinks')return {ok:true,suggestions:savedLinks,warnings:[]};
         if(message.query==='1250 * 0.18')return {ok:true,suggestions:[{kind:'calculator',title:'225',url:message.query,copyText:'225',sources:['calculator']}],warnings:[]};
         if(message.mode==='bookmark-folders')return {ok:true,suggestions:[{kind:'bookmark-folder',folderId:'work',title:'Bookmarks bar / Work',url:'Save selected tabs here'}],warnings:[]};
@@ -589,6 +591,10 @@ try {
   await send('Input.insertText',{text:'google ai mode'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:site'),{type:'palette:site',site:'provider:gemini',query:'keep this prompt'},'redirect drops only the recognized provider alias');
 
+
+  await mount([],{sites:BUILTIN_SITES});await send('Input.insertText',{text:'>search current query'});await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Type a query first','command prefix is not a search query');
+  await key('Escape','Escape');await key('Escape','Escape');
 
   // Optional documentation demo: real palette DOM, fictional tabs, disposable profile.
   if (process.env.PALETTE_SCREENSHOT_DIR) {
