@@ -61,8 +61,8 @@ try {
   await evaluate(`document.body.innerHTML='<input id="page-input"><video></video>';document.querySelector('input').focus();
     globalThis.pageKeys=[];globalThis.messages=[];
     for(const type of ['keydown','keypress','keyup']) window.addEventListener(type,event=>pageKeys.push(type+':'+event.key),true);
-    globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};messages.push(message);return {ok:true};}}};`);
-  await mount([{id:1,title:'Video',url:'https://video.example'}]);
+    globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:tab.sources || ['tab']})),warnings:[]};messages.push(message);return {ok:true};}}};`);
+  await mount([{id:1,title:'Video',url:'https://video.example',sources:['tab','bookmark','history','bookmark']}]);
   assert.equal(await paletteCall(`function(){return this.querySelectorAll('header,nav,select,#close').length;}`),0,'palette must open directly on the query without a toolbar');
   async function paletteCall(functionDeclaration,args=[]) {
     const tree = await send('DOM.getDocument',{depth:-1,pierce:true});
@@ -97,6 +97,10 @@ try {
     await writeFile(join(process.env.PALETTE_SCREENSHOT_DIR,`arc-spotlight-${name}.png`),Buffer.from(data,'base64'));
   }
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'light'}]});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.equal(await paletteCall(`function(){return this.querySelector('[data-source=tab]').textContent;}`),'Open tab','open tabs need a named source badge');
+  assert.deepEqual(await paletteCall(`function(){return [...this.querySelectorAll('.source-badge')].map(node=>node.textContent);}`),['Open tab','Bookmark','History'],'merged results retain every distinct source');
+  assert.equal(await paletteCall(`function(){return new Set([...this.querySelectorAll('.source-badge')].map(node=>this.ownerDocument.defaultView.getComputedStyle(node).getPropertyValue('--source-color').trim())).size;}`),3,'source categories use distinct colors');
   const light=await paletteStyles();
   assert.equal(light.background,light.canvas,'palette should use native browser Canvas color');
   assert.equal(light.color,light.canvasText);
@@ -378,6 +382,8 @@ try {
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
   await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
   await key('d','KeyD','',4);
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.equal(await paletteCall(`function(){return this.querySelector('[data-source=bookmark-folder]').textContent;}`),'Bookmark folder');
   assert.equal(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),'Choose a folder to save bookmarks…');
   await send('Input.insertText',{text:'Work'});await key('Enter','Enter');
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:bookmark',operation:'add',tabIds:[81,82],folderId:'work'});

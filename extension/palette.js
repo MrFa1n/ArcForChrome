@@ -61,6 +61,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
       [data-group-color=orange]{--group-color:#fa903e}
       .group-badge{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;padding:1px 7px;margin:3px 0;border-radius:6px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--group-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--group-color) 35%,Canvas)}
       .group-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--group-color);margin-right:6px;vertical-align:middle}
+      .source-badges{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+      .source-badge{--source-color:#526174;display:inline-flex;align-items:center;gap:5px;padding:1px 6px;border-radius:5px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--source-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--source-color) 40%,Canvas)}
+      .source-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--source-color)}
+      [data-source=tab]{--source-color:#3685ec}[data-source=bookmark]{--source-color:#be8500}
+      [data-source=history]{--source-color:#a16be0}[data-source=domain]{--source-color:#168e70}
+      [data-source=site]{--source-color:#1495a8}[data-source=command],[data-source=browser-page]{--source-color:#7b8795}
+      [data-source=closed]{--source-color:#d77940}
+      [data-source=navigate]{--source-color:#6373dc}[data-source=move]{--source-color:#657d98}
+      [data-source=ai-draft]{--source-color:#d46676}[data-source=bookmark-folder]{--source-color:#be8500}
+      [data-source=group]{--source-color:#b75cb0}
+      @media (forced-colors:active){.source-badge{border-color:CanvasText}.source-badge::before{background:CanvasText}}
       .icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
@@ -188,7 +199,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let timer;
     let suggestions = [];
     let domains = [];
-    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page'};
+    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page',navigate:'Open / Search',move:'Tab placement','ai-draft':'Saved AI prompt','bookmark-folder':'Bookmark folder',group:'Tab group'};
     const heldKeys = new Set();
     let closing = false;
     function close() {
@@ -397,8 +408,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         else if(choice.kind==='bookmark-folder'){icon.textContent=bookmarkOperation==='add'?'☆':'−';row.title=choice.title;}
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = (['navigate','order-tab','move','ai-draft','bookmark-folder'].includes(choice.kind) || choice.kind.startsWith('group-')) ? choice.url
-          : `${(choice.sources || [choice.kind]).map(source => labels[source]).join(' · ')} · ${choice.url || ''}`;
+        const url = document.createElement('span');url.className = 'url';url.textContent = choice.url || '';
         if(choice.groupColor || choice.groupTitle)row.dataset.groupColor=choice.groupColor || 'grey';
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title);
@@ -406,6 +416,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
           const badge=document.createElement('span');badge.className='group-badge';
           badge.textContent=choice.groupTitle+(choice.groupCollapsed?' · Collapsed':'');
           badge.title=`Tab group: ${choice.groupTitle}`;text.append(badge);
+        }
+        const sources=Array.from(new Set(choice.sources || [choice.kind==='order-tab'?'tab':choice.kind==='site-query'?'site':choice.kind.startsWith('group-')?'group':choice.kind])).filter(source=>labels[source]);
+        if(sources.length) {
+          const badges=document.createElement('span');badges.className='source-badges';
+          for(const source of sources) {
+            const badge=document.createElement('span');badge.className='source-badge';badge.dataset.source=source;
+            badge.textContent=labels[source];badges.append(badge);
+          }
+          text.append(badges);
         }
         text.append(url);row.append(icon,text);
         if (choice.kind !== 'navigate' && !choice.kind.startsWith('group-') && !['command','closed','order-tab','move','ai-draft','bookmark-folder'].includes(choice.kind)) {

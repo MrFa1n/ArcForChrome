@@ -147,6 +147,10 @@ The catalogue includes extensions and their shortcuts, browser settings, history
 
 Known catalogue addresses such as `chrome://extensions` also open directly. Only listed internal routes are recognized; this is navigation to browser pages, not a search inside their private contents or automatic modification of settings. No new permissions are required.
 
+Results carry colored text labels: **blue — Open tab**, **amber — Bookmark**, **purple — History**, **green — Homepage**, **teal — Site search**, **orange — Restore session**, and **grey — browser pages/commands**. A merged result shows each source; native tab-group badges keep their own colors. Labels remain readable in light/dark themes and without color perception.
+
+Additional modes label **Saved AI prompt**, **Bookmark folder**, **Tab group**, **Tab placement** and **Open / Search** too; folders share the bookmark color and tab-group actions use a separate mauve label.
+
 ### Select once, then act
 
 1. Find tabs in Search or `@`; mark each with **Shift+Space**. Marks stay when you change the query.
