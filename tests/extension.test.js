@@ -6,7 +6,7 @@ const root = new URL('../extension/', import.meta.url);
 test('command-bar manifest declares required permissions and entry points', async () => {
   const manifest = JSON.parse(await readFile(new URL('manifest.json', root)));
   assert.equal(manifest.manifest_version, 3);
-  assert.deepEqual(manifest.permissions, ['tabs','activeTab','scripting','history','bookmarks','search','sessions','storage','clipboardWrite','alarms','tabGroups']);
+  assert.deepEqual(manifest.permissions, ['tabs','activeTab','scripting','history','bookmarks','search','sessions','storage','clipboardWrite','alarms','tabGroups','favicon']);
   assert.equal(manifest.side_panel, undefined);
   assert.equal(manifest.host_permissions, undefined);
   assert.deepEqual(Object.keys(manifest.commands),['open-search','edit-address']);

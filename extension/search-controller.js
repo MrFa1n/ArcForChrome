@@ -8,7 +8,7 @@ export function registerSearch(api, mount) {
     if (command === 'edit-address') return open('edit');
   });
   api.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (!message || !['palette:activate','palette:navigate','palette:suggest','palette:site','palette:command','palette:restore','palette:remember-site','palette:move','palette:recover','palette:group','palette:bookmark','palette:quicklink','palette:tab-action'].includes(message.type)) return;
+    if (!message || !['palette:activate','palette:navigate','palette:suggest','palette:site','palette:command','palette:restore','palette:remember-site','palette:move','palette:recover','palette:group','palette:bookmark','palette:quicklink','palette:tab-action','palette:icons'].includes(message.type)) return;
     paletteAction(api, message, sender).then(result => sendResponse({ok:true,...result}),
       error => sendResponse({ok:false,error:error.message}));
     return true;

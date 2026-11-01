@@ -51,7 +51,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       input{font:inherit;font-size:1.3125rem;width:100%;padding:18px 22px;border:0;outline:none;color:var(--fg);background:transparent}
       #results{padding:6px 10px;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:12px;width:100%;border:0;
-      border-radius:8px;background:transparent;text-align:left;padding:12px}button.result[aria-selected=true]{background:var(--hover)}
+      border-radius:8px;background:transparent;text-align:left;padding:9px 12px}button.result[aria-selected=true]{background:var(--hover)}
       button.result[data-marked=true]{box-shadow:inset 3px 0 Highlight}
       .result[data-group-color]{border-left:3px solid var(--group-color)}
       [data-group-color=grey]{--group-color:#80868b}[data-group-color=blue]{--group-color:#4285f4}
@@ -59,9 +59,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
       [data-group-color=green]{--group-color:#34a853}[data-group-color=pink]{--group-color:#e871bd}
       [data-group-color=purple]{--group-color:#a142f4}[data-group-color=cyan]{--group-color:#24c1e0}
       [data-group-color=orange]{--group-color:#fa903e}
-      .group-badge{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;padding:1px 7px;margin:3px 0;border-radius:6px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--group-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--group-color) 35%,Canvas)}
+      .group-badge{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;padding:1px 7px;margin:0;border-radius:6px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--group-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--group-color) 35%,Canvas)}
       .group-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--group-color);margin-right:6px;vertical-align:middle}
-      .source-badges{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+      .source-badges{display:contents}.metadata{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px;max-width:42%;flex-shrink:0}.group-badge{margin:0}.result{position:relative}.result[data-section]{margin-top:25px}.section-label{position:absolute;left:2px;top:-23px;color:var(--muted);font-size:.6875rem;font-weight:600;pointer-events:none}
       .source-badge{--source-color:#526174;display:inline-flex;align-items:center;gap:5px;padding:1px 6px;border-radius:5px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--source-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--source-color) 40%,Canvas)}
       .source-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--source-color)}
       [data-source=tab]{--source-color:#3685ec}[data-source=bookmark]{--source-color:#be8500}
@@ -70,12 +70,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
       [data-source=closed]{--source-color:#d77940}
       [data-source=navigate]{--source-color:#6373dc}[data-source=move]{--source-color:#657d98}
       [data-source=ai-draft]{--source-color:#d46676}[data-source=bookmark-folder]{--source-color:#be8500}
-      [data-source=group]{--source-color:#b75cb0}
+      [data-source=group]{--source-color:#b75cb0}[data-source=quicklink],[data-source=quicklink-save]{--source-color:#c0784d}[data-source=calculator]{--source-color:#27a189}[data-source=activity]{--source-color:#748795}[data-source=result-action]{--source-color:#7b8795}
       @media (forced-colors:active){.source-badge{border-color:CanvasText}.source-badge::before{background:CanvasText}}
-      .icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
+      .icon img{width:20px;height:20px;object-fit:contain}.icon[data-selectable=true]{position:relative}.icon[data-selectable=true]:has(img)::after{content:'☐';position:absolute;right:-4px;bottom:-4px;font-size:10px;line-height:12px;background:Canvas;border-radius:3px;padding:0 1px}.icon[data-marked=true]:has(img)::after{content:'☑'}.icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
-      footer{cursor:grab;touch-action:none;user-select:none;padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
+      .url:empty{display:none}.url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
+      kbd{font:inherit;font-size:.6875rem;border:1px solid var(--line);border-radius:4px;padding:1px 4px;white-space:nowrap}.footer-action{border:0;background:transparent;display:flex;align-items:center;gap:5px;font-size:.6875rem;padding:2px;color:var(--fg)}.footer-action:hover{color:Highlight}.footer-main{display:flex;align-items:center;gap:6px;min-width:0}.footer-status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}footer{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:grab;touch-action:none;user-select:none;padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
       footer.dragging{cursor:grabbing}
       dialog[data-sized]{display:flex;flex-direction:column}
       dialog[data-sized] input,dialog[data-sized] footer,dialog[data-sized] #error{flex-shrink:0}
@@ -146,7 +146,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       drag={id:event.pointerId,kind,x:event.clientX,y:event.clientY,left:bounds.left,top:bounds.top,width:bounds.width,height:bounds.height};
       event.currentTarget.setPointerCapture(event.pointerId);footer.classList.add('dragging');
     }
-    footer.addEventListener('pointerdown',event=>beginPointer(event,'move'));
+    footer.addEventListener('pointerdown',event=>{if(!event.target.closest('button'))beginPointer(event,'move');});
     resizeHandle.addEventListener('pointerdown',event=>beginPointer(event,'resize'));
     // Track the frame document too: modal backdrop retargeting can bypass the handle.
     document.addEventListener('pointermove',event=>{
@@ -185,6 +185,81 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let bookmarkTargetIds=[];
     let bookmarkOperation='add';
     let notice='';
+    let actionTarget=null,actionReturn=null,actionIds=[];
+    let providerQuery='',lastSearchQuery='',providerReturn=null,quicklinkReturn=null;
+    let quicklinkTarget=null;
+    let footerDescription='';
+    let returnKey=null;
+    const modifierLabel=/Mac|iPhone|iPad/.test(navigator.platform)?'⌘':'Ctrl';
+    function shortcutLabel(value){return value.replaceAll('⌘/Ctrl',modifierLabel).replaceAll('Alt',modifierLabel==='⌘'?'⌥':'Alt');}
+    const actionDefinitions=[
+      {id:'open',title:'Open / Run',shortcut:'↵'},
+      {id:'new',title:'Open in a new tab',shortcut:'⌘/Ctrl ↵'},
+      {id:'background',title:'Open in background',shortcut:'⇧ ↵'},
+      {id:'copy',title:'Copy URL / Result'},
+      {id:'move',title:'Move selected tab…',shortcut:'Alt ←/→'},
+      {id:'group',title:'Add to a tab group…',key:'g',shortcut:'⌘/Ctrl G'},
+      {id:'ungroup',title:'Remove from tab groups',key:'g',shift:true,shortcut:'⌘/Ctrl ⇧ G'},
+      {id:'manage-groups',title:'Manage tab groups…',key:'g',alt:true,shortcut:'⌘/Ctrl Alt G'},
+      {id:'bookmark',title:'Save in a bookmark folder…',key:'d',shortcut:'⌘/Ctrl D'},
+      {id:'remove-bookmark',title:'Remove from a bookmark folder…',key:'d',shift:true,shortcut:'⌘/Ctrl ⇧ D'},
+      {id:'duplicate',title:'Duplicate selected tab'},
+      {id:'save-link',title:'Save as quicklink…'},
+      {id:'rename-link',title:'Rename quicklink…'},
+      {id:'remove-link',title:'Remove quicklink'},
+      {id:'provider',title:'Search this query with…'}
+    ];
+    function choiceKey(choice) {return choice && `${choice.kind}:${choice.activityId ?? choice.linkId ?? choice.actionId ?? choice.folderId ?? choice.groupId ?? choice.color ?? choice.action ?? choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}`;}
+    function webUrl(value){try{const url=new URL(value);return ['http:','https:'].includes(url.protocol) && !url.username && !url.password;}catch{return false;}}
+    function startProviders(query=input.value) {const inline=query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/us);providerQuery=(inline && siteMatches(inline[1],true).length?inline[2]:query).trim();if(!providerQuery){error.textContent='Type a query first';return;}providerReturn=mode==='actions'?actionReturn:{mode:mode==='commands'?'search':mode,value:mode==='commands'?lastSearchQuery:query,orderTabId};setMode('providers');}
+    function startQuicklink(target=choices[selected]) {
+      const tabId=target?.kind==='tab'?target.id:target?.kind==='order-tab'?target.tabId:undefined;
+      const url=target?.url || context.sourceUrl;
+      if(!webUrl(url)){error.textContent='Choose a web page to save as a quicklink';return;}
+      quicklinkReturn=mode==='actions'?actionReturn:{mode,value:input.value,orderTabId};
+      quicklinkTarget={url,...(tabId!==undefined?{tabId}:{}),...(target?.linkId?{id:target.linkId}:{})};
+      setMode('quicklink-name',(target?.linkName || target?.title || 'Quicklink').slice(0,80));input.select();
+    }
+    function openActions() {
+      if(busy)return;
+      if(mode==='actions'){leaveActions();return;}
+      if(!choices[selected])return;
+      actionTarget=choices[selected];actionReturn={mode,value:input.value,orderTabId};
+      actionIds=markedTabs.size?[...markedTabs]:actionTarget.kind==='tab'?[actionTarget.id]:actionTarget.kind==='order-tab'?[actionTarget.tabId]:[];
+      setMode('actions');
+    }
+    function leaveActions() {
+      if(!actionReturn){setMode('search');return;}
+      returnKey=choiceKey(actionTarget);setMode(actionReturn.mode,actionReturn.value,actionReturn.orderTabId);
+    }
+    function availableActions() {
+      const page=webUrl(actionTarget?.url),query=actionReturn?.value.trim();
+      return actionDefinitions.map(action=>action.id==='open'?{...action,title:primaryLabel(actionTarget)}:action).filter(action=>{
+        if(['new','background'].includes(action.id))return page || ['navigate','site-query'].includes(actionTarget?.kind);
+        if(action.id==='copy')return page || Boolean(actionTarget?.copyText);
+        if(['group','ungroup','bookmark','remove-bookmark'].includes(action.id))return actionIds.length>0;
+        if(['move','duplicate'].includes(action.id))return actionIds.length===1;
+        if(action.id==='save-link')return page && !actionTarget?.linkId;
+        if(['rename-link','remove-link'].includes(action.id))return Boolean(actionTarget?.linkId);
+        if(action.id==='provider')return Boolean(query) && (['search','edit'].includes(actionReturn?.mode) || actionReturn?.mode.startsWith('site:'));
+        return true;
+      });
+    }
+    async function runAction(id) {
+      const revision=queryRevision;
+      if(id==='group'){startGrouping();return;}
+      if(id==='ungroup'){await performGroup({action:'remove',tabIds:selectedTabIds()});return;}
+      if(id==='manage-groups'){setMode('group-manage');return;}
+      if(id==='bookmark' || id==='remove-bookmark'){startBookmarks(id==='bookmark'?'add':'remove');return;}
+      if(id==='move'){setMode('order','',actionIds[0]);return;}
+      if(id==='save-link' || id==='rename-link'){startQuicklink(actionTarget);return;}
+      if(id==='provider'){startProviders(actionReturn.value);return;}
+      if(id==='copy') {await copyText(actionTarget.copyText ?? actionTarget.url);if(dismissed || closing || revision!==queryRevision)return;leaveActions();notice='Copied';render();return;}
+      const message=id==='remove-link'?{type:'palette:quicklink',operation:'remove',id:actionTarget.linkId}
+        :id==='duplicate'?{type:'palette:tab-action',action:'duplicate',tabId:actionIds[0]}:null;
+      if(message){const reply=await chrome.runtime.sendMessage(message);if(!reply?.ok)throw Error(reply?.error || 'Action failed');if(dismissed || closing || revision!==queryRevision)return;setMode(id==='remove-link'?'quicklinks':'search');notice=id==='remove-link'?'Quicklink removed':'Tab duplicated';render();}
+    }
+
     let managedGroupId;
     let completedAddress = null;
     let pendingQuery = Promise.resolve();
@@ -195,11 +270,22 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let busy = false;
     let moving = false;
     const moveQueue=[];
+    const icons=new Map();
+    async function decorateIcons() {
+      if(!context.favicons)return;
+      const urls=[...new Set(choices.map(choice=>choice.url).filter(url=>webUrl(url)))].slice(0,20);
+      const missing=urls.filter(url=>!icons.has(url));
+      for(const url of missing)icons.set(url,null);
+      if(missing.length){try{const reply=await chrome.runtime.sendMessage({type:'palette:icons',urls:missing});if(reply?.ok)missing.forEach((url,index)=>{const data=reply.images?.[index];if(typeof data==='string' && data.startsWith('data:image/png;base64,') && data.length<90000)icons.set(url,data);});}catch{}}
+      if(dismissed || closing)return;
+      while(icons.size>100)icons.delete(icons.keys().next().value);
+      [...results.children].forEach((row,index)=>{const data=icons.get(choices[index]?.url);const icon=row.querySelector('.icon');if(!data || !icon)return;icon.textContent='';const image=document.createElement('img');image.alt='';image.src=data;image.addEventListener('error',()=>{image.remove();icon.textContent='↗';},{once:true});icon.append(image);});
+    }
     let queryRevision = 0;
     let timer;
     let suggestions = [];
     let domains = [];
-    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page',navigate:'Open / Search',move:'Tab placement','ai-draft':'Saved AI prompt','bookmark-folder':'Bookmark folder',group:'Tab group'};
+    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page',navigate:'Open / Search',move:'Tab placement','ai-draft':'Saved AI prompt','bookmark-folder':'Bookmark folder',group:'Tab group',quicklink:'Quicklink',calculator:'Calculator','result-action':'Action','quicklink-save':'Quicklink',activity:'Recent action'};
     const heldKeys = new Set();
     let closing = false;
     function close() {
@@ -240,6 +326,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       setMode(`site:${site.key}`,value);
     }
     function selectedTabIds() {
+      if(mode==='actions' && actionIds.length)return actionIds;
       if(markedTabs.size)return [...markedTabs];
       const choice=choices[selected];
       const id=choice?.kind==='order-tab'?choice.tabId:choice?.kind==='tab'?choice.id:context.sourceTabId;
@@ -272,25 +359,19 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(dismissed || closing || revision!==queryRevision)return;
       markedTabs.clear();groupTargetIds=[];setMode('search');
     }
-    async function removeFromGroups() {
-      if(busy)return;
-      busy=true;const revision=queryRevision;
-      try {await performGroup({action:'remove',tabIds:selectedTabIds()},revision);}
-      catch(failure){if(revision===queryRevision)error.textContent=failure.message;}
-      finally{busy=false;}
-    }
     function setMode(next,value='',tabId,preferredId,keepResults=false) {
       if(!keepResults){moveQueue.length=0;notice='';}
+      if(mode==='search' && !['search','edit'].includes(next))lastSearchQuery=input.value;
       orderTabId=next==='order'?tabId:undefined;
-      mode=next;completedAddress=null;input.value=value;
-      input.placeholder=mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
+      mode=next;completedAddress=null;input.maxLength=mode==='quicklink-name'?80:8192;input.value=value;
+      input.placeholder=mode==='actions'?`Actions · ${actionTarget?.title || 'Selected result'}`:mode==='providers'?`Search with… · ${providerQuery.slice(0,80)}`:mode==='quicklink-name'?'Name this quicklink…':mode==='quicklinks'?'Find a quicklink…':mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
         :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
       input.setAttribute('aria-label',input.placeholder);
       if(!keepResults)updateSuggestions(preferredId);input.focus();
       if(mode==='edit' || mode==='group-rename') input.select();
     }
     async function copyText(value) {
-      if(navigator.clipboard?.writeText) {await navigator.clipboard.writeText(value);return;}
+      if(view.navigator.clipboard?.writeText) {await view.navigator.clipboard.writeText(value);return;}
       const area=document.createElement('textarea');area.value=value;root.append(area);area.select();
       const copied=document.execCommand('copy');area.remove();
       if(!copied) throw new Error('Clipboard access is unavailable');
@@ -303,8 +384,26 @@ export function mountPalette(tabs, floating = false, context = {}) {
         // Do not commit the provisional list while smart suggestions are still loading.
         await pendingQuery;
         if(dismissed || closing || actionRevision!==queryRevision) return;
-        const choice=choices[selected];
+        let choice=choices[selected];
+        let fromActions=false;
         if(!choice) return;
+        if(choice.kind==='result-action') {
+          if(!['open','new','background'].includes(choice.actionId)){await runAction(choice.actionId);return;}
+          fromActions=true;const actionId=choice.actionId;choice=actionTarget;mode=actionReturn.mode;input.value=actionReturn.value;
+          event=actionId==='background'?{shiftKey:true}:actionId==='new'?{ctrlKey:true}:{};
+        }
+        if(choice.kind==='calculator') {await copyText(choice.copyText);if(dismissed || closing || actionRevision!==queryRevision)return;if(fromActions)setMode(actionReturn.mode,actionReturn.value);notice=`Copied ${choice.copyText}`;render();return;}
+        if(choice.kind==='quicklink-save') {
+          const response=await chrome.runtime.sendMessage({type:'palette:quicklink',operation:'save',...quicklinkTarget,name:input.value});
+          if(!response?.ok)throw Error(response?.error || 'Could not save quicklink');
+          if(dismissed || closing || actionRevision!==queryRevision)return;
+          setMode('search');notice='Quicklink saved';render();return;
+        }
+        if(choice.kind==='activity'){const response=await chrome.runtime.sendMessage({type:'palette:command',command:'activity'});if(!response?.ok)throw Error(response?.error || 'Could not open history');close();return;}
+        if(choice.command==='quicklinks'){setMode('quicklinks');return;}
+        if(choice.command==='save-quicklink'){startQuicklink({title:tabs.find(tab=>tab.id===context.sourceTabId)?.title || 'Quicklink',url:context.sourceUrl,kind:'tab',id:context.sourceTabId});return;}
+        if(choice.command==='search-with'){startProviders(lastSearchQuery);return;}
+
         if(choice.command==='bookmark-tabs'){startBookmarks('add');return;}
         if(choice.command==='remove-bookmarks'){startBookmarks('remove');return;}
         if(choice.kind==='bookmark-folder'){await performBookmark(choice.folderId,actionRevision);return;}
@@ -342,26 +441,45 @@ export function mountPalette(tabs, floating = false, context = {}) {
         else message={type:'palette:navigate',query:choice.kind==='navigate'?input.value:choice.url,...targetField};
         const response=await chrome.runtime.sendMessage(message);
         if(!response?.ok) throw new Error(response?.error || 'Could not open result');
-        if(choice.kind==='site-query')chrome.runtime.sendMessage({type:'palette:remember-site',site:choice.site,alias:choice.alias}).catch(()=>{});
+        if(choice.kind==='site-query' && choice.alias)chrome.runtime.sendMessage({type:'palette:remember-site',site:choice.site,alias:choice.alias}).catch(()=>{});
         if(response.copyText!==undefined) await copyText(response.copyText);
         close();
       } catch(failure) {error.textContent=failure.message;}
       finally {busy=false;}
     }
     editCurrent=value=>mode==='edit'?close():setMode('edit',value);
+    function primaryLabel(choice) {
+      const titles={tab:'Switch tab',command:'Run',calculator:'Copy result',closed:'Restore','site-query':'Search',site:'Choose site','result-action':'Choose action','quicklink-save':'Save',quicklink:'Open link','bookmark-folder':'Choose folder','ai-draft':'Recover prompt','order-tab':'Choose position',move:'Move tab','group-create':'Create group','group-add':'Add to group','group-manage':'Manage group','group-rename':'Rename','group-colors':'Choose color','group-change':'Apply',activity:'View history'};
+      return titles[choice?.kind] || 'Open';
+    }
+    function paintFooter() {
+      const choice=choices[selected];
+      const main=document.createElement('span');main.className='footer-main';
+      const status=document.createElement('span');status.className='footer-status';
+      status.textContent=notice || (mode==='order'?'Arrange tabs':mode==='actions'?'Actions':markedTabs.size?`${markedTabs.size} marked`:mode==='providers'?'Search with':mode==='quicklinks'?'Quicklinks':'');
+      const key=document.createElement('kbd');key.textContent='↵';
+      const label=document.createElement('span');label.textContent=primaryLabel(choice);
+      main.append(status,key,label);
+      const action=document.createElement('button');action.type='button';action.className='footer-action';action.setAttribute('aria-label',mode==='actions'?'Return to results':'Actions for selected result');
+      action.textContent=mode==='actions'?'Back':'Actions';
+      const shortcut=document.createElement('kbd');shortcut.textContent=`${modifierLabel} K`;action.append(shortcut);
+      action.disabled=mode!=='actions' && !choice;action.addEventListener('click',event=>{event.stopPropagation();openActions();});
+      footer.replaceChildren(main,action);footer.title=footerDescription+' · Drag to move · Ctrl+Alt+arrows move · Ctrl+Alt+0 reset';
+    }
     function highlight() {
       [...results.children].forEach((row,index) => row.setAttribute('aria-selected', String(index === selected)));
       const row = results.children[selected];
       if (row) {input.setAttribute('aria-activedescendant',row.id);row.scrollIntoView({block:'nearest'});}
       else input.removeAttribute('aria-activedescendant');
+      paintFooter();
     }
     function render(preferredId) {
       const oldPositions=new Map([...results.children].map(row=>[row.dataset.key,row.getBoundingClientRect().top]));
       const previous = choices[selected];
-      const previousKey = previous && `${previous.kind}:${previous.folderId ?? previous.groupId ?? previous.color ?? previous.action ?? previous.draftId ?? previous.beforeTabId ?? previous.placement ?? previous.tabId ?? previous.site ?? previous.command ?? previous.sessionId ?? previous.id ?? previous.url}`;
-      choices = [...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['tab','browser-page'].includes(item.kind))];
+      const previousKey = choiceKey(previous);
+      choices = [...suggestions.filter(item => item.kind === 'calculator'),...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['calculator','tab','browser-page'].includes(item.kind))];
       const query=input.value.trim();
-      if(['commands','closed','order','drafts','bookmark-folders'].includes(mode) || mode.startsWith('group')) choices=suggestions;
+      if(['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name'].includes(mode) || mode.startsWith('group')) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
         const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
@@ -371,6 +489,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
           const open=choices.filter(item=>item.kind==='tab');
           choices=[...open,...siteRows,...choices.filter(item=>item.kind!=='tab')];
         }
+      }
+      if(mode==='search' && query && completedAddress!==query && !suggestions.some(row=>['tab','bookmark','history','quicklink','calculator','browser-page'].includes(row.kind))) {
+        choices.push(...sites.filter(site=>['provider:google','provider:chatgpt','provider:gemini'].includes(site.key)).map(site=>({kind:'site-query',site:site.key,query,alias:'',title:`Search ${site.name}`,url:query,section:'Search elsewhere',sources:['site']})));
       }
       const inline=mode==='search' && completedAddress!==query?query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/us):null;
       const inlineSites=inline?siteMatches(inline[1],true):[];
@@ -392,7 +513,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(mode==='bookmark-folders')footer.textContent=`${bookmarkOperation==='add'?'Save':'Remove'} bookmarks for ${bookmarkTargetIds.length} tab(s) · Enter choose folder · Esc back`;
       if(mode==='search' && notice)footer.textContent=notice;
       if(inlineSites.length)footer.textContent=uniqueInline?`Search ${inlineSites[0].site.name} · Enter send query · Tab enter scope · ↓ other results`:'Shared shortcut · ↓ choose site · Enter default search';
-      const retained = choices.findIndex(choice => `${choice.kind}:${choice.folderId ?? choice.groupId ?? choice.color ?? choice.action ?? choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}` === previousKey);
+      footerDescription=footer.textContent;
+      const retained = choices.findIndex(choice => choiceKey(choice) === (returnKey || previousKey));
+      if(returnKey && retained>=0){selectionMoved=true;returnKey=null;}
       const preferred=preferredId===undefined?-1:choices.findIndex(choice=>(choice.tabId ?? choice.id)===preferredId);
       selected = preferred>=0?preferred:selectionMoved && retained >= 0 ? retained : 0;
       if(preferred>=0)selectionMoved=true;
@@ -402,20 +525,21 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const tabId=choice.kind==='tab'?choice.id:choice.kind==='order-tab'?choice.tabId:undefined;
         if(tabId!==undefined){row.dataset.marked=String(markedTabs.has(tabId));row.setAttribute('aria-checked',String(markedTabs.has(tabId)));}
         row.tabIndex = -1;row.dataset.key=String(choice.tabId ?? choice.id ?? `other:${index}`);
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕'})[choice.kind];
-        if(tabId!==undefined){icon.textContent=markedTabs.has(tabId)?'☑':'☐';icon.title='Select tab · Shift+Space';icon.addEventListener('click',event=>{event.stopPropagation();markTab(tabId);});}
+        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕',quicklink:'↗',calculator:'=', 'result-action':'›','quicklink-save':'↗',activity:'◷'})[choice.kind] || '›';
+        if(tabId!==undefined){icon.dataset.selectable='true';icon.dataset.marked=String(markedTabs.has(tabId));icon.textContent=markedTabs.has(tabId)?'☑':'☐';icon.title='Select tab · Shift+Space';icon.addEventListener('click',event=>{event.stopPropagation();markTab(tabId);});}
         else if(choice.kind.startsWith('group-'))icon.textContent='▤';
         else if(choice.kind==='bookmark-folder'){icon.textContent=bookmarkOperation==='add'?'☆':'−';row.title=choice.title;}
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = choice.url || '';
+        const url = document.createElement('span');url.className = 'url';url.textContent = webUrl(choice.url)?choice.url.replace(/^https?:\/\/(www\.)?/,''):choice.url || '';url.title=choice.url || '';
         if(choice.groupColor || choice.groupTitle)row.dataset.groupColor=choice.groupColor || 'grey';
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title);
+        const metadata=document.createElement('span');metadata.className='metadata';
         if(choice.groupTitle) {
           const badge=document.createElement('span');badge.className='group-badge';
           badge.textContent=choice.groupTitle+(choice.groupCollapsed?' · Collapsed':'');
-          badge.title=`Tab group: ${choice.groupTitle}`;text.append(badge);
+          badge.title=`Tab group: ${choice.groupTitle}`;metadata.append(badge);
         }
         const sources=Array.from(new Set(choice.sources || [choice.kind==='order-tab'?'tab':choice.kind==='site-query'?'site':choice.kind.startsWith('group-')?'group':choice.kind])).filter(source=>labels[source]);
         if(sources.length) {
@@ -424,16 +548,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
             const badge=document.createElement('span');badge.className='source-badge';badge.dataset.source=source;
             badge.textContent=labels[source];badges.append(badge);
           }
-          text.append(badges);
+          metadata.append(badges);
         }
-        text.append(url);row.append(icon,text);
-        if (choice.kind !== 'navigate' && !choice.kind.startsWith('group-') && !['command','closed','order-tab','move','ai-draft','bookmark-folder'].includes(choice.kind)) {
-          const hint = document.createElement('span');hint.className = 'hint';hint.textContent = choice.kind==='site-query'?'Enter ↵':'Tab ↹';row.append(hint);
-        }
+        text.append(url);row.append(icon,text,metadata);
+        const section=choice.section || (mode==='search' && !query?(choice.kind==='tab'?'Open tabs':choice.kind==='quicklink'?'Quicklinks':choice.kind==='command'?'Frequent commands':''):null);
+        const previousSection=index?choices[index-1].section || (choices[index-1].kind==='tab'?'Open tabs':choices[index-1].kind==='quicklink'?'Quicklinks':choices[index-1].kind==='command'?'Frequent commands':''):null;
+        if(section && section!==previousSection){row.dataset.section=section;const label=document.createElement('span');label.className='section-label';label.textContent=section;label.setAttribute('aria-hidden','true');row.append(label);}
+        if(choice.shortcut){const key=document.createElement('kbd');key.textContent=shortcutLabel(choice.shortcut);row.append(key);}
         row.addEventListener('click',event => {if(busy)return;selected=index;selectionMoved=true;activate(event);});
         row.addEventListener('mousemove',() => {if(!busy){selected=index;selectionMoved=true;highlight();}});
         return row;
-      }));highlight();
+      }));highlight();decorateIcons();
       if(mode==='order' && !view.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         for(const row of results.children) {
           const previous=oldPositions.get(row.dataset.key);
@@ -443,7 +568,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
     }
     function updateSuggestions(preferredId) {
-      const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts'}[input.value[0]];
+      const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts','$':'quicklinks'}[input.value[0]];
       if(mode==='search' && input.value.startsWith('*')){try{startBookmarks('add',input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && input.value.startsWith('#')){try{startGrouping(input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && prefixMode) {setMode(prefixMode,input.value.slice(1).trimStart());return;}
@@ -453,10 +578,24 @@ export function mountPalette(tabs, floating = false, context = {}) {
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-      suggestions=['commands','closed','order','drafts','bookmark-folders'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
+      suggestions=['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
         :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
+      if(mode==='actions') {
+        const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+        suggestions=availableActions().filter(action=>terms.every(term=>action.title.toLocaleLowerCase().includes(term))).map(action=>({kind:'result-action',actionId:action.id,title:action.title,url:'',shortcut:action.shortcut}));
+        render();resolvePending();return;
+      }
+      if(mode==='providers') {
+        const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+        suggestions=sites.filter(site=>terms.every(term=>`${site.name} ${(site.aliases || []).join(' ')}`.toLocaleLowerCase().includes(term))).map(site=>({kind:'site-query',site:site.key,query:providerQuery,alias:'',title:`Search ${site.name}`,url:providerQuery,sources:['site']}));
+        render();resolvePending();return;
+      }
+      if(mode==='quicklink-name') {
+        suggestions=query && query.length<=80?[{kind:'quicklink-save',title:`Save “${query}”`,url:quicklinkTarget.url}]:[];
+        render();resolvePending();return;
+      }
       if(mode==='group-rename') {
         suggestions=query && query.length<=80?[{kind:'group-change',action:'rename',name:query,title:`Rename group to “${query}”`,url:'Enter apply name'}]:[];
         render();resolvePending();return;
@@ -468,7 +607,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(mode.startsWith('site:')) {resolvePending();return;}
       timer=setTimeout(async()=>{
         try {
-          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions','bookmark-folders'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
+          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions','bookmark-folders','quicklinks'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];
@@ -520,7 +659,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       if (event.key === 'Escape') {
         event.preventDefault();event.stopPropagation();
-        if(['group-rename','group-colors'].includes(mode))setMode('group-actions');
+        if(mode==='actions')leaveActions();
+        else if(mode==='providers' && providerReturn)setMode(providerReturn.mode,providerReturn.value,providerReturn.orderTabId);
+        else if(mode==='quicklink-name' && quicklinkReturn)setMode(quicklinkReturn.mode,quicklinkReturn.value,quicklinkReturn.orderTabId);
+        else if(['group-rename','group-colors'].includes(mode))setMode('group-actions');
         else if(mode==='group-actions')setMode('group-manage');
         else if(mode==='order' && orderTabId!==undefined) setMode('order');
         else if(mode!=='search') setMode('search');
@@ -528,19 +670,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
         else close();
         return;
       }
-      if((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLocaleLowerCase()==='d') {
-        event.preventDefault();if(busy)return;
-        try{startBookmarks(event.shiftKey?'remove':'add');}catch(failure){error.textContent=failure.message;}
-        return;
+      if((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLocaleLowerCase()==='k') {
+        event.preventDefault();openActions();return;
       }
-      if((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase()==='g') {
-        event.preventDefault();if(busy)return;
-        try {
-          if(event.altKey)setMode('group-manage');
-          else if(event.shiftKey)removeFromGroups();
-          else startGrouping();
-        }catch(failure){error.textContent=failure.message;}
-        return;
+      if(event.metaKey || event.ctrlKey) {
+        const action=actionDefinitions.find(action=>action.key===event.key.toLocaleLowerCase() && Boolean(action.shift)===event.shiftKey && Boolean(action.alt)===event.altKey);
+        if(action){event.preventDefault();if(!busy){busy=true;runAction(action.id).catch(failure=>{error.textContent=failure.message;}).finally(()=>{busy=false;});}return;}
       }
       if(event.key===' ' && event.target===input && event.shiftKey && !event.altKey && !event.metaKey && !event.ctrlKey) {
         const choice=choices[selected];
@@ -557,6 +692,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(deltas[event.key]){event.preventDefault();const bounds=dialog.getBoundingClientRect();const [x,y]=deltas[event.key];const step=event.shiftKey?64:16;resize(bounds.width+x*step,bounds.height+y*step);return;}
       }
       if(busy) {event.preventDefault();return;}
+      if(event.key==='Backspace' && mode==='providers' && !input.value && providerReturn){event.preventDefault();setMode(providerReturn.mode,providerReturn.value,providerReturn.orderTabId);return;}
+      if(event.key==='Backspace' && mode==='actions' && !input.value){event.preventDefault();leaveActions();return;}
       if(event.key==='Backspace' && mode!=='search' && !input.value) {
         event.preventDefault();
         if(mode==='order' && orderTabId!==undefined)setMode('order');
@@ -566,7 +703,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (['ArrowDown','ArrowUp'].includes(event.key) && event.target===input && choices.length) {
         event.preventDefault(); selectionMoved = true; selected = (selected + (event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length;highlight();
       }
-      if (event.key === 'Enter') {event.preventDefault();activate(event);}
+      if (event.key === 'Enter') {event.preventDefault();if(event.target===footer.querySelector('button'))openActions();else activate(event);}
       if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
         const choice = choices[selected];
@@ -576,15 +713,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(!event.shiftKey && event.target===input && choice?.kind==='site-query') {enterSite(sites.find(site=>site.key===choice.site),choice.alias,choice.query);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && site) {enterSite(site);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && !input.value.trim()) {setMode('commands');return;}
-        if (!event.shiftKey && event.target === input && !choice?.kind.startsWith('group-') && !['navigate','command','closed','site','order-tab','move','ai-draft','bookmark-folder'].includes(choice?.kind) && choice?.url) {
+        if (!event.shiftKey && event.target === input && !choice?.kind.startsWith('group-') && !['navigate','command','closed','site','order-tab','move','ai-draft','bookmark-folder','result-action','quicklink-save','calculator','activity'].includes(choice?.kind) && choice?.url) {
           input.value = choice.url;
           completedAddress = choice.url;
           input.focus();
           input.setSelectionRange(input.value.length,input.value.length);
           updateSuggestions();
         } else {
-          const controls=[input,resizeHandle];
-          controls[(controls.indexOf(root.activeElement)+1)%controls.length].focus();
+          const controls=[input,footer.querySelector('button'),resizeHandle];
+          controls[(controls.indexOf(root.activeElement)+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();
         }
       }
     });

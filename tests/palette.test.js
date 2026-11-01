@@ -217,5 +217,18 @@ test('launcher tools offer calculator, named links and recent commands without l
   const idle=await paletteAction(api,{type:'palette:suggest',query:''},sender);
   assert.ok(idle.suggestions.some(row=>row.kind==='quicklink'));
   assert.ok(idle.suggestions.some(row=>row.command==='copy-url'));
+  assert.ok(idle.suggestions.some(row=>row.kind==='activity' && row.title==='Copy current URL'));
+  const duplicateCalls=api.calls.filter(call=>call[0]==='update').length;
+  assert.equal(duplicateCalls,0,'listing recent actions does not replay them');
   await assert.rejects(()=>paletteAction(api,{type:'palette:quicklink',operation:'save',name:'Foreign',tabId:9},{...sender,tab:{id:5,windowId:8}}));
+});
+
+test('contextual duplicate validates selected tab and source window before mutation',async()=>{
+  const api=browser();api.tabs.duplicate=async id=>api.calls.push(['duplicate',id]);
+  await paletteAction(api,{type:'palette:tab-action',action:'duplicate',tabId:8},sender);
+  assert.deepEqual(api.calls,[['duplicate',8]]);
+  api.tabs.get=async id=>({id,windowId:9});
+  await assert.rejects(()=>paletteAction(api,{type:'palette:tab-action',action:'duplicate',tabId:8},sender));
+  await assert.rejects(()=>paletteAction(api,{type:'palette:tab-action',action:'close',tabId:8},sender));
+  assert.equal(api.calls.length,1);
 });

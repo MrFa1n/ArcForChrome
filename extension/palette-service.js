@@ -1,3 +1,4 @@
+import {faviconImages} from './favicons.js';
 import {calculate} from './calculator.js';
 import {quicklinks,changeQuicklink} from './quicklinks.js';
 import {listActivity} from './activity-store.js';
@@ -17,7 +18,7 @@ export async function openPalette(api,mount,mode='search') {
   const [tab]=await api.tabs.query({active:true,currentWindow:true});
   if(!tab) return;
   const [tabs,sites]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api,tab.windowId)]);
-  const context={mode,sourceUrl:tab.url || '',sourceTabId:tab.id,groupColors:GROUP_COLORS,sites};
+  const context={mode,sourceUrl:tab.url || '',sourceTabId:tab.id,groupColors:GROUP_COLORS,sites,favicons:true};
   try {
     await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url})=>({id,title,url})),false,context]});
   } catch {
@@ -103,6 +104,7 @@ async function executeAction(api,context,id) {
 }
 
 async function performAction(api,message,context) {
+  if(message.type==='palette:icons')return {images:await faviconImages(api,message.urls)};
   if(message.type==='palette:suggest') {
     if(typeof message.query!=='string' || message.query.length>8192) throw new Error('Invalid query');
     if(message.mode==='quicklinks')return {suggestions:await quicklinks(api,message.query),domains:[],warnings:[]};
@@ -120,15 +122,22 @@ async function performAction(api,message,context) {
     const [found,links]=await Promise.all([findSuggestions(api,context.windowId,message.query),quicklinks(api,message.query).catch(()=>[])]);
     const calculation=calculate(message.query);
     const extra=calculation?[{kind:'calculator',title:calculation.result,url:calculation.expression,copyText:calculation.result,sources:['calculator']}]:[];
-    let recent=[];
+    let recent=[],recentActions=[];
     if(!message.query.trim()) {
       const history=await listActivity(api).catch(()=>[]);
+      recentActions=history.slice(0,3).map(row=>({kind:'activity',activityId:row.id,title:row.label,url:`View history · ${new Date(row.time).toLocaleString()}`,sources:['activity'],section:'Recent actions'}));
       const counts=new Map();
       for(const row of history.filter(row=>row.action==='command' && row.status==='ok'))counts.set(row.label,(counts.get(row.label) || 0)+1);
       recent=commandSuggestions('').filter(row=>counts.has(row.title)).sort((a,b)=>counts.get(b.title)-counts.get(a.title)).slice(0,3);
       if(!recent.length)recent=commandSuggestions('').filter(row=>['quicklinks','save-quicklink','search-with','order-tabs','closed-tabs','settings'].includes(row.command));
     }
-    return {...found,suggestions:[...extra,...found.suggestions,...links.slice(0,8),...recent]};
+    const rows=found.suggestions.slice(),remaining=[];
+    for(const link of links.slice(0,8)) {
+      const index=rows.findIndex(row=>row.url===link.url);
+      if(index<0)remaining.push(link);
+      else rows[index]={...rows[index],linkId:link.linkId,linkName:link.title,sources:[...new Set([...(rows[index].sources || [rows[index].kind]),'quicklink'])]};
+    }
+    return {...found,suggestions:[...extra,...rows,...remaining,...recentActions,...recent]};
   }
   if(message.type==='palette:quicklink') {
     let request=message;
@@ -199,7 +208,7 @@ function activityEvent(message,status) {
 }
 export async function paletteAction(api,message,sender) {
   const context=sourceContext(api,sender);
-  const logged=!['palette:suggest','palette:remember-site'].includes(message.type) && message.command!=='activity';
+  const logged=!['palette:suggest','palette:icons','palette:remember-site'].includes(message.type) && message.command!=='activity';
   try {
     const result=await performAction(api,message,context);
     if(logged) {

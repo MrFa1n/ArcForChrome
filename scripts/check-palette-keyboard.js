@@ -164,7 +164,7 @@ try {
     await evaluate('new Promise(resolve=>setTimeout(resolve,70))');
   }
 
-  await key('0','Digit0','',3);await key('Tab','Tab',undefined,8);
+  await key('0','Digit0','',3);await key('Tab','Tab',undefined,8);await key('Tab','Tab',undefined,8);
   await evaluate('new Promise(resolve=>setTimeout(resolve,100))');
   assert.deepEqual(await evaluate('paletteErrors'),[],'resize/clamping must not produce ResizeObserver feedback errors');
 
@@ -515,24 +515,102 @@ try {
   assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),context.sourceUrl);
   await key('Escape','Escape');await key('Escape','Escape');
 
+  // Contextual actions, frozen provider queries, quicklinks and calculator clipboard flow.
+  await evaluate(`globalThis.savedLinks=[];globalThis.copiedValues=[];
+    chrome.runtime.sendMessage=async message=>{
+      if(message.type==='palette:suggest') {
+        if(message.mode==='quicklinks')return {ok:true,suggestions:savedLinks,warnings:[]};
+        if(message.query==='1250 * 0.18')return {ok:true,suggestions:[{kind:'calculator',title:'225',url:message.query,copyText:'225',sources:['calculator']}],warnings:[]};
+        if(message.mode==='bookmark-folders')return {ok:true,suggestions:[{kind:'bookmark-folder',folderId:'work',title:'Bookmarks bar / Work',url:'Save selected tabs here'}],warnings:[]};
+        return {ok:true,suggestions:mockTabs.filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};
+      }
+      if(message.type==='palette:icons')return {ok:true,images:message.urls.map(()=> 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==')};
+      messages.push(message);
+      if(message.type==='palette:quicklink' && message.operation==='save')savedLinks=[{kind:'quicklink',linkId:'quicklink:demo',title:message.name,url:'https://alpha.example/',sources:['quicklink']}];
+      if(message.type==='palette:quicklink' && message.operation==='remove')savedLinks=[];
+      if(message.type==='palette:bookmark')return {ok:true,changed:message.tabIds.length,skipped:0,folderPath:'Bookmarks bar / Work'};
+      return {ok:true};
+    };`);
+  await mount(selectableTabs,{...groupContext,sites:BUILTIN_SITES,favicons:true});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.ok(await paletteCall(`function(){return this.querySelector('.icon img')!==null;}`),'browser-cache images decorate results without replacing selection controls');
+  await key('ArrowDown','ArrowDown');await key('k','KeyK','',4);
+  assert.match(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),/Actions.*Beta/);
+  assert.ok(await paletteCall(`function(){return this.querySelector('#results').textContent.includes('Save in a bookmark folder');}`));
+  await key('Escape','Escape');
+  assert.equal(await paletteCall(`function(){return this.querySelector('[aria-selected=true] .title').textContent;}`),'Beta','Esc restores the selected result');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'duplicate'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:tab-action'),{type:'palette:tab-action',action:'duplicate',tabId:82});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'save in a bookmark'});await key('Enter','Enter');await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:bookmark').tabIds,[81,82]);
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'save as quicklink'});await key('Enter','Enter');
+  await send('Input.insertText',{text:'Work portal'});await key('Enter','Enter');
+  assert.equal((await evaluate('messages')).findLast(message=>message.type==='palette:quicklink').name,'Work portal');
+  await send('Input.insertText',{text:'$'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.equal(await paletteCall(`function(){return this.querySelector('.title').textContent;}`),'Work portal');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'rename quicklink'});await key('Enter','Enter');
+  await send('Input.insertText',{text:'Renamed portal'});await key('Enter','Enter');
+  assert.equal((await evaluate('messages')).findLast(message=>message.type==='palette:quicklink').id,'quicklink:demo','renaming updates the existing entry');
+  await send('Input.insertText',{text:'$'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'remove quicklink'});await key('Enter','Enter');
+  assert.equal(await evaluate('savedLinks.length'),0);
+  await key('Escape','Escape');await send('Input.insertText',{text:'explain CSS grid'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.ok(await paletteCall(`function(){return this.querySelector('#results').textContent.includes('Search Google AI Mode');}`),'fallback providers are discoverable');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'search this query'});await key('Enter','Enter');
+  await key('Escape','Escape');
+  assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'explain CSS grid','cancel provider selection keeps the original query');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'search this query'});await key('Enter','Enter');
+  await send('Input.insertText',{text:'claude'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:site'),{type:'palette:site',site:'provider:claude',query:'explain CSS grid'});
+  await mount([],{sites:BUILTIN_SITES});await send('Input.insertText',{text:'1250 * 0.18'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await paletteCall(`function(){Object.defineProperty(this.ownerDocument.defaultView.navigator,'clipboard',{configurable:true,value:{writeText:async text=>{this.dataset.copied=text;}}});}`);
+  await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.dataset.copied;}`),'225');
+  assert.ok(await paletteCall(`function(){return this.querySelector('footer').textContent.includes('Copied 225');}`));
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'copy result'});await key('Enter','Enter');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.equal(await paletteCall(`function(){return this.querySelector('.title').textContent;}`),'225','calculator primary action restores the calculator list after copying');
+  await key('Escape','Escape');
+  await mount(selectableTabs,{...groupContext,sites:BUILTIN_SITES});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('ArrowDown','ArrowDown');await key('k','KeyK','',4);
+  await send('Input.insertText',{text:'no-such-action'});await key('k','KeyK','',4);
+  assert.equal(await paletteCall(`function(){return this.querySelector('[aria-selected=true] .title').textContent;}`),'Beta','action toggle returns even when its filter has no results');
+  await key('k','KeyK','',4);await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:activate'),{type:'palette:activate',tabId:82},'menu primary action uses the frozen selected result');
+  await mount([],{sites:BUILTIN_SITES});await send('Input.insertText',{text:'gpt keep this prompt'});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'search this query'});await key('Enter','Enter');
+  await send('Input.insertText',{text:'google ai mode'});await key('Enter','Enter');
+  assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:site'),{type:'palette:site',site:'provider:gemini',query:'keep this prompt'},'redirect drops only the recognized provider alias');
+
+
   // Optional documentation demo: real palette DOM, fictional tabs, disposable profile.
   if (process.env.PALETTE_SCREENSHOT_DIR) {
     await key('Escape','Escape');
     await send('Emulation.setDeviceMetricsOverride',{width:1120,height:720,deviceScaleFactor:1,mobile:false});
     await evaluate(`document.body.innerHTML='<main><small>DEMO WORKSPACE</small><h1>A little more focus.</h1><p>Your page stays right here while you find your next destination.</p><section><article>Reading list<br><span>Ideas worth coming back to</span></article><article>Current project<br><span>One good thing at a time</span></article></section></main>';document.body.style.cssText='margin:0;background:#edf1f7;color:#243048;font:16px system-ui';const style=document.createElement('style');style.textContent='main{max-width:900px;margin:80px auto}small{letter-spacing:.18em;color:#687892}h1{font-size:48px;letter-spacing:-2px;margin:18px 0}p{color:#687892}section{display:flex;gap:20px;margin-top:60px}article{background:#ffffffaa;border:1px solid #dbe2ed;border-radius:18px;padding:28px;width:40%;font-weight:600}article span{display:block;color:#7b879b;font-size:14px;font-weight:400;margin-top:12px}';document.head.append(style);
       globalThis.chrome.runtime.sendMessage=async message=>{if(message.type!=='palette:suggest')return {ok:true};if(message.mode==='commands')return {ok:true,suggestions:commandRows,warnings:[]};return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};};`);
+    const demoContext={...context,sites:[...BUILTIN_SITES,...(context.sites || [])]};
     const demoTabs=[{id:101,title:'GitHub · Arc for Chrome',url:'https://github.com/example/arc-for-chrome',groupTitle:'Development',groupColor:'blue'},{id:102,title:'Chrome Extensions · Documentation',url:'https://developer.chrome.com/docs/extensions',groupTitle:'Development',groupColor:'blue'},{id:103,title:'YouTube · Design inspiration',url:'https://www.youtube.com/',groupTitle:'Inspiration',groupColor:'purple'}];
-    await mount(demoTabs,context);
+    await mount(demoTabs,demoContext);
     await screenshot('demo-01');
+    await key('k','KeyK','',4);await screenshot('actions');await key('Escape','Escape');
+
     await send('Input.insertText',{text:'github'});
     await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     await screenshot('demo-02');
-    await key('Escape','Escape');await mount([],context);
+    await key('Escape','Escape');await mount([],demoContext);
     await send('Input.insertText',{text:'yt minimal interface design'});
     await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     await screenshot('demo-03');
     await key('Escape','Escape');await key('Escape','Escape');
-    await mount(demoTabs,context);await key('Tab','Tab');
+    await mount(demoTabs,demoContext);await key('Tab','Tab');
     await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     await screenshot('demo-04');
     await key('Escape','Escape');await key('Escape','Escape');
@@ -541,18 +619,28 @@ try {
       const rows=message.mode==='bookmark-folders'?[{kind:'bookmark-folder',folderId:'work',title:'Bookmarks bar / Work / Research',url:'Save selected tabs here'},{kind:'bookmark-folder',folderId:'reading',title:'Bookmarks bar / Reading list',url:'Save selected tabs here'}]:message.mode==='groups'?workRows:mockTabs.map(tab=>({...tab,kind:'tab',sources:['tab']}));
       return {ok:true,suggestions:rows,warnings:[]};
     };`);
-    await mount(demoTabs,context);await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await mount(demoTabs,demoContext);await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
     await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
     await screenshot('selection');
     await key('g','KeyG','',4);await send('Input.insertText',{text:'Work'});
     await evaluate('new Promise(resolve=>setTimeout(resolve,300))');await screenshot('groups');
     await key('Escape','Escape');await key('Escape','Escape');await key('Escape','Escape');
-    await mount(demoTabs,context);await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await mount(demoTabs,demoContext);await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
     await key(' ','Space',' ',8);await key('ArrowDown','ArrowDown');await key(' ','Space',' ',8);
     await key('d','KeyD','',4);await evaluate('new Promise(resolve=>setTimeout(resolve,300))');
     await screenshot('bookmarks');await key('Escape','Escape');await key('Escape','Escape');await key('Escape','Escape');
+    await mount([],demoContext);await send('Input.insertText',{text:'design a calmer browser'});
+    await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await key('k','KeyK','',4);await send('Input.insertText',{text:'search this query'});await key('Enter','Enter');
+    await screenshot('providers');await key('Escape','Escape');await key('Escape','Escape');
+    await evaluate(`chrome.runtime.sendMessage=async message=>message.type==='palette:suggest'?{ok:true,suggestions:message.mode==='quicklinks'?[{kind:'quicklink',linkId:'quicklink:demo',title:'Work portal',url:'https://example.com/work',sources:['quicklink']}]:[{kind:'calculator',title:'225',url:'1250 × 0.18',copyText:'225',sources:['calculator']}],warnings:[]}:{ok:true};`);
+    await mount([],demoContext);await send('Input.insertText',{text:'1250 * 0.18'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await screenshot('calculator');await key('Escape','Escape');
+    await mount([],demoContext);await send('Input.insertText',{text:'$'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await screenshot('quicklinks');await key('Escape','Escape');await key('Escape','Escape');
+
     await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
-    await mount(demoTabs,context);await screenshot('demo-dark');
+    await mount(demoTabs,demoContext);await screenshot('demo-dark');
     await key('Escape','Escape');
     await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'light'}]});
   }
@@ -607,7 +695,7 @@ try {
   await evaluate("document.querySelector('#clear').click()");
   await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
   assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),0);
-  console.log('PASS: real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, folder-scoped bookmark save/removal, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
+  console.log('PASS: contextual action selection/return, provider redirect/cancel, quicklink save/rename/remove, calculator copy and favicon rendering; real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, folder-scoped bookmark save/removal, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
   if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();
