@@ -15,3 +15,5 @@ Set `CHROME_BINARY` if Chrome is not installed at the standard macOS path. The c
 The activity-history preview uses two fictional action records. The current GIF includes inline shortcut + query; no live prompt is sent during capture.
 
 The selection, group picker and bookmark-folder picker PNGs show the current multi-tab workflow, captured with the same fictional fixtures. Their browser API responses are stubbed; the displayed UI and keyboard handling are the extension’s real code.
+
+Version 0.21 adds contextual Actions, provider redirection, quicklinks and calculator captures. These are real UI states with fictional data and stubbed browser services; no remote prompt is submitted and automated clipboard tests use a stub. The provider example includes builtins and detected site scopes.

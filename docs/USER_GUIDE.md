@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.20.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.21.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -82,10 +82,11 @@ No telemetry, backend, online autocomplete, permanent host access or persistent 
 | `bookmarks` | Read suggestions and explicit folder-scoped bookmark edits |
 | `search` | Execute queries through Chrome's selected provider |
 | `sessions` | List and restore recently closed tabs |
-| `storage` | Site overrides/aliases, bounded action journal and temporary AI recovery |
+| `storage` | Site overrides/aliases, bounded action journal, local named quicklinks and temporary AI recovery |
 | `alarms` | Schedule history expiry while Chrome runs |
 | `tabGroups` | Group metadata, colors, titles and collapsed state |
-| `clipboardWrite` | Explicit Copy current URL action; clipboard contents are not read |
+| `clipboardWrite` | Explicit URL/calculation copying; clipboard contents are not read |
+| `favicon` | Cached Chrome site icons, without an external favicon service |
 
 No sidebar, spaces UI, global tab cycling, MRU tracking or numbered pin commands. Native Chrome pins/groups/tabs are retained. Session restoration uses Chrome's original session destination, which can belong to a different window. A failed default-provider query can leave its newly created blank tab; the original page is unaffected.
 
@@ -167,3 +168,16 @@ Use marked tabs or the highlighted/source tab. Cmd/Ctrl+D opens save-folder sele
 The complete path is shown (and available as a hover title). Root/managed folders are excluded. Saving canonicalizes HTTP(S)/known Chrome section URLs, rejects embedded credentials/unsupported schemes, deduplicates selected URLs and skips copies already directly in the destination without overwriting custom titles. Removal lists folders containing selected URLs and shows count; it removes all matching direct bookmark copies, not nested records, folders, unrelated pages or copies elsewhere. No selection action navigates or closes tabs. Native syncing may propagate changes.
 
 Mutation-time revalidation uses fresh tabs/tree/children; selected IDs must be distinct, current-window and bounded to 100. Extension-originated writes serialize to avoid own concurrent duplicate creation. Chrome provides no multi-record transaction: partial API failure reports the completed count and retains those changes. Retry refreshes state and skips successful additions. The footer reports success/skips and chosen path, and the palette stays open. Creating folders and arbitrary saved-bookmark editing are outside this feature. No new permission beyond the existing bookmarks grant.
+
+
+## Compact launcher actions v0.21
+
+Select a result → Cmd/Ctrl+K or Actions → filter/choose an operation → Enter. Escape restores the selected result and original query. This reuses direct group/bookmark hotkeys and marked tabs, with no permanent extra panel. The footer shows the applicable primary action and keyboard keycaps. Empty Search includes open tabs, quicklinks, recent action-journal entries and frequent/starter commands; clicking recent activity views the journal without replaying it.
+
+For another destination, use Actions → Search this query with…, filter the provider/site name, Enter. The outgoing text is separate from the filter. Recognized leading provider aliases are removed on redirect; cancel preserves the original input. Without local matches, Google/ChatGPT/Google AI Mode are also offered below default search. Existing inline aliases and recovery remain available.
+
+Quicklinks: select a web result → Actions → Save as quicklink… → name → Enter. Search saved names in ordinary Search or use $ / $work; Manage quicklinks is a command. Actions on a link offers rename/remove; Save selected page as quicklink in Commands uses the original page. Limits: 100 links, names of 1–80 characters, HTTP(S) without embedded credentials. Records persist locally until explicitly removed, independently of native bookmarks and action retention; no automatic sync.
+
+Calculator: 1250 * 0.18 → 225; Enter copies the result while keeping the overlay open. Arithmetic supports parentheses, + - * / ^ %, unary signs, × ÷ −, right-associative powers and 12-significant-digit formatting. % means remainder. No eval, network, calculator history or currency/date/unit conversion. Invalid expressions remain normal search input. URL/result copying reads no clipboard content.
+
+Site icons use Chrome's cached favicon endpoint and the new favicon permission, with generic fallback and no third-party icon service. They load separately from suggestions. Reload/re-enable the extension after updating if Chrome requests permission review. See README for current [workflow screenshots](../README.md#more-from-one-search-field).

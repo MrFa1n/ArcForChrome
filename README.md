@@ -60,6 +60,7 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 | Manage groups | **⌘⌥G** | **Ctrl+Alt+G** |
 | Save in a bookmark folder | **⌘D** | **Ctrl+D** |
 | Remove from a bookmark folder | **⌘⇧D** | **Ctrl+Shift+D** |
+| Actions for the selected result | **⌘K** | **Ctrl+K** |
 | Choose a result | **↑ / ↓** | **↑ / ↓** |
 | Open / run the selection | **Enter** | **Enter** |
 | Open in a background tab | **Shift+Enter** | **Shift+Enter** |
@@ -69,7 +70,7 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 
 In Search, Enter activates an existing tab or opens a new one. In **Edit current URL**, Enter replaces the source page; submitting its unchanged URL reloads it. Navigation modifiers apply to URL/search results; commands and session restoration keep their explicit actions.
 
-**Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed · `?` recover AI prompts. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
+**Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed · `?` recover AI prompts · `$` quicklinks. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
 
 These action shortcuts work while Spotlight is open. For vertical tabs, use **Alt/Option+↑/↓**; add Shift for start/end. **`#Work`** chooses a group; **`*Work`** chooses a bookmark folder.
 
@@ -80,6 +81,36 @@ These action shortcuts work while Spotlight is open. For vertical tabs, use **Al
 - On a selected URL result, complete its address for editing without navigating.
 
 For ambiguous site matches, choose a site explicitly with the arrows. Repeating the Search shortcut closes the overlay. [Full keyboard guide →](docs/KEYBOARD_REMAPPING.md)
+
+## More from one search field
+
+Results use compact two-line rows: title and address on the left, source/group labels on the right. Chrome's cached site icons load separately without delaying suggestions; missing icons keep a generic symbol. With an empty query, sections surface open tabs, quicklinks, recent activity and frequent commands. Recent activity opens the journal rather than repeating an action. Command frequency comes from the existing bounded journal; with no journal data, starter commands are shown.
+
+### Actions without memorizing shortcuts
+
+Select a result and press **⌘/Ctrl+K**, or click **Actions** in the footer. Search that menu and press Enter. It offers only applicable operations: open/new/background, copy URL or calculation, move/duplicate a tab, group marked tabs, edit folder bookmarks, save/manage a quicklink, or redirect the query. Existing direct hotkeys remain available. **Esc** or the same action shortcut returns to the original query and selection. The footer shows the current primary action with keyboard keycaps; Tab/Shift+Tab reach Actions and the resize handle.
+
+### Keep a query, choose where it goes
+
+When no local page matches, Search offers **Google**, **ChatGPT** and **Google AI Mode** underneath the normal default-search action. For all providers and detected search sites, use **Actions → Search this query with…**, then filter by provider name. The prompt is retained separately from that filter; a recognized leading provider alias is removed when redirecting. Esc returns to the original query. Nothing is submitted until Enter. AI routes retain the existing recovery copy before navigation.
+
+### Named quicklinks
+
+Select a web page → **Actions → Save as quicklink…** → enter a name → Enter. Find it by name or URL in ordinary Search, or type **`$`** / **`$work`** to browse/filter quicklinks. **Manage quicklinks** is also a searchable command. Use Actions on a quicklink to rename or remove it. Saving the current page is available through **Save selected page as quicklink** in Commands.
+
+Quicklinks are local to this Chrome profile, separate from native bookmarks: at most **100**, names **1–80 characters**, HTTP(S) addresses without embedded credentials. They persist until explicitly removed; clearing the action journal does not delete them. They are not automatically synced.
+
+### Calculate without leaving the page
+
+Type **`1250 * 0.18`** → **225** → Enter copies the result and keeps Spotlight open. Supports parentheses, `+ - * / ^ %`, unary signs and `× ÷ −`; `%` is remainder. Powers associate right-to-left. Calculations use a bounded local parser without `eval`, round to 12 significant digits and do not provide currency/date/unit conversion. Invalid or non-finite expressions stay ordinary search input. No calculator history is stored.
+
+| Contextual actions | Choose a provider |
+| --- | --- |
+| ![Actions for a selected browser tab](docs/assets/spotlight-actions.png) | ![Search providers retain the original query](docs/assets/spotlight-providers.png) |
+
+| Local calculator | Named quicklinks |
+| --- | --- |
+| ![Arithmetic result ready to copy](docs/assets/spotlight-calculator.png) | ![Named local quicklinks](docs/assets/spotlight-quicklinks.png) |
 
 ## Search that gets out of your way
 
@@ -225,10 +256,11 @@ Suggestions are processed locally. There is **no telemetry, backend, online auto
 | `bookmarks` | Read suggestions and explicitly save/remove selected pages in a chosen folder |
 | `search` | Use Chrome’s chosen default provider |
 | `sessions` | List and restore recently closed tabs |
-| `storage` | Site templates/aliases, local action history and temporary AI prompt recovery |
+| `storage` | Site templates/aliases, local action history, named quicklinks and temporary AI prompt recovery |
 | `alarms` | Automatically expire action-history entries |
 | `tabGroups` | Read and update source-window group names, colors and state |
-| `clipboardWrite` | Copy the current URL on request; never read the clipboard |
+| `clipboardWrite` | Copy URLs or calculator results on request; never read the clipboard |
+| `favicon` | Read site icons from Chrome’s cache; no external favicon service |
 
 No permanent host access is requested. Automatically inferred site templates are not persisted; ordinary typed text is not saved while composing. Executed action metadata is stored locally with automatic limits; query/prompt text in that journal is opt-in. AI prompt recovery uses separate temporary session storage. [Security policy →](SECURITY.md)
 
@@ -254,5 +286,7 @@ Bug reports, clear reproduction steps and focused pull requests are welcome. See
 [User guide](docs/USER_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [Testing](docs/TESTING.md) · [Arc behavior audit](docs/ARC_COMMAND_BAR_AUDIT.md) · [Work log](docs/WORK_LOG.md)
 
 ---
+
+Interaction patterns also draw inspiration from [Vicinae](https://github.com/vicinaehq/vicinae); all code and bundled visuals here are our own.
 
 [MIT license](LICENSE) · Made for people who miss a good command bar.
