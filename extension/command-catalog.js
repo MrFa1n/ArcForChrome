@@ -1,5 +1,8 @@
 import {browserPageCommands} from './browser-pages.js';
 export const COMMANDS = [
+  {command:'quicklinks',title:'Manage quicklinks',aliases:'links shortcuts быстрые ссылки ярлыки'},
+  {command:'save-quicklink',title:'Save selected page as quicklink',aliases:'shortcut create link сохранить быстрая ссылка'},
+  {command:'search-with',title:'Search current query with…',aliases:'provider ai engine поисковик ии другой'},
   {command:'bookmark-tabs',title:'Bookmark selected tabs in a folder',aliases:'save add bookmarks сохранить закладки добавить папка'},
   {command:'remove-bookmarks',title:'Remove selected bookmarks from a folder',aliases:'delete bookmarks удалить закладки папка'},
   {command:'group-tabs',title:'Group selected tabs',aliases:'create add group создать группу объединить вкладки добавить'},

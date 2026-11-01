@@ -203,3 +203,19 @@ test('bookmark mutation routes only selected source-window tabs to the requested
  await assert.rejects(()=>paletteAction(api,{type:'palette:bookmark',operation:'add',folderId:'folder',tabIds:[5]},{id:'foreign'}));
  assert.equal(created.length,1);assert.deepEqual(api.calls,[]);
 });
+
+test('launcher tools offer calculator, named links and recent commands without leaking query text',async()=>{
+  const api=browser(),stored={};
+  api.storage={local:{get:async()=>({...stored}),set:async value=>Object.assign(stored,value),remove:async keys=>{for(const key of Array.isArray(keys)?keys:[keys])delete stored[key];}}};
+  api.tabs.get=async id=>({id,windowId:2,title:'Project',url:'https://example.com/work'});
+  await paletteAction(api,{type:'palette:quicklink',operation:'save',name:'Work',tabId:5},sender);
+  const links=await paletteAction(api,{type:'palette:suggest',mode:'quicklinks',query:'work'},sender);
+  assert.equal(links.suggestions[0].url,'https://example.com/work');
+  const calc=await paletteAction(api,{type:'palette:suggest',query:'1250 * 0.18'},sender);
+  assert.equal(calc.suggestions.find(row=>row.kind==='calculator').copyText,'225');
+  await paletteAction(api,{type:'palette:command',command:'copy-url'},sender);
+  const idle=await paletteAction(api,{type:'palette:suggest',query:''},sender);
+  assert.ok(idle.suggestions.some(row=>row.kind==='quicklink'));
+  assert.ok(idle.suggestions.some(row=>row.command==='copy-url'));
+  await assert.rejects(()=>paletteAction(api,{type:'palette:quicklink',operation:'save',name:'Foreign',tabId:9},{...sender,tab:{id:5,windowId:8}}));
+});
