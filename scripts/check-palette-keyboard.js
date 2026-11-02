@@ -1,3 +1,5 @@
+import {launcherContext} from '../extension/launcher-catalog.js';
+const PALETTE_CATALOG=await launcherContext({commands:{getAll:async()=>[{name:'open-search',shortcut:'⌘T'},{name:'edit-address',shortcut:'⌘L'}]}});
 import {GROUP_COLORS,groupSuggestions,manageGroupSuggestions,groupActionSuggestions} from '../extension/tab-groups.js';
 import {BUILTIN_SITES} from '../extension/search-providers.js';
 import {browserPageSuggestions,mergeBrowserPages} from '../extension/browser-pages.js';
@@ -56,7 +58,7 @@ try {
     if(key==='Enter') await evaluate('new Promise(resolve=>setTimeout(resolve,450))');
   }
   async function mount(tabs,context={}) {
-    await evaluate(`globalThis.mockTabs=${JSON.stringify(tabs)};(${mountPalette.toString()})(${JSON.stringify(tabs)},false,${JSON.stringify(context)})`);
+    await evaluate(`globalThis.mockTabs=${JSON.stringify(tabs)};(${mountPalette.toString()})(${JSON.stringify(tabs)},false,${JSON.stringify({...PALETTE_CATALOG,...context})})`);
   }
   await evaluate(`document.body.innerHTML='<input id="page-input"><video></video>';document.querySelector('input').focus();
     globalThis.pageKeys=[];globalThis.messages=[];
@@ -596,6 +598,69 @@ try {
   assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Type a query first','command prefix is not a search query');
   await key('Escape','Escape');await key('Escape','Escape');
 
+  // Notes CRUD, multiline editing and the complete searchable shortcut menu.
+  await evaluate(`globalThis.mockNotes=[];globalThis.noteFails=false;
+    chrome.runtime.sendMessage=async message=>{
+      if(message.type==='palette:suggest') {
+        if(message.mode==='notes' || !message.mode)return {ok:true,suggestions:mockNotes.filter(note=>(note.title+' '+note.body).toLowerCase().includes(message.query.toLowerCase())).map(note=>({kind:'note',noteId:note.id,revision:note.revision,title:note.title,url:'',description:note.body,sources:['note']})),warnings:[]};
+        if(message.mode==='commands')return {ok:true,suggestions:commandRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};
+        return {ok:true,suggestions:[],warnings:[]};
+      }
+      messages.push(message);
+      if(message.type==='palette:note') {
+        if(message.operation==='get')return {ok:true,note:mockNotes.find(note=>note.id===message.id)};
+        if(noteFails)return {ok:false,error:'Note changed elsewhere'};
+        if(message.operation==='remove'){mockNotes=mockNotes.filter(note=>note.id!==message.id);return {ok:true};}
+        const note={id:message.id || 'note:demo',title:message.title,body:message.body,revision:(mockNotes.find(note=>note.id===message.id)?.revision || 0)+1};
+        mockNotes=[note];return {ok:true,note};
+      }
+      return {ok:true};
+    };`);
+  await mount([],{...context,shortcuts:PALETTE_CATALOG.shortcuts.map(row=>row.global==='open-search'?{...row,shortcut:'Alt+Q'}:row)});
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('k','KeyK','',4);
+  assert.ok(await paletteCall(`function(){return this.querySelector('#results').textContent.includes('New note');}`),'actions work even without a selected result');
+  assert.ok(await paletteCall(`function(){return this.querySelector('#results').textContent.includes('Move Spotlight in larger steps');}`),'geometry hotkeys are discoverable in the main action menu');
+  await send('Input.insertText',{text:'open / close spotlight'});
+  assert.equal(await paletteCall(`function(){return this.querySelector('#results kbd').textContent.replace('⌥','Alt');}`),'Alt+Q','shows configured global binding');
+  await key('Escape','Escape');await key('k','KeyK','',4);await send('Input.insertText',{text:'new note'});await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('#note-body').hidden;}`),false);
+  await send('Input.insertText',{text:'Meeting'});await key('Tab','Tab');
+  await send('Input.insertText',{text:'First line'});await key('Enter','Enter','\r');await send('Input.insertText',{text:'Обсудить проект <b>literal</b>'});
+  assert.equal(await paletteCall(`function(){return this.querySelector('#note-body').value;}`),'First line\nОбсудить проект <b>literal</b>');
+  await key('Enter','Enter','',4);
+  assert.equal(await evaluate('mockNotes[0].title'),'Meeting');
+  assert.equal(await evaluate('mockNotes[0].body'),'First line\nОбсудить проект <b>literal</b>');
+  assert.ok(await paletteCall(`function(){return this.querySelector('footer').textContent.includes('Note saved');}`));
+  await paletteCall(`function(){Object.defineProperty(this.ownerDocument.defaultView.navigator,'clipboard',{configurable:true,value:{writeText:async text=>{this.dataset.copied=text;}}});}`);
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'copy note text'});await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.dataset.copied;}`),'First line\nОбсудить проект <b>literal</b>');
+  await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  await key('k','KeyK','',4);await key('Enter','Enter');
+  assert.equal(await paletteCall(`function(){return this.querySelector('#note-body').hidden;}`),false,'primary note action opens the editor');
+  await key('Tab','Tab');await key('Tab','Tab');await key('Tab','Tab');await key('Enter','Enter');
+  assert.match(await paletteCall(`function(){return this.querySelector('input').placeholder;}`),/Actions/,'Enter on editor Actions opens its menu rather than saving');
+  await key('Escape','Escape');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'all keyboard shortcuts'});await key('Enter','Enter');
+  await send('Input.insertText',{text:'save note'});
+  assert.ok(await paletteCall(`function(){return this.querySelector('#results').textContent.includes('Note editor only');}`),'shortcut entries explain their scope');
+  await key('Escape','Escape');
+  assert.equal(await paletteCall(`function(){return this.querySelector('#note-body').value;}`),'First line\nОбсудить проект <b>literal</b>','help round trip preserves editor text');
+  await key('Tab','Tab');await send('Input.insertText',{text:' + update'});
+  await evaluate('noteFails=true');await key('Enter','Enter','',4);
+  assert.equal(await paletteCall(`function(){return this.querySelector('#error').textContent;}`),'Note changed elsewhere');
+  assert.ok(await paletteCall(`function(){return this.querySelector('#note-body').value.endsWith(' + update');}`),'save failure keeps edited text');
+  await evaluate('noteFails=false');await key('Enter','Enter','',4);
+  assert.equal(await evaluate('mockNotes[0].revision'),2);
+  await key('Escape','Escape');await key('Escape','Escape');
+  await mount([],context);await send('Input.insertText',{text:':проект'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+  assert.equal(await paletteCall(`function(){return this.querySelector('.title').textContent;}`),'Meeting','notes can be found by body text after reopening');
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'delete note'});await key('Enter','Enter');
+  assert.equal(await evaluate('mockNotes.length'),0);
+  await key('k','KeyK','',4);await send('Input.insertText',{text:'reset spotlight position'});await key('Enter','Enter');
+  assert.ok(await paletteCall(`function(){return this.querySelector('footer').textContent.includes('Shortcut copied');}`),'informational hotkeys can be copied without executing an unrelated action');
+  await key('Escape','Escape');await key('Escape','Escape');await key('Escape','Escape');
+
   // Optional documentation demo: real palette DOM, fictional tabs, disposable profile.
   if (process.env.PALETTE_SCREENSHOT_DIR) {
     await key('Escape','Escape');
@@ -645,6 +710,11 @@ try {
     await mount([],demoContext);await send('Input.insertText',{text:'$'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
     await screenshot('quicklinks');await key('Escape','Escape');await key('Escape','Escape');
 
+    await evaluate(`globalThis.demoNote={id:'note:fictional',title:'Project notes',body:'Keep the command bar small.\\nReview tabs, links and next steps.',revision:1};chrome.runtime.sendMessage=async message=>message.type==='palette:note'?{ok:true,note:demoNote}:message.type==='palette:suggest'?{ok:true,suggestions:message.mode==='notes'?[{kind:'note',noteId:demoNote.id,revision:1,title:demoNote.title,url:'',description:demoNote.body,sources:['note']}]:[],warnings:[]}:{ok:true};`);
+    await mount([],demoContext);await send('Input.insertText',{text:':'});await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
+    await screenshot('notes');await key('Enter','Enter');await screenshot('note-editor');
+    await key('k','KeyK','',4);await send('Input.insertText',{text:'all keyboard shortcuts'});await key('Enter','Enter');
+    await screenshot('shortcuts');await key('Escape','Escape');await key('Escape','Escape');await key('Escape','Escape');await key('Escape','Escape');
     await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
     await mount(demoTabs,demoContext);await screenshot('demo-dark');
     await key('Escape','Escape');
@@ -701,7 +771,7 @@ try {
   await evaluate("document.querySelector('#clear').click()");
   await evaluate('new Promise(resolve=>setTimeout(resolve,20))');
   assert.equal(await evaluate("document.querySelectorAll('#entries li').length"),0);
-  console.log('PASS: contextual action selection/return, provider redirect/cancel, quicklink save/rename/remove, calculator copy and favicon rendering; real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, folder-scoped bookmark save/removal, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
+  console.log('PASS: local notes multiline create/edit/copy/delete and save retry, complete scoped shortcut reference and configured global bindings; contextual action selection/return, provider redirect/cancel, quicklink save/rename/remove, calculator copy and favicon rendering; real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, folder-scoped bookmark save/removal, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.');
 } finally {
   if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
   socket?.close();

@@ -49,6 +49,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       font:.875rem/1.5 sans-serif;overflow:hidden}
       dialog::backdrop{background:#0005}
       input{font:inherit;font-size:1.3125rem;width:100%;padding:18px 22px;border:0;outline:none;color:var(--fg);background:transparent}
+      [hidden]{display:none!important}#note-body{display:block;resize:none;width:100%;height:220px;min-height:80px;max-height:45vh;border:0;border-top:1px solid var(--line);outline:none;padding:14px 22px;font:inherit;line-height:1.7;background:Canvas;color:CanvasText}#note-body:focus-visible{box-shadow:inset 0 0 0 1px Highlight}dialog[data-sized] #note-body{flex:1;max-height:none;height:auto}button.result[data-shortcut=true] .url{white-space:normal;line-height:1.45}button.result[data-shortcut=true]>kbd{max-width:38%;white-space:normal;text-align:right}
       #results{padding:6px 10px;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:12px;width:100%;border:0;
       border-radius:8px;background:transparent;text-align:left;padding:9px 12px}button.result[aria-selected=true]{background:var(--hover)}
@@ -70,7 +71,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       [data-source=closed]{--source-color:#d77940}
       [data-source=navigate]{--source-color:#6373dc}[data-source=move]{--source-color:#657d98}
       [data-source=ai-draft]{--source-color:#d46676}[data-source=bookmark-folder]{--source-color:#be8500}
-      [data-source=group]{--source-color:#b75cb0}[data-source=quicklink],[data-source=quicklink-save]{--source-color:#c0784d}[data-source=calculator]{--source-color:#27a189}[data-source=activity]{--source-color:#748795}[data-source=result-action]{--source-color:#7b8795}
+      [data-source=group]{--source-color:#b75cb0}[data-source=quicklink],[data-source=quicklink-save]{--source-color:#c0784d}[data-source=calculator]{--source-color:#27a189}[data-source=note]{--source-color:#8a9b3c}[data-source=shortcut]{--source-color:#73859b}[data-source=activity]{--source-color:#748795}[data-source=result-action]{--source-color:#7b8795}
       @media (forced-colors:active){.source-badge{border-color:CanvasText}.source-badge::before{background:CanvasText}}
       .icon img{width:20px;height:20px;object-fit:contain}.icon[data-selectable=true]{position:relative}.icon[data-selectable=true]:has(img)::after{content:'☐';position:absolute;right:-4px;bottom:-4px;font-size:10px;line-height:12px;background:Canvas;border-radius:3px;padding:0 1px}.icon[data-marked=true]:has(img)::after{content:'☑'}.icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
       .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -98,6 +99,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');
     input.setAttribute('aria-controls','results');input.setAttribute('aria-expanded','true');
     const results = document.createElement('div'); results.id = 'results'; results.setAttribute('role','listbox');
+    const noteBody=document.createElement('textarea');noteBody.id='note-body';noteBody.hidden=true;noteBody.maxLength=20000;noteBody.placeholder='Write your note…';noteBody.setAttribute('aria-label','Note text');
     const error = document.createElement('p'); error.id = 'error'; error.setAttribute('role','status');
     const footer = document.createElement('footer');footer.textContent = '↑ ↓ select · Tab complete address · Enter open · Esc return';
     const resizeHandle=document.createElement('button');resizeHandle.id='resize';resizeHandle.type='button';resizeHandle.textContent='◢';
@@ -105,7 +107,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const sites = Array.isArray(context.sites) ? context.sites : [];
     footer.title='Drag to move · Ctrl+Alt+arrows move · Shift for larger steps · Ctrl+Alt+0 reset';
     footer.id='hints';input.setAttribute('aria-describedby','hints');
-    dialog.append(input,results,error,footer,resizeHandle); root.append(dialog);document.documentElement.append(host);
+    dialog.append(input,noteBody,results,error,footer,resizeHandle); root.append(dialog);document.documentElement.append(host);
     let positioned=false;
     let customSize=null;
     let drag=null;
@@ -188,28 +190,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let actionTarget=null,actionReturn=null,actionIds=[];
     let providerQuery='',lastSearchQuery='',providerReturn=null,quicklinkReturn=null;
     let quicklinkTarget=null;
+    let noteDraft=null,noteDirty=false,shortcutsReturn=null;
     let footerDescription='';
     let returnKey=null;
     const modifierLabel=/Mac|iPhone|iPad/.test(navigator.platform)?'⌘':'Ctrl';
     function shortcutLabel(value){return value.replaceAll('⌘/Ctrl',modifierLabel).replaceAll('Alt',modifierLabel==='⌘'?'⌥':'Alt');}
-    const actionDefinitions=[
-      {id:'open',title:'Open / Run',shortcut:'↵'},
-      {id:'new',title:'Open in a new tab',shortcut:'⌘/Ctrl ↵'},
-      {id:'background',title:'Open in background',shortcut:'⇧ ↵'},
-      {id:'copy',title:'Copy URL / Result'},
-      {id:'move',title:'Move selected tab…',shortcut:'Alt ←/→'},
-      {id:'group',title:'Add to a tab group…',key:'g',shortcut:'⌘/Ctrl G'},
-      {id:'ungroup',title:'Remove from tab groups',key:'g',shift:true,shortcut:'⌘/Ctrl ⇧ G'},
-      {id:'manage-groups',title:'Manage tab groups…',key:'g',alt:true,shortcut:'⌘/Ctrl Alt G'},
-      {id:'bookmark',title:'Save in a bookmark folder…',key:'d',shortcut:'⌘/Ctrl D'},
-      {id:'remove-bookmark',title:'Remove from a bookmark folder…',key:'d',shift:true,shortcut:'⌘/Ctrl ⇧ D'},
-      {id:'duplicate',title:'Duplicate selected tab'},
-      {id:'save-link',title:'Save as quicklink…'},
-      {id:'rename-link',title:'Rename quicklink…'},
-      {id:'remove-link',title:'Remove quicklink'},
-      {id:'provider',title:'Search this query with…'}
-    ];
-    function choiceKey(choice) {return choice && `${choice.kind}:${choice.activityId ?? choice.linkId ?? choice.actionId ?? choice.folderId ?? choice.groupId ?? choice.color ?? choice.action ?? choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}`;}
+    const actionDefinitions=Array.isArray(context.actions)?context.actions:[];
+    const shortcutDefinitions=Array.isArray(context.shortcuts)?context.shortcuts:[];
+    function choiceKey(choice) {return choice && `${choice.kind}:${choice.shortcutId ?? choice.noteId ?? choice.activityId ?? choice.linkId ?? choice.actionId ?? choice.folderId ?? choice.groupId ?? choice.color ?? choice.action ?? choice.draftId ?? choice.beforeTabId ?? choice.placement ?? choice.tabId ?? choice.site ?? choice.command ?? choice.sessionId ?? choice.id ?? choice.url}`;}
     function webUrl(value){try{const url=new URL(value);return ['http:','https:'].includes(url.protocol) && !url.username && !url.password;}catch{return false;}}
     function startProviders(query=input.value) {const inline=query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/us);providerQuery=(inline && siteMatches(inline[1],true).length?inline[2]:query).trim();if(!providerQuery){error.textContent='Type a query first';return;}providerReturn=mode==='actions'?actionReturn:{mode:mode==='commands'?'search':mode,value:mode==='commands'?lastSearchQuery:query,orderTabId};setMode('providers');}
     function startQuicklink(target=choices[selected]) {
@@ -223,9 +211,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
     function openActions() {
       if(busy)return;
       if(mode==='actions'){leaveActions();return;}
-      if(!choices[selected])return;
-      actionTarget=choices[selected];actionReturn={mode,value:input.value,placeholder:input.placeholder,maxLength:input.maxLength,orderTabId,suggestions:suggestions.slice(),domains:domains.slice(),completedAddress};
-      actionIds=markedTabs.size?[...markedTabs]:actionTarget.kind==='tab'?[actionTarget.id]:actionTarget.kind==='order-tab'?[actionTarget.tabId]:[];
+      if(!choices[selected] && suggestionsPending && (mode!=='search' || input.value.trim()))return;
+      actionTarget=mode==='note-editor'?null:choices[selected] || null;actionReturn={mode,value:input.value,placeholder:input.placeholder,maxLength:input.maxLength,orderTabId,suggestions:suggestions.slice(),domains:domains.slice(),completedAddress};
+      actionIds=markedTabs.size?[...markedTabs]:actionTarget?.kind==='tab'?[actionTarget.id]:actionTarget?.kind==='order-tab'?[actionTarget.tabId]:[];
       setMode('actions');
     }
     function leaveActions() {
@@ -234,7 +222,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function availableActions() {
       const page=webUrl(actionTarget?.url),query=actionReturn?.value.trim();
-      return actionDefinitions.map(action=>action.id==='open'?{...action,title:primaryLabel(actionTarget)}:action).filter(action=>{
+      return actionDefinitions.map(action=>action.id==='open'?{...action,title:primaryLabel(actionTarget)}:action).sort((a,b)=>Number(b.id==='open')-Number(a.id==='open')).filter(action=>{
+        if(action.id==='open')return Boolean(actionTarget);
+        if(['edit-note','copy-note','remove-note'].includes(action.id))return actionTarget?.kind==='note';
+        if(action.id==='save-note')return actionReturn?.mode==='note-editor' && Boolean(noteDraft);
         if(['new','background'].includes(action.id))return page || ['navigate','site-query'].includes(actionTarget?.kind);
         if(action.id==='copy')return page || Boolean(actionTarget?.copyText);
         if(['group','ungroup','bookmark','remove-bookmark'].includes(action.id))return actionIds.length>0;
@@ -247,6 +238,24 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     async function runAction(id) {
       const revision=queryRevision;
+      if(id==='new-note'){startNote();return;}
+      if(id==='notes'){setMode('notes');return;}
+      if(id==='commands'){setMode('commands');return;}
+      if(id==='shortcuts'){shortcutsReturn=mode==='actions'?actionReturn:{mode,value:input.value,orderTabId};setMode('shortcuts');return;}
+      if(id==='edit-note'){await openNote(actionTarget.noteId);return;}
+      if(id==='save-note'){await saveNote();return;}
+      if(id==='copy-note'){
+        const reply=await chrome.runtime.sendMessage({type:'palette:note',operation:'get',id:actionTarget.noteId});
+        if(!reply?.ok)throw Error(reply?.error || 'Could not read note');
+        if(dismissed || closing || revision!==queryRevision)return;
+        await copyText(reply.note.body || reply.note.title);if(dismissed || closing || revision!==queryRevision)return;leaveActions();notice='Note copied';render();return;
+      }
+      if(id==='remove-note'){
+        const reply=await chrome.runtime.sendMessage({type:'palette:note',operation:'remove',id:actionTarget.noteId,revision:actionTarget.revision});
+        if(!reply?.ok)throw Error(reply?.error || 'Could not delete note');
+        if(dismissed || closing || revision!==queryRevision)return;
+        setMode('notes');notice='Note deleted';render();return;
+      }
       if(id==='group'){startGrouping();return;}
       if(id==='ungroup'){await performGroup({action:'remove',tabIds:selectedTabIds()});return;}
       if(id==='manage-groups'){setMode('group-manage');return;}
@@ -260,8 +269,31 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(message){const reply=await chrome.runtime.sendMessage(message);if(!reply?.ok)throw Error(reply?.error || 'Action failed');if(dismissed || closing || revision!==queryRevision)return;setMode(id==='remove-link'?'quicklinks':'search');notice=id==='remove-link'?'Quicklink removed':'Tab duplicated';render();}
     }
 
+    function startNote() {noteDraft={title:'',body:''};noteDirty=false;noteBody.value='';setMode('note-editor');}
+    async function openNote(id) {
+      const revision=queryRevision;
+      const reply=await chrome.runtime.sendMessage({type:'palette:note',operation:'get',id});
+      if(!reply?.ok)throw Error(reply?.error || 'Could not read note');
+      if(dismissed || closing || revision!==queryRevision)return;
+      noteDraft={...reply.note};noteDirty=false;noteBody.value=noteDraft.body;setMode('note-editor',noteDraft.title);
+    }
+    async function saveNote() {
+      if(!noteDraft)throw Error('Choose a note first');
+      const revision=queryRevision;
+      const reply=await chrome.runtime.sendMessage({type:'palette:note',operation:'save',...noteDraft});
+      if(!reply?.ok)throw Error(reply?.error || 'Could not save note');
+      if(dismissed || closing || revision!==queryRevision)return;
+      noteDirty=false;setMode('notes');noteDraft=null;notice='Note saved';render();
+    }
+    function submitNote(){if(busy)return;busy=true;error.textContent='';saveNote().catch(failure=>{error.textContent=failure.message;}).finally(()=>{busy=false;});}
+    function shortcutRows(query,omit=new Set()) {
+      const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+      return shortcutDefinitions.filter(row=>!omit.has(row.id) && terms.every(term=>`${row.title} ${row.description} ${row.aliases || ''} ${row.shortcut}`.toLocaleLowerCase().includes(term)))
+        .map(row=>({kind:'shortcut',shortcutId:row.id,title:row.title,url:'',description:row.description,shortcut:row.shortcut,copyText:`${row.title}\n${shortcutLabel(row.shortcut)}\n${row.description}`,sources:['shortcut'],section:'Keyboard shortcuts'}));
+    }
     let managedGroupId;
     let completedAddress = null;
+    let suggestionsPending=false;
     let pendingQuery = Promise.resolve();
     let finishPending = () => {};
     let selected = 0;
@@ -285,7 +317,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let timer;
     let suggestions = [];
     let domains = [];
-    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page',navigate:'Open / Search',move:'Tab placement','ai-draft':'Saved AI prompt','bookmark-folder':'Bookmark folder',group:'Tab group',quicklink:'Quicklink',calculator:'Calculator','result-action':'Action','quicklink-save':'Quicklink',activity:'Recent action'};
+    const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page',navigate:'Open / Search',move:'Tab placement','ai-draft':'Saved AI prompt','bookmark-folder':'Bookmark folder',group:'Tab group',quicklink:'Quicklink',calculator:'Calculator','result-action':'Action','quicklink-save':'Quicklink',activity:'Recent action',note:'Note','note-save':'Note',shortcut:'Shortcut'};
     const heldKeys = new Set();
     let closing = false;
     function close() {
@@ -361,12 +393,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     function setMode(next,value='',tabId,preferredId,keepResults=false) {
       if(!keepResults){moveQueue.length=0;notice='';}
-      if(mode==='search' && !['search','edit'].includes(next) && !'>@<?$#*'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;
+      if(mode==='search' && !['search','edit'].includes(next) && !'>@<?$#*:'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;
       orderTabId=next==='order'?tabId:undefined;
-      mode=next;completedAddress=null;input.maxLength=mode==='quicklink-name'?80:8192;input.value=value;
-      input.placeholder=mode==='actions'?`Actions · ${actionTarget?.title || 'Selected result'}`:mode==='providers'?`Search with… · ${providerQuery.slice(0,80)}`:mode==='quicklink-name'?'Name this quicklink…':mode==='quicklinks'?'Find a quicklink…':mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
+      mode=next;completedAddress=null;input.maxLength=['quicklink-name','note-editor'].includes(mode)?80:8192;input.value=value;
+      input.placeholder=mode==='note-editor'?'Note title…':mode==='notes'?'Search note titles and text…':mode==='shortcuts'?'Find any shortcut or prefix…':mode==='actions'?`Actions · ${actionTarget?.title || (actionReturn?.mode==='note-editor'?'Note editor':'Spotlight')}`:mode==='providers'?`Search with… · ${providerQuery.slice(0,80)}`:mode==='quicklink-name'?'Name this quicklink…':mode==='quicklinks'?'Find a quicklink…':mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
         :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
-      input.setAttribute('aria-label',input.placeholder);
+      input.setAttribute('aria-label',input.placeholder);noteBody.hidden=mode!=='note-editor';results.hidden=mode==='note-editor';input.setAttribute('role',mode==='note-editor'?'textbox':'combobox');input.setAttribute('aria-expanded',String(mode!=='note-editor'));
       if(!keepResults)updateSuggestions(preferredId);input.focus();
       if(mode==='edit' || mode==='group-rename') input.select();
     }
@@ -393,6 +425,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
           suggestions=actionReturn.suggestions;domains=actionReturn.domains;completedAddress=actionReturn.completedAddress;returnKey=choiceKey(choice);render();
           event=actionId==='background'?{shiftKey:true}:actionId==='new'?{ctrlKey:true}:{};
         }
+        if(choice.kind==='note-save'){await saveNote();return;}
+        if(choice.kind==='note'){await openNote(choice.noteId);return;}
+        if(choice.kind==='shortcut'){await copyText(choice.copyText);if(dismissed || closing || actionRevision!==queryRevision)return;notice='Shortcut copied';render();return;}
+        if(choice.command==='new-note'){startNote();return;}
+        if(choice.command==='notes'){setMode('notes');return;}
+        if(choice.command==='shortcuts'){await runAction('shortcuts');return;}
         if(choice.kind==='calculator') {await copyText(choice.copyText);if(dismissed || closing || actionRevision!==queryRevision)return;if(fromActions)setMode(actionReturn.mode,actionReturn.value);notice=`Copied ${choice.copyText}`;render();return;}
         if(choice.kind==='quicklink-save') {
           const response=await chrome.runtime.sendMessage({type:'palette:quicklink',operation:'save',...quicklinkTarget,name:input.value});
@@ -450,26 +488,27 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     editCurrent=value=>mode==='edit'?close():setMode('edit',value);
     function primaryLabel(choice) {
-      const titles={tab:'Switch tab',command:'Run',calculator:'Copy result',closed:'Restore','site-query':'Search',site:'Choose site','result-action':'Choose action','quicklink-save':'Save',quicklink:'Open link','bookmark-folder':'Choose folder','ai-draft':'Recover prompt','order-tab':'Choose position',move:'Move tab','group-create':'Create group','group-add':'Add to group','group-manage':'Manage group','group-rename':'Rename','group-colors':'Choose color','group-change':'Apply',activity:'View history'};
+      const titles={tab:'Switch tab',command:'Run',calculator:'Copy result',closed:'Restore','site-query':'Search',site:'Choose site','result-action':'Choose action','quicklink-save':'Save',quicklink:'Open link','bookmark-folder':'Choose folder','ai-draft':'Recover prompt','order-tab':'Choose position',move:'Move tab','group-create':'Create group','group-add':'Add to group','group-manage':'Manage group','group-rename':'Rename','group-colors':'Choose color','group-change':'Apply',activity:'View history',note:'Edit note','note-save':'Save note',shortcut:'Copy shortcut'};
       return titles[choice?.kind] || 'Open';
     }
     function paintFooter() {
       const choice=choices[selected];
       const main=document.createElement('span');main.className='footer-main';
       const status=document.createElement('span');status.className='footer-status';
-      status.textContent=notice || (mode==='order'?'Arrange tabs':mode==='actions'?'Actions':markedTabs.size?`${markedTabs.size} marked`:mode==='providers'?'Search with':mode==='quicklinks'?'Quicklinks':'');
-      const key=document.createElement('kbd');key.textContent='↵';
+      status.textContent=notice || (mode==='note-editor'?(noteDirty?'Unsaved note':'Note editor'):mode==='shortcuts'?'All shortcuts':mode==='notes'?'Notes':mode==='order'?'Arrange tabs':mode==='actions'?'Actions':markedTabs.size?`${markedTabs.size} marked`:mode==='providers'?'Search with':mode==='quicklinks'?'Quicklinks':'');
+      const key=document.createElement('kbd');key.textContent=mode==='note-editor'?`${modifierLabel} ↵`:'↵';
       const label=document.createElement('span');label.textContent=primaryLabel(choice);
-      main.append(status,key,label);
-      const action=document.createElement('button');action.type='button';action.className='footer-action';action.setAttribute('aria-label',mode==='actions'?'Return to results':'Actions for selected result');
+      if(mode==='note-editor'){const save=document.createElement('button');save.type='button';save.id='save-note';save.className='footer-action';save.append(key,label);save.addEventListener('click',event=>{event.stopPropagation();submitNote();});main.append(status,save);}else main.append(status,key,label);
+      const action=document.createElement('button');action.type='button';action.className='footer-action';action.id='actions';action.setAttribute('aria-label',mode==='actions'?'Return to results':'Actions for selected result');
       action.textContent=mode==='actions'?'Back':'Actions';
       const shortcut=document.createElement('kbd');shortcut.textContent=`${modifierLabel} K`;action.append(shortcut);
-      action.disabled=mode!=='actions' && !choice;action.addEventListener('click',event=>{event.stopPropagation();openActions();});
+      action.disabled=false;action.addEventListener('click',event=>{event.stopPropagation();openActions();});
       footer.replaceChildren(main,action);footer.title=footerDescription+' · Drag to move · Ctrl+Alt+arrows move · Ctrl+Alt+0 reset';
     }
     function highlight() {
       [...results.children].forEach((row,index) => row.setAttribute('aria-selected', String(index === selected)));
       const row = results.children[selected];
+      if(mode==='note-editor'){input.removeAttribute('aria-activedescendant');paintFooter();return;}
       if (row) {input.setAttribute('aria-activedescendant',row.id);row.scrollIntoView({block:'nearest'});}
       else input.removeAttribute('aria-activedescendant');
       paintFooter();
@@ -480,7 +519,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       const previousKey = choiceKey(previous);
       choices = [...suggestions.filter(item => item.kind === 'calculator'),...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['calculator','tab','browser-page'].includes(item.kind))];
       const query=input.value.trim();
-      if(['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name'].includes(mode) || mode.startsWith('group')) choices=suggestions;
+      if(['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name','notes','note-editor','shortcuts'].includes(mode) || mode.startsWith('group')) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
         const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
@@ -491,7 +530,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           choices=[...open,...siteRows,...choices.filter(item=>item.kind!=='tab')];
         }
       }
-      if(mode==='search' && query && completedAddress!==query && !suggestions.some(row=>['tab','bookmark','history','quicklink','calculator','browser-page'].includes(row.kind))) {
+      if(mode==='search' && query && completedAddress!==query && !suggestions.some(row=>['tab','bookmark','history','quicklink','calculator','browser-page','note'].includes(row.kind))) {
         choices.push(...sites.filter(site=>['provider:google','provider:chatgpt','provider:gemini'].includes(site.key)).map(site=>({kind:'site-query',site:site.key,query,alias:'',title:`Search ${site.name}`,url:query,section:'Search elsewhere',sources:['site']})));
       }
       const inline=mode==='search' && completedAddress!==query?query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/us):null;
@@ -522,17 +561,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(preferred>=0)selectionMoved=true;
       results.replaceChildren(...choices.map((choice,index) => {
         const row = document.createElement('button'); row.className = 'result';row.id = `result-${index}`;
-        row.setAttribute('role','option');
+        row.setAttribute('role','option');if(choice.kind==='shortcut')row.dataset.shortcut='true';
         const tabId=choice.kind==='tab'?choice.id:choice.kind==='order-tab'?choice.tabId:undefined;
         if(tabId!==undefined){row.dataset.marked=String(markedTabs.has(tabId));row.setAttribute('aria-checked',String(markedTabs.has(tabId)));}
         row.tabIndex = -1;row.dataset.key=String(choice.tabId ?? choice.id ?? `other:${index}`);
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕',quicklink:'↗',calculator:'=', 'result-action':'›','quicklink-save':'↗',activity:'◷'})[choice.kind] || '›';
+        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕',quicklink:'↗',calculator:'=', 'result-action':'›','quicklink-save':'↗',activity:'◷',note:'▤','note-save':'▤',shortcut:'⌨'})[choice.kind] || '›';
         if(tabId!==undefined){icon.dataset.selectable='true';icon.dataset.marked=String(markedTabs.has(tabId));icon.textContent=markedTabs.has(tabId)?'☑':'☐';icon.title='Select tab · Shift+Space';icon.addEventListener('click',event=>{event.stopPropagation();markTab(tabId);});}
         else if(choice.kind.startsWith('group-'))icon.textContent='▤';
         else if(choice.kind==='bookmark-folder'){icon.textContent=bookmarkOperation==='add'?'☆':'−';row.title=choice.title;}
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = webUrl(choice.url)?choice.url.replace(/^https?:\/\/(www\.)?/,''):choice.url || '';url.title=choice.url || '';
+        const url = document.createElement('span');url.className = 'url';url.textContent = choice.description || (webUrl(choice.url)?choice.url.replace(/^https?:\/\/(www\.)?/,''):choice.url || '');url.title=choice.description || choice.url || '';
         if(choice.groupColor || choice.groupTitle)row.dataset.groupColor=choice.groupColor || 'grey';
         if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title);
@@ -569,25 +608,28 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
     }
     function updateSuggestions(preferredId) {
-      const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts','$':'quicklinks'}[input.value[0]];
+      const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts','$':'quicklinks',':':'notes'}[input.value[0]];
       if(mode==='search' && input.value.startsWith('*')){try{startBookmarks('add',input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && input.value.startsWith('#')){try{startGrouping(input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && prefixMode) {setMode(prefixMode,input.value.slice(1).trimStart());return;}
       const revision=++queryRevision;
-      clearTimeout(timer);finishPending();
+      clearTimeout(timer);finishPending();suggestionsPending=false;
       let resolvePending;
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-      suggestions=['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
+      suggestions=['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name','notes','note-editor','shortcuts'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
         :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
       if(mode==='actions') {
         const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
-        suggestions=availableActions().filter(action=>terms.every(term=>action.title.toLocaleLowerCase().includes(term))).map(action=>({kind:'result-action',actionId:action.id,title:action.title,url:'',shortcut:action.shortcut}));
+        const actions=availableActions();
+        suggestions=[...actions.filter(action=>terms.every(term=>`${action.title} ${action.aliases || ''}`.toLocaleLowerCase().includes(term))).map(action=>({kind:'result-action',actionId:action.id,title:action.title,url:'',shortcut:action.shortcut})),...shortcutRows(query,new Set(actions.map(action=>action.id)))];
         render();resolvePending();return;
       }
+      if(mode==='shortcuts'){suggestions=shortcutRows(query);render();resolvePending();return;}
+      if(mode==='note-editor'){suggestions=[{kind:'note-save',title:'Save note',url:''}];render();resolvePending();return;}
       if(mode==='providers') {
         const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
         suggestions=sites.filter(site=>terms.every(term=>`${site.name} ${(site.aliases || []).join(' ')}`.toLocaleLowerCase().includes(term))).map(site=>({kind:'site-query',site:site.key,query:providerQuery,alias:'',title:`Search ${site.name}`,url:providerQuery,sources:['site']}));
@@ -606,16 +648,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
         render();resolvePending();return;
       }
       if(mode.startsWith('site:')) {resolvePending();return;}
+      suggestionsPending=true;
       timer=setTimeout(async()=>{
         try {
-          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions','bookmark-folders','quicklinks'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
+          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions','bookmark-folders','quicklinks','notes'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];
           error.textContent=(response.warnings || []).join(' · ');render(preferredId);
         } catch(failure) {
           if(revision===queryRevision && !dismissed && !closing) error.textContent=failure.message;
-        } finally {resolvePending();}
+        } finally {if(revision===queryRevision)suggestionsPending=false;resolvePending();}
       },150);
     }
     async function quickMove(placement) {
@@ -646,7 +689,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
       } catch(failure) {if(!dismissed && !closing && revision===queryRevision)error.textContent=failure.message;}
       finally {moveQueue.length=0;moving=false;busy=false;}
     }
-    input.addEventListener('input',()=>{notice='';completedAddress=null;if(mode==='search' && !'>@<?$#*'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;updateSuggestions();});
+    noteBody.addEventListener('input',()=>{if(mode==='note-editor' && noteDraft){noteDraft.body=noteBody.value;noteDirty=true;notice='';updateSuggestions();}});
+    noteBody.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
+    input.addEventListener('input',()=>{notice='';completedAddress=null;if(mode==='note-editor' && noteDraft){noteDraft.title=input.value;noteDirty=true;updateSuggestions();return;}if(mode==='search' && !'>@<?$#*:'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;updateSuggestions();});
     input.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
     dialog.addEventListener('keydown', event => {
       if (event.isComposing) return;
@@ -661,6 +706,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (event.key === 'Escape') {
         event.preventDefault();event.stopPropagation();
         if(mode==='actions')leaveActions();
+        else if(mode==='note-editor'){noteDraft=null;noteDirty=false;setMode('notes');}
+        else if(mode==='shortcuts' && shortcutsReturn)setMode(shortcutsReturn.mode,shortcutsReturn.value,shortcutsReturn.orderTabId);
         else if(mode==='providers' && providerReturn)setMode(providerReturn.mode,providerReturn.value,providerReturn.orderTabId);
         else if(mode==='quicklink-name' && quicklinkReturn)setMode(quicklinkReturn.mode,quicklinkReturn.value,quicklinkReturn.orderTabId);
         else if(['group-rename','group-colors'].includes(mode))setMode('group-actions');
@@ -673,6 +720,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       if((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLocaleLowerCase()==='k') {
         event.preventDefault();openActions();return;
+      }
+      if(mode==='note-editor') {
+        if((event.metaKey || event.ctrlKey) && event.key==='Enter'){event.preventDefault();submitNote();return;}
+        if(event.key==='Enter' && event.target!==noteBody){event.preventDefault();if(event.target===input)noteBody.focus();else if(event.target===resizeHandle)resetSize();else if(event.target===footer.querySelector('#actions'))openActions();else submitNote();return;}
+        if(event.key==='Tab') {event.preventDefault();const controls=[input,noteBody,footer.querySelector('#save-note'),footer.querySelector('#actions'),resizeHandle];controls[(controls.indexOf(root.activeElement)+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();return;}
+        if(event.target!==resizeHandle){if((event.metaKey || event.ctrlKey) && ['g','d'].includes(event.key.toLocaleLowerCase()))event.preventDefault();return;}
       }
       if(event.metaKey || event.ctrlKey) {
         const action=actionDefinitions.find(action=>action.key===event.key.toLocaleLowerCase() && Boolean(action.shift)===event.shiftKey && Boolean(action.alt)===event.altKey);
@@ -704,7 +757,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (['ArrowDown','ArrowUp'].includes(event.key) && event.target===input && choices.length) {
         event.preventDefault(); selectionMoved = true; selected = (selected + (event.key === 'ArrowDown' ? 1 : -1) + choices.length) % choices.length;highlight();
       }
-      if (event.key === 'Enter') {event.preventDefault();if(event.target===footer.querySelector('button'))openActions();else activate(event);}
+      if (event.key === 'Enter') {event.preventDefault();if(event.target===footer.querySelector('#actions'))openActions();else activate(event);}
       if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
         const choice = choices[selected];
@@ -714,14 +767,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(!event.shiftKey && event.target===input && choice?.kind==='site-query') {enterSite(sites.find(site=>site.key===choice.site),choice.alias,choice.query);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && site) {enterSite(site);return;}
         if(!event.shiftKey && event.target===input && mode==='search' && !input.value.trim()) {setMode('commands');return;}
-        if (!event.shiftKey && event.target === input && !choice?.kind.startsWith('group-') && !['navigate','command','closed','site','order-tab','move','ai-draft','bookmark-folder','result-action','quicklink-save','calculator','activity'].includes(choice?.kind) && choice?.url) {
+        if (!event.shiftKey && event.target === input && !choice?.kind.startsWith('group-') && !['navigate','command','closed','site','order-tab','move','ai-draft','bookmark-folder','result-action','quicklink-save','calculator','activity','note','shortcut','note-save'].includes(choice?.kind) && choice?.url) {
           input.value = choice.url;
           completedAddress = choice.url;
           input.focus();
           input.setSelectionRange(input.value.length,input.value.length);
           updateSuggestions();
         } else {
-          const controls=[input,footer.querySelector('button'),resizeHandle];
+          const controls=[input,footer.querySelector('#actions'),resizeHandle];
           controls[(controls.indexOf(root.activeElement)+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();
         }
       }
