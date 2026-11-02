@@ -45,3 +45,10 @@ Prefixes from Search: `>` commands, `@` arrange tabs, `<` recently closed. The r
 Inside Spotlight, Cmd/Ctrl+K toggles the Actions scope for the selected result (and current marks). Filter action titles, arrows choose, Enter runs; Escape returns to the original query/selection. Direct G/D group/bookmark chords use the same action definitions and remain available. Tab/Shift+Tab cycle input → Actions → resize; Shift+Tab from input still reaches resize directly. The footer uses platform modifier keycaps and the selected primary action.
 
 $ opens named quicklinks; $work filters them. Manage quicklinks and Save selected page as quicklink are searchable commands. Actions offers save/rename/remove as applicable. Name entry uses Enter save and Esc cancel. Type 1250 * 0.18 and Enter to copy 225 without dismissing Spotlight. For query redirection, Actions → Search this query with… → filter provider name → Enter; Escape preserves the previous query. Global Chrome shortcut assignment remains unchanged.
+
+
+## Notes and complete discovery v0.22
+
+Cmd/Ctrl+K now lists notes operations and the complete extension shortcut reference. All keyboard shortcuts enters its searchable directory; normal action rows run, Shortcut-labelled rows copy instructions and describe their required scope. Search includes English/Russian aliases. Actual global Search/Edit bindings come from commands.getAll, including unassigned/custom combinations, and are not claimed to be the defaults.
+
+:query enters note title/body search. New note is an action/command. Inside the editor only, Cmd/Ctrl+Enter saves; Enter in body inserts a line, Enter in title moves to body, Escape cancels unsaved edits. Tab/Shift+Tab cycle title, body, Save, Actions and resize; Enter on Actions opens the menu, never saves the note. Escape from contextual help restores the editor. Ordinary URL modifiers and tab mutations do not run while typing in the note editor. Standard native editing keys remain available. No new global shortcut or permission was added.

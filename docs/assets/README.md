@@ -17,3 +17,5 @@ The activity-history preview uses two fictional action records. The current GIF 
 The selection, group picker and bookmark-folder picker PNGs show the current multi-tab workflow, captured with the same fictional fixtures. Their browser API responses are stubbed; the displayed UI and keyboard handling are the extension’s real code.
 
 Version 0.21 adds contextual Actions, provider redirection, quicklinks and calculator captures. These are real UI states with fictional data and stubbed browser services; no remote prompt is submitted and automated clipboard tests use a stub. The provider example includes builtins and detected site scopes.
+
+Version 0.22 adds fictional notes-list, multiline-editor and full-shortcut-directory captures. Global shortcut assignments in screenshots are test fixtures; the installed extension reads its actual Chrome assignments. No personal notes or clipboard are used.

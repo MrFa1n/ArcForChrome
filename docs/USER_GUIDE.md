@@ -1,6 +1,6 @@
 # User guide
 
-An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.21.0. Not affiliated with Arc or The Browser Company.
+An independent, Arc-inspired **Command Bar for Chrome**: local page suggestions, Site Search, browser actions and URL editing in one keyboard-driven overlay. Early MVP, v0.22.0. Not affiliated with Arc or The Browser Company.
 
 ## Install / update
 
@@ -82,7 +82,7 @@ No telemetry, backend, online autocomplete, permanent host access or persistent 
 | `bookmarks` | Read suggestions and explicit folder-scoped bookmark edits |
 | `search` | Execute queries through Chrome's selected provider |
 | `sessions` | List and restore recently closed tabs |
-| `storage` | Site overrides/aliases, bounded action journal, local named quicklinks and temporary AI recovery |
+| `storage` | Site overrides/aliases, bounded action journal, local named quicklinks/notes and temporary AI recovery |
 | `alarms` | Schedule history expiry while Chrome runs |
 | `tabGroups` | Group metadata, colors, titles and collapsed state |
 | `clipboardWrite` | Explicit URL/calculation copying; clipboard contents are not read |
@@ -181,3 +181,12 @@ Quicklinks: select a web result → Actions → Save as quicklink… → name �
 Calculator: 1250 * 0.18 → 225; Enter copies the result while keeping the overlay open. Arithmetic supports parentheses, + - * / ^ %, unary signs, × ÷ −, right-associative powers and 12-significant-digit formatting. % means remainder. No eval, network, calculator history or currency/date/unit conversion. Invalid expressions remain normal search input. URL/result copying reads no clipboard content.
 
 Site icons use Chrome's cached favicon endpoint and the new favicon permission, with generic fallback and no third-party icon service. They load separately from suggestions. Reload/re-enable the extension after updating if Chrome requests permission review. See README for current [workflow screenshots](../README.md#more-from-one-search-field).
+
+
+## Notes and full shortcut discovery v0.22
+
+Cmd/Ctrl+K offers New note, Search / manage notes and All keyboard shortcuts even when Search has no result. The action menu also includes the remaining keyboard-reference rows. Applicable actions execute; Shortcut-labelled rows explain their scope and copy their instructions on Enter. The full directory covers global Search/Edit, arrows/marks/navigation modifiers, groups/bookmarks, movement axes/start/end/Home/End, Tab/completion/focus, Escape/Backspace, overlay move/resize/reset, note save and every prefix. Actual global bindings are read from Chrome, not inferred from manifest defaults; change them at chrome://extensions/shortcuts.
+
+New note → enter title → Tab to body → Cmd/Ctrl+Enter or Save note. Enter inserts a new line in the body; Enter in the title moves focus to the body. Tab/Shift+Tab include title, body, Save, Actions and resize. Cmd/Ctrl+K opens note actions/help; Escape from help restores the editor text. Escape from the editor cancels unsaved changes. Saving is explicit, without autosave; a failed save retains the editor content.
+
+Search note titles/bodies in normal Search, :query, or the Notes scope. Enter edits; Actions offers edit/copy/delete. Up to 200 records, titles up to 80 and bodies up to 20,000 characters, stored locally until explicitly removed with no automatic sync. Journal retention does not remove notes; journal text opt-in never captures note title/body. Revision checks reject stale overwrites/deletions from another editor. Copy edited text before reopening a conflicting saved version if you need to retain both.

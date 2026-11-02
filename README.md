@@ -70,7 +70,7 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 
 In Search, Enter activates an existing tab or opens a new one. In **Edit current URL**, Enter replaces the source page; submitting its unchanged URL reloads it. Navigation modifiers apply to URL/search results; commands and session restoration keep their explicit actions.
 
-**Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed · `?` recover AI prompts · `$` quicklinks. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
+**Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed · `?` recover AI prompts · `$` quicklinks · `:` notes. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
 
 These action shortcuts work while Spotlight is open. For vertical tabs, use **Alt/Option+↑/↓**; add Shift for start/end. **`#Work`** chooses a group; **`*Work`** chooses a bookmark folder.
 
@@ -99,6 +99,18 @@ When no local page matches, Search offers **Google**, **ChatGPT** and **Google A
 Select a web page → **Actions → Save as quicklink…** → enter a name → Enter. Find it by name or URL in ordinary Search, or type **`$`** / **`$work`** to browse/filter quicklinks. **Manage quicklinks** is also a searchable command. Use Actions on a quicklink to rename or remove it. Saving the current page is available through **Save selected page as quicklink** in Commands.
 
 Quicklinks are local to this Chrome profile, separate from native bookmarks: at most **100**, names **1–80 characters**, HTTP(S) addresses without embedded credentials. They persist until explicitly removed; clearing the action journal does not delete them. They are not automatically synced.
+
+### Notes and the full shortcut map
+
+Open **⌘/Ctrl+K → New note**. Enter a title, Tab to the multiline body, and **⌘/Ctrl+Enter** or **Save note** to save locally. Plain Enter in the body adds a line. Find notes by title or text in Search, **`:query`**, or **Actions → Search / manage notes**. On a note, Actions offers edit, copy text and delete. Esc cancels unsaved edits; reopening a saved note restores its saved text. There is no autosave. Limits: **200 notes**, **80-character titles**, **20,000-character bodies**. Notes are local to this profile, separate from journal retention and without automatic sync. Concurrent edits are revision-checked: a stale editor cannot silently overwrite a newer note; a save failure leaves its text intact. Note text is never included in the action journal.
+
+The same **⌘/Ctrl+K** menu now includes **every extension shortcut and prefix**, including marking, both tab axes/edges, groups/bookmarks, completion/focus, overlay positioning/resizing and note-save. Context actions execute normally; rows labelled **Shortcut** are a reference, explain the required scope, and **Enter copies their instructions**. **All keyboard shortcuts** opens the full searchable directory. Global Search/Edit rows show their actual Chrome assignments, including changed or unassigned bindings; an unavailable lookup says to check Chrome shortcuts rather than guessing. Notes and help remain available when Search has no matching result.
+
+| Multiline notes | All keyboard shortcuts |
+| --- | --- |
+| ![Local note editor with explicit save shortcut](docs/assets/spotlight-note-editor.png) | ![Searchable shortcut directory with scopes and actual bindings](docs/assets/spotlight-shortcuts.png) |
+
+[Notes list preview](docs/assets/spotlight-notes.png). All media use fictional notes and shortcut assignments.
 
 ### Calculate without leaving the page
 
@@ -256,7 +268,7 @@ Suggestions are processed locally. There is **no telemetry, backend, online auto
 | `bookmarks` | Read suggestions and explicitly save/remove selected pages in a chosen folder |
 | `search` | Use Chrome’s chosen default provider |
 | `sessions` | List and restore recently closed tabs |
-| `storage` | Site templates/aliases, local action history, named quicklinks and temporary AI prompt recovery |
+| `storage` | Site templates/aliases, local action history, named quicklinks/notes and temporary AI prompt recovery |
 | `alarms` | Automatically expire action-history entries |
 | `tabGroups` | Read and update source-window group names, colors and state |
 | `clipboardWrite` | Copy URLs or calculator results on request; never read the clipboard |
