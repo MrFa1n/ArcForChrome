@@ -239,3 +239,16 @@ test('empty launcher labels starter commands accurately without history',async()
   const commands=response.suggestions.filter(row=>row.kind==='command');
   assert.equal(commands.length,3);assert.ok(commands.every(row=>row.section==='Commands'));
 });
+
+test('notes use validated messages and keep text out of the action journal',async()=>{
+  const api=browser(),stored={'activity:settings':{enabled:true,includeText:true,retentionHours:168,maxEntries:500}};
+  api.storage={local:{get:async()=>({...stored}),set:async value=>Object.assign(stored,value),remove:async keys=>{for(const key of Array.isArray(keys)?keys:[keys])delete stored[key];}}};
+  const created=await paletteAction(api,{type:'palette:note',operation:'save',title:'Ideas',body:'Private fictional note content'},sender);
+  const result=await paletteAction(api,{type:'palette:suggest',mode:'notes',query:'fictional'},sender);
+  assert.equal(result.suggestions[0].noteId,created.note.id);
+  const journal=Object.entries(stored).filter(([key])=>key.startsWith('activity:entry:'));
+  assert.equal(journal.length,1);assert.ok(!JSON.stringify(journal).includes('fictional'));
+  await paletteAction(api,{type:'palette:note',operation:'get',id:created.note.id},sender);
+  assert.equal(Object.keys(stored).filter(key=>key.startsWith('activity:entry:')).length,1,'reading a note is not an action-history write');
+  await assert.rejects(()=>paletteAction(api,{type:'palette:note',operation:'get',id:created.note.id},{id:'foreign'}));
+});

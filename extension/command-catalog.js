@@ -1,5 +1,8 @@
 import {browserPageCommands} from './browser-pages.js';
 export const COMMANDS = [
+  {command:'notes',title:'Search / manage notes',aliases:'заметки найти текст список'},
+  {command:'new-note',title:'New note',aliases:'создать новая заметка текст'},
+  {command:'shortcuts',title:'All keyboard shortcuts',aliases:'все хоткеи сочетания клавиши справка'},
   {command:'quicklinks',title:'Manage quicklinks',aliases:'links shortcuts быстрые ссылки ярлыки'},
   {command:'save-quicklink',title:'Save selected page as quicklink',aliases:'shortcut create link сохранить быстрая ссылка'},
   {command:'search-with',title:'Search current query with…',aliases:'provider ai engine поисковик ии другой'},

@@ -1,3 +1,5 @@
+import {launcherContext} from './launcher-catalog.js';
+import {noteSuggestions,noteAction} from './notes.js';
 import {faviconImages} from './favicons.js';
 import {calculate} from './calculator.js';
 import {quicklinks,changeQuicklink} from './quicklinks.js';
@@ -17,8 +19,8 @@ import { COMMANDS,commandSuggestions } from './command-catalog.js';
 export async function openPalette(api,mount,mode='search') {
   const [tab]=await api.tabs.query({active:true,currentWindow:true});
   if(!tab) return;
-  const [tabs,sites]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api,tab.windowId)]);
-  const context={mode,sourceUrl:tab.url || '',sourceTabId:tab.id,groupColors:GROUP_COLORS,sites,favicons:true};
+  const [tabs,sites,launcher]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api,tab.windowId),launcherContext(api)]);
+  const context={...launcher,mode,sourceUrl:tab.url || '',sourceTabId:tab.id,groupColors:GROUP_COLORS,sites,favicons:true};
   try {
     await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url})=>({id,title,url})),false,context]});
   } catch {
@@ -92,7 +94,7 @@ async function executeAction(api,context,id) {
   if(browserUrl) return navigate(api,context,browserUrl);
   if(id==='activity') return api.tabs.create({windowId:context.windowId,url:api.runtime.getURL('activity.html')});
   if(id==='clear-prompts') return clearPrompts(api);
-  if(['quicklinks','save-quicklink','search-with','order-tabs','closed-tabs','edit-url','recover-prompts','group-tabs','manage-groups','ungroup-tabs','bookmark-tabs','remove-bookmarks'].includes(id)) throw new Error('Choose this mode in the command bar');
+  if(['notes','new-note','shortcuts','quicklinks','save-quicklink','search-with','order-tabs','closed-tabs','edit-url','recover-prompts','group-tabs','manage-groups','ungroup-tabs','bookmark-tabs','remove-bookmarks'].includes(id)) throw new Error('Choose this mode in the command bar');
   if(id==='reopen') return restore(api);
   if(id==='settings') return api.runtime.openOptionsPage();
   if(id==='new-window') return api.windows.create({type:'normal'});
@@ -107,6 +109,7 @@ async function performAction(api,message,context) {
   if(message.type==='palette:icons')return {images:await faviconImages(api,message.urls)};
   if(message.type==='palette:suggest') {
     if(typeof message.query!=='string' || message.query.length>8192) throw new Error('Invalid query');
+    if(message.mode==='notes')return {suggestions:await noteSuggestions(api,message.query),domains:[],warnings:[]};
     if(message.mode==='quicklinks')return {suggestions:await quicklinks(api,message.query),domains:[],warnings:[]};
     if(message.mode==='bookmark-folders') {
       const suggestions=await bookmarkFolders(api,context.windowId,message.query,message.operation,message.tabIds);
@@ -119,7 +122,7 @@ async function performAction(api,message,context) {
     if(message.mode==='order') return {suggestions:await orderSuggestions(api,context.windowId,message.query,message.tabId),domains:[],warnings:[]};
     if(message.mode==='commands') return {suggestions:commandSuggestions(message.query),domains:[],warnings:[]};
     if(message.mode==='closed') return {suggestions:await closedSuggestions(api,message.query),domains:[],warnings:[]};
-    const [found,links]=await Promise.all([findSuggestions(api,context.windowId,message.query),quicklinks(api,message.query).catch(()=>[])]);
+    const [found,links,notes]=await Promise.all([findSuggestions(api,context.windowId,message.query),quicklinks(api,message.query).catch(()=>[]),noteSuggestions(api,message.query).catch(()=>[])]);
     const calculation=calculate(message.query);
     const extra=calculation?[{kind:'calculator',title:calculation.result,url:calculation.expression,copyText:calculation.result,sources:['calculator']}]:[];
     let recent=[],recentActions=[];
@@ -139,8 +142,9 @@ async function performAction(api,message,context) {
       if(index<0)remaining.push(link);
       else rows[index]={...rows[index],linkId:link.linkId,linkName:link.title,sources:[...new Set([...(rows[index].sources || [rows[index].kind]),'quicklink'])]};
     }
-    return {...found,suggestions:[...extra,...rows,...remaining,...recentActions,...recent]};
+    return {...found,suggestions:[...extra,...rows,...remaining,...notes.slice(0,message.query.trim()?8:3).map(note=>({...note,...(!message.query.trim()?{section:'Notes'}:{})})),...recentActions,...recent]};
   }
+  if(message.type==='palette:note')return noteAction(api,message);
   if(message.type==='palette:quicklink') {
     let request=message;
     if(message.operation==='save' && message.tabId!==undefined) {
@@ -204,13 +208,14 @@ function activityEvent(message,status) {
   if(action==='bookmark')label=`Bookmarks · ${message.operation} · ${message.tabIds?.length || 0} tabs`;
   if(action==='group')label=`Tab group · ${message.action}${message.tabIds?` · ${message.tabIds.length} tabs`:''}`;
   if(action==='recover')label='Recover AI prompt';
+  if(action==='note')label=`Note · ${message.operation}`;
   if(action==='quicklink')label=`Quicklink · ${message.operation}`;
   if(action==='tab-action')label=`Tab · ${message.action}`;
   return {action,label,status,text:typeof message.query==='string'?message.query:undefined};
 }
 export async function paletteAction(api,message,sender) {
   const context=sourceContext(api,sender);
-  const logged=!['palette:suggest','palette:icons','palette:remember-site'].includes(message.type) && message.command!=='activity';
+  const logged=!(message.type==='palette:note' && message.operation==='get') && !['palette:suggest','palette:icons','palette:remember-site'].includes(message.type) && message.command!=='activity';
   try {
     const result=await performAction(api,message,context);
     if(logged) {
