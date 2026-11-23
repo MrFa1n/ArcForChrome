@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { rankSuggestions, findSuggestions } from '../extension/suggestions.js';
 const tab = {id:1,title:'Project Design',url:'https://example.com/design'};
-test('open tabs win over bookmarks and history, including exact URL matches elsewhere', () => {
+test('stronger matches can outrank open tabs', () => {
   const results=rankSuggestions([tab],[{title:'Design',url:'https://design.com'}],[{title:'Design archive',url:'https://history.example'}],'design');
-  assert.deepEqual(results.map(row=>row.kind),['tab','bookmark','history']);
+  assert.deepEqual(results.map(row=>row.kind),['bookmark','history','tab']);
 });
 test('search matches titles and addresses case-insensitively', () => {
   assert.equal(rankSuggestions([tab],[],[],'PROJECT')[0].id,1);
@@ -30,7 +30,7 @@ test('history searches all time and partial source failures preserve available r
     history:{search:async options=>{parameters.push(options);return [{title:'Design notes',url:'https://notes.example'}];}}};
   const response=await findSuggestions(api,2,'design');
   assert.equal(parameters[0].startTime,0);assert.equal(parameters[0].text,'design');
-  assert.deepEqual(response.suggestions.map(row=>row.kind),['tab','history']);
+  assert.deepEqual(response.suggestions.map(row=>row.kind),['history','tab']);
   assert.ok(response.warnings.includes('Bookmarks unavailable'));
 });
 test('malformed queries are rejected before API access', async () => {
@@ -88,4 +88,49 @@ test('exact and corrected suggestions stay local and never trigger navigation', 
   const api={tabs:{query:async()=>[{id:1,title:'GitHub',url:'https://github.com/'}]},bookmarks:{search:async()=>[]},history:{search:async()=>[]}};
   const result=await findSuggestions(api,2,'githbu');
   assert.equal(result.suggestions[0].id,1);assert.equal(result.suggestions[0].kind,'tab');
+});
+
+test('bookmarks are published while history is still loading', async () => {
+  let finishHistory;
+  const history = new Promise(resolve => { finishHistory = resolve; });
+  const bookmark = {title:'Project guide',url:'https://guide.example/'};
+  const api = {
+    tabs:{query:async () => [tab]},
+    bookmarks:{search:async () => [bookmark]},
+    history:{search:() => history}
+  };
+  let publishFirst;
+  const first = new Promise(resolve => { publishFirst = resolve; });
+  const final = findSuggestions(api,2,'project',publishFirst);
+  const partial = await first;
+  assert.ok(partial.suggestions.some(row => row.url === bookmark.url));
+  assert.ok(partial.suggestions.some(row => row.id === tab.id));
+  finishHistory([{title:'Project notes',url:'https://notes.example/'}]);
+  assert.ok((await final).suggestions.some(row => row.kind === 'history'));
+});
+
+test('title and host collapse history duplicates while preserving separate tabs', () => {
+  const tabs = [
+    {id:1,title:'Project · GitHub',url:'https://github.com/org/project'},
+    {id:2,title:'Project · GitHub',url:'https://github.com/org/project?view=readme'}
+  ];
+  const history = [
+    {title:' project · github ',url:'https://github.com/org/project?tracking=1'},
+    {title:'Project · GitHub',url:'https://example.org/project'},
+    {title:'Project issues',url:'https://github.com/org/project/issues'}
+  ];
+  const rows = rankSuggestions(tabs,[],history,'project');
+  assert.deepEqual(rows.filter(row => row.kind === 'tab').map(row => row.id),[1,2]);
+  assert.deepEqual(rows.filter(row => row.kind === 'history').map(row => row.url).sort(),
+    ['https://example.org/project','https://github.com/org/project/issues']);
+});
+
+test('visit frequency breaks equally relevant history matches without displacing a stronger match', () => {
+  const rows = rankSuggestions([],[],[
+    {title:'Project archive',url:'https://archive.example/',visitCount:1,lastVisitTime:900},
+    {title:'Project archive',url:'https://frequent.example/',visitCount:6,lastVisitTime:500},
+    {title:'Project',url:'https://exact.example/',visitCount:0,lastVisitTime:100}
+  ],'project');
+  assert.deepEqual(rows.map(row => row.url),
+    ['https://exact.example/','https://frequent.example/','https://archive.example/']);
 });

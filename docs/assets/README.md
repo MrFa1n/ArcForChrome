@@ -19,3 +19,5 @@ The selection, group picker and bookmark-folder picker PNGs show the current mul
 Version 0.21 adds contextual Actions, provider redirection, quicklinks and calculator captures. These are real UI states with fictional data and stubbed browser services; no remote prompt is submitted and automated clipboard tests use a stub. The provider example includes builtins and detected site scopes.
 
 Version 0.22 adds fictional notes-list, multiline-editor and full-shortcut-directory captures. Global shortcut assignments in screenshots are test fixtures; the installed extension reads its actual Chrome assignments. No personal notes or clipboard are used.
+
+Version 0.23 refreshes the palette captures for the token-based interface and the current **⌘T** Search shortcut. PNGs and the README GIF were regenerated from the current `mountPalette` code with fictional tabs and stubbed browser APIs.

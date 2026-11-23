@@ -40,7 +40,9 @@ Find an open tab, revisit a bookmarked page, search a website or run a browser c
 1. Download this repository using **Code → Download ZIP** and extract it, or clone it.
 2. Open `chrome://extensions` and enable **Developer mode**.
 3. Click **Load unpacked** and select the repository’s **`extension`** folder.
-4. Click the extension’s toolbar icon or press **⌘T** on macOS / **Alt+Shift+K** on Windows and Linux.
+4. Click the extension’s toolbar icon or press **⌘T** on macOS / **Alt+Shift+K** on Windows and Linux to open Search over the current page. The extension also provides its Search page when Chrome opens a new tab.
+
+Chrome may preserve an older shortcut assignment after an update. If **⌘T** still opens a regular new tab, check `chrome://extensions/shortcuts` and assign **Open Search** to **⌘T**. Choosing an open tab closes a temporary Search tab.
 
 Chrome may keep an older key assignment or reject a conflicting binding. Open `chrome://extensions/shortcuts` to check or change it. Modes are available through prefixes and searchable commands; no mode dropdown is needed. The extension is not currently published to the Chrome Web Store.
 
@@ -92,7 +94,7 @@ Select a result and press **⌘/Ctrl+K**, or click **Actions** in the footer. Se
 
 ### Keep a query, choose where it goes
 
-When no local page matches, Search offers **Google**, **ChatGPT** and **Google AI Mode** underneath the normal default-search action. For all providers and detected search sites, use **Actions → Search this query with…**, then filter by provider name. The prompt is retained separately from that filter; a recognized leading provider alias is removed when redirecting. Esc returns to the original query. Nothing is submitted until Enter. AI routes retain the existing recovery copy before navigation.
+Search keeps one web action using your default search provider. For all providers and detected search sites, use **Actions → Search this query with…**, then filter by provider name. The prompt is retained separately from that filter; a recognized leading provider alias is removed when redirecting. Esc returns to the original query. Nothing is submitted until Enter. AI routes retain the existing recovery copy before navigation.
 
 ### Named quicklinks
 

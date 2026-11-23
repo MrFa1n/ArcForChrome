@@ -166,21 +166,19 @@ test('executed actions log metadata without URL query/path content by default',a
  assert.equal(rows.length,1);assert.equal(rows[0].label,'Open example.com');assert.equal(rows[0].status,'ok');
  assert.ok(!JSON.stringify(rows).includes('token'));assert.equal(rows[0].text,undefined);
 });
-test('restricted pages prefer the toolbar popup inside the source browser window',async()=>{
- const api=browser();api.scripting.executeScript=async()=>{throw Error('Restricted');};
- api.action={setPopup:async options=>api.calls.push(['setPopup',options]),openPopup:async options=>api.calls.push(['openPopup',options])};
+test('restricted pages open a popup centered on the source window',async()=>{
+ const api=browser();
+ api.scripting.executeScript=async()=>{throw Error('Restricted');};
+ api.windows.get=async id=>{
+   assert.equal(id,2);
+   return {left:100,top:60,width:1200,height:800};
+ };
  await openPalette(api,()=>{});
- assert.equal(api.calls[0][0],'setPopup');assert.match(api.calls[0][1].popup,/surface=action/);
- assert.deepEqual(api.calls[1],['openPopup',{windowId:2}]);
- assert.deepEqual(api.calls[2],['setPopup',{tabId:5,popup:''}]);
- assert.ok(!api.calls.some(call=>call[0]==='popup'));
-});
-test('native popup failure restores toolbar behavior before legacy fallback',async()=>{
- const api=browser();api.scripting.executeScript=async()=>{throw Error('Restricted');};
- api.action={setPopup:async options=>api.calls.push(['setPopup',options]),openPopup:async()=>{throw Error('Unavailable');}};
- await openPalette(api,()=>{});
- assert.deepEqual(api.calls[1],['setPopup',{tabId:5,popup:''}]);
- assert.equal(api.calls[2][0],'popup');
+ const [kind,popup]=api.calls[0];
+ assert.equal(kind,'popup');
+ assert.equal(popup.left,460);
+ assert.equal(popup.top,250);
+ assert.match(popup.url,/surface=window/);
 });
 test('group mutations stay in the validated source window and preserve native tabs',async()=>{
  const api=browser();const changes=[];
@@ -251,4 +249,20 @@ test('notes use validated messages and keep text out of the action journal',asyn
   await paletteAction(api,{type:'palette:note',operation:'get',id:created.note.id},sender);
   assert.equal(Object.keys(stored).filter(key=>key.startsWith('activity:entry:')).length,1,'reading a note is not an action-history write');
   await assert.rejects(()=>paletteAction(api,{type:'palette:note',operation:'get',id:created.note.id},{id:'foreign'}));
+});
+
+test('switching from the new tab dismisses only the temporary search tab', async () => {
+  const api = browser();
+  const url = api.runtime.getURL('newtab.html');
+  api.tabs.get = async id => ({id,windowId:2,url:id===5 ? url : 'https://example.com/'});
+  api.tabs.remove = async id => api.calls.push(['remove',id]);
+  const newTabSender = {...sender,url};
+
+  await paletteAction(api,{type:'palette:activate',tabId:8},newTabSender);
+  assert.deepEqual(api.calls,[['update',8,{active:true}],['remove',5]]);
+
+  api.calls.length=0;
+  api.tabs.get = async id => ({id,windowId:2,url:'https://example.com/'});
+  await paletteAction(api,{type:'palette:activate',tabId:8},newTabSender);
+  assert.deepEqual(api.calls,[['update',8,{active:true}]]);
 });

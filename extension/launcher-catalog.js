@@ -1,3 +1,4 @@
+import {COMMANDS} from './command-catalog.js';
 // Shared by injected and protected-page palettes; data only, no remote code.
 export const ACTIONS=[
       {id:'new-note',title:'New note',aliases:'создать заметку текст'},
@@ -59,5 +60,5 @@ export const SHORTCUTS=[
 export async function launcherContext(api){
   let commands=null;
   try {if(api.commands?.getAll)commands=await api.commands.getAll();}catch{/* Show an explicit unknown binding rather than guess. */}
-  return {actions:ACTIONS,shortcuts:SHORTCUTS.map(row=>!row.global?row:{...row,shortcut:commands?commands.find(command=>command.name===row.global)?.shortcut || 'Not assigned':'Check Chrome shortcuts'})};
+  return {actions:ACTIONS,commands:COMMANDS.filter(row => !row.command.startsWith("browser:")),shortcuts:SHORTCUTS.map(row=>!row.global?row:{...row,shortcut:commands?commands.find(command=>command.name===row.global)?.shortcut || 'Not assigned':'Check Chrome shortcuts'})};
 }

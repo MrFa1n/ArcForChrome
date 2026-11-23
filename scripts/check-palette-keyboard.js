@@ -101,8 +101,8 @@ try {
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'light'}]});
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
   assert.equal(await paletteCall(`function(){return this.querySelector('[data-source=tab]').textContent;}`),'Open tab','open tabs need a named source badge');
-  assert.deepEqual(await paletteCall(`function(){return [...this.querySelectorAll('.source-badge')].map(node=>node.textContent);}`),['Open tab','Bookmark','History'],'merged results retain every distinct source');
-  assert.equal(await paletteCall(`function(){return new Set([...this.querySelectorAll('.source-badge')].map(node=>this.ownerDocument.defaultView.getComputedStyle(node).getPropertyValue('--source-color').trim())).size;}`),3,'source categories use distinct colors');
+  assert.deepEqual(await paletteCall(`function(){return [...this.querySelectorAll('.source-badge')].map(node=>node.textContent);}`),['Open tab'],'merged results show a single source badge');
+  assert.equal(await paletteCall(`function(){return this.querySelector('.source-badge').title;}`),'Open tab · Bookmark · History','the tooltip explains merged sources');
   const light=await paletteStyles();
   assert.equal(light.background,light.canvas,'palette should use native browser Canvas color');
   assert.equal(light.color,light.canvasText);
@@ -198,7 +198,7 @@ try {
   await mount([{id:7,title:'Existing',url:'https://existing.example'}]);
   await key('ArrowDown','ArrowDown');
   await key('Enter','Enter');
-  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:activate',tabId:7});
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:activate',tabId:7,selectionQuery:''});
   assert.deepEqual(await evaluate('pageKeys'),[],'selection keyup must not leak to the page');
   await mount([]);
   await send('Input.dispatchKeyEvent',{type:'keyDown',key:'k',code:'KeyK',text:'k'});
@@ -234,16 +234,16 @@ try {
   await key('Tab','Tab');
   assert.equal(await evaluate('messages.length'),beforeCompletion,'Tab must not navigate');
   await key('Enter','Enter');
-  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/'},
-    'Tab must complete the selected homepage, and Enter must open just the domain');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/org/project'},
+    'Tab must complete the initially selected saved page URL');
   await mount([]);
   await key('g','KeyG','g');
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
   await key('ArrowDown','ArrowDown');
   await key('Tab','Tab');
   await key('Enter','Enter');
-  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/org/project'},
-    'Tab must also complete the full saved page URL');
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'https://github.com/'},
+    'ArrowDown must select the homepage before Tab completes it');
   assert.deepEqual(await evaluate('pageKeys'),[],'completion and homepage selection must stay isolated');
   await evaluate(`globalThis.commandRows=${JSON.stringify(commandSuggestions(''))};globalThis.chrome.runtime.sendMessage=async message=>{
     if(message.type!=='palette:suggest'){messages.push(message);return {ok:true};}
@@ -426,7 +426,7 @@ try {
   assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:navigate',query:'chrome://extensions/'});
   await evaluate('useOpenChrome=true');
   await mount([],context);await send('Input.insertText',{text:'расширения'});await key('Enter','Enter');
-  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:activate',tabId:71});
+  assert.deepEqual((await evaluate('messages')).at(-1),{type:'palette:activate',tabId:71,selectionQuery:'расширения'});
   assert.deepEqual(await evaluate('pageKeys'),[],'Chrome page search must isolate host shortcuts');
   // Arrange is a two-step action: choosing a tab never activates/navigates it.
   const arrangeApi={tabs:{query:async()=>[
@@ -563,7 +563,7 @@ try {
   assert.equal(await evaluate('savedLinks.length'),0);
   await key('Escape','Escape');await send('Input.insertText',{text:'explain CSS grid'});
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
-  assert.ok(await paletteCall(`function(){return this.querySelector('#results').textContent.includes('Search Google AI Mode');}`),'fallback providers are discoverable');
+  assert.ok(await paletteCall(`function(){const text=this.querySelector('#results').textContent;return text.includes('Search the web') && !text.includes('Search Google AI Mode');}`),'ordinary search offers one web fallback');
   await key('k','KeyK','',4);await send('Input.insertText',{text:'search this query'});await key('Enter','Enter');
   await key('Escape','Escape');
   assert.equal(await paletteCall(`function(){return this.querySelector('input').value;}`),'explain CSS grid','cancel provider selection keeps the original query');
@@ -586,7 +586,7 @@ try {
   await send('Input.insertText',{text:'no-such-action'});await key('k','KeyK','',4);
   assert.equal(await paletteCall(`function(){return this.querySelector('[aria-selected=true] .title').textContent;}`),'Beta','action toggle returns even when its filter has no results');
   await key('k','KeyK','',4);await key('Enter','Enter');
-  assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:activate'),{type:'palette:activate',tabId:82},'menu primary action uses the frozen selected result');
+  assert.deepEqual((await evaluate('messages')).findLast(message=>message.type==='palette:activate'),{type:'palette:activate',tabId:82,selectionQuery:''},'menu primary action uses the frozen selected result');
   await mount([],{sites:BUILTIN_SITES});await send('Input.insertText',{text:'gpt keep this prompt'});
   await evaluate('new Promise(resolve=>setTimeout(resolve,220))');
   await key('k','KeyK','',4);await send('Input.insertText',{text:'search this query'});await key('Enter','Enter');

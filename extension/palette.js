@@ -1,5 +1,7 @@
 // Self-contained: Chrome serializes this function for isolated-world injection.
 export function mountPalette(tabs, floating = false, context = {}) {
+  const newTab = context.newTab === true;
+  const actionPopup = context.actionPopup === true;
   const existing = document.querySelector('[data-arc-command-palette]');
   if (existing) {
     existing.dispatchEvent(context.mode === 'edit'
@@ -13,6 +15,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
   const shell = document.createElement('dialog');
   shell.setAttribute('aria-label', 'Arc command bar');
   shell.style.cssText = 'border:0;padding:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;overflow:hidden;';
+  if (actionPopup || newTab) {
+    const style = document.createElement('style');
+    style.textContent = 'dialog::backdrop{background:transparent}';
+    root.append(style);
+  }
   const frame = document.createElement('iframe');
   frame.title = 'Arc search';
   frame.style.cssText = 'display:block;border:0;width:100%;height:100%;background:transparent;';
@@ -24,6 +31,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     if (dismissed) return;
     dismissed = true;
     shell.close(); host.remove();
+    if (newTab) return;
     if (floating) window.close(); else if (previousFocus?.isConnected) previousFocus.focus();
   }
   host.addEventListener('arc-palette-close', () => requestClose());
@@ -40,19 +48,19 @@ export function mountPalette(tabs, floating = false, context = {}) {
     host.setAttribute('data-arc-command-palette', '');
     const root = host.attachShadow({ mode: 'closed' });
     const style = document.createElement('style');
-    style.textContent = `
+    style.textContent = (context.designTokens || '') + `
       :host{all:initial;color-scheme:light dark}*{box-sizing:border-box}
-      dialog{--bg:Canvas;--fg:CanvasText;--muted:GrayText;
-      --hover:color-mix(in srgb,Highlight 12%,Canvas);--line:color-mix(in srgb,CanvasText 18%,Canvas);
-      color-scheme:light dark;border:1px solid var(--line);border-radius:16px;padding:0;width:min(620px,calc(100vw - 32px));
-      max-height:80vh;margin:12vh auto 0;background:var(--bg);color:var(--fg);box-shadow:0 12px 40px #0004;
-      font:.875rem/1.5 sans-serif;overflow:hidden}
+      dialog{--bg:var(--arc-surface,Canvas);--fg:var(--arc-text,CanvasText);--muted:var(--arc-muted,GrayText);
+      --hover:var(--arc-hover,color-mix(in srgb,CanvasText 7%,Canvas));--selection:var(--arc-selection,color-mix(in srgb,Highlight 17%,Canvas));--line:var(--arc-border,color-mix(in srgb,CanvasText 18%,Canvas));
+      color-scheme:light dark;border:1px solid var(--line);border-radius:var(--arc-radius-panel,1rem);padding:0;width:min(600px,calc(100vw - 32px));
+      max-height:calc(100vh - 32px);margin:auto;background:var(--bg);color:var(--fg);box-shadow:0 20px 64px #0006,0 2px 8px #0002;
+      font:.875rem/1.45 var(--arc-font,system-ui);overflow:hidden}
       dialog::backdrop{background:#0005}
-      input{font:inherit;font-size:1.3125rem;width:100%;padding:18px 22px;border:0;outline:none;color:var(--fg);background:transparent}
+      input{font:inherit;font-size:1.1875rem;width:100%;padding:17px 18px;border:0;outline:none;color:var(--fg);background:transparent}
       [hidden]{display:none!important}#note-body{display:block;resize:none;width:100%;height:220px;min-height:80px;max-height:45vh;border:0;border-top:1px solid var(--line);outline:none;padding:14px 22px;font:inherit;line-height:1.7;background:Canvas;color:CanvasText}#note-body:focus-visible{box-shadow:inset 0 0 0 1px Highlight}dialog[data-sized] #note-body{flex:1;max-height:none;height:auto}button.result[data-shortcut=true] .url{white-space:normal;line-height:1.45}button.result[data-shortcut=true]>kbd{max-width:38%;white-space:normal;text-align:right}
-      #results{padding:6px 10px;max-height:48vh;overflow:auto;border-top:1px solid var(--line)}
-      button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:12px;width:100%;border:0;
-      border-radius:8px;background:transparent;text-align:left;padding:9px 12px}button.result[aria-selected=true]{background:var(--hover)}
+      #results{padding:6px 8px;max-height:55vh;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;border-top:1px solid var(--line)}
+      button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:10px;width:100%;border:0;
+      border-radius:var(--arc-radius-row,.625rem);background:transparent;text-align:left;padding:8px 11px}button.result:hover{background:var(--hover)}button.result[aria-selected=true]{background:var(--selection);outline:1px solid color-mix(in srgb,Highlight 22%,transparent);outline-offset:-1px}
       button.result[data-marked=true]{box-shadow:inset 3px 0 Highlight}
       .result[data-group-color]{border-left:3px solid var(--group-color)}
       [data-group-color=grey]{--group-color:#80868b}[data-group-color=blue]{--group-color:#4285f4}
@@ -62,9 +70,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
       [data-group-color=orange]{--group-color:#fa903e}
       .group-badge{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;padding:1px 7px;margin:0;border-radius:6px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--group-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--group-color) 35%,Canvas)}
       .group-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--group-color);margin-right:6px;vertical-align:middle}
-      .source-badges{display:contents}.metadata{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px;max-width:42%;flex-shrink:0}.group-badge{margin:0}.result{position:relative}.result[data-section]{margin-top:25px}.section-label{position:absolute;left:2px;top:-23px;color:var(--muted);font-size:.6875rem;font-weight:600;pointer-events:none}
-      .source-badge{--source-color:#526174;display:inline-flex;align-items:center;gap:5px;padding:1px 6px;border-radius:5px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--source-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--source-color) 40%,Canvas)}
-      .source-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--source-color)}
+      .metadata{display:flex;min-width:0;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;max-width:34%;flex-shrink:0}.group-badge{margin:0}.result{position:relative}.result[data-section]{margin-top:23px}.section-label{position:absolute;left:10px;top:-20px;color:var(--muted);font-size:.6875rem;font-weight:600;pointer-events:none}
+      .source-badge{--source-color:#526174;display:inline-flex;align-items:center;gap:5px;padding:1px 5px;border-radius:5px;font-size:.6875rem;color:var(--muted);background:transparent;border:1px solid transparent}
+      .source-badge::before{flex:none;content:'';width:6px;height:6px;border-radius:50%;background:var(--source-color)}
       [data-source=tab]{--source-color:#3685ec}[data-source=bookmark]{--source-color:#be8500}
       [data-source=history]{--source-color:#a16be0}[data-source=domain]{--source-color:#168e70}
       [data-source=site]{--source-color:#1495a8}[data-source=command],[data-source=browser-page]{--source-color:#7b8795}
@@ -73,23 +81,68 @@ export function mountPalette(tabs, floating = false, context = {}) {
       [data-source=ai-draft]{--source-color:#d46676}[data-source=bookmark-folder]{--source-color:#be8500}
       [data-source=group]{--source-color:#b75cb0}[data-source=quicklink],[data-source=quicklink-save]{--source-color:#c0784d}[data-source=calculator]{--source-color:#27a189}[data-source=note]{--source-color:#8a9b3c}[data-source=shortcut]{--source-color:#73859b}[data-source=activity]{--source-color:#748795}[data-source=result-action]{--source-color:#7b8795}
       @media (forced-colors:active){.source-badge{border-color:CanvasText}.source-badge::before{background:CanvasText}}
-      .icon img{width:20px;height:20px;object-fit:contain}.icon[data-selectable=true]{position:relative}.icon[data-selectable=true]:has(img)::after{content:'☐';position:absolute;right:-4px;bottom:-4px;font-size:10px;line-height:12px;background:Canvas;border-radius:3px;padding:0 1px}.icon[data-marked=true]:has(img)::after{content:'☑'}.icon{width:28px;height:28px;border-radius:8px;background:var(--hover);display:grid;place-items:center;flex-shrink:0}
-      .text{min-width:0;flex:1}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .url:empty{display:none}.url{font-size:.6875rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
-      kbd{font:inherit;font-size:.6875rem;border:1px solid var(--line);border-radius:4px;padding:1px 4px;white-space:nowrap}.footer-action{border:0;background:transparent;display:flex;align-items:center;gap:5px;font-size:.6875rem;padding:2px;color:var(--fg)}.footer-action:hover{color:Highlight}.footer-main{display:flex;align-items:center;gap:6px;min-width:0}.footer-status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}footer{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:grab;touch-action:none;user-select:none;padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
+      .icon{position:relative;width:var(--arc-icon-tile,1.75rem);height:var(--arc-icon-tile,1.75rem);border-radius:var(--arc-radius-control,.5rem);background:var(--hover);display:grid;place-items:center;flex-shrink:0}
+      .icon svg,#resize svg{width:var(--arc-icon-size,1.0625rem);height:var(--arc-icon-size,1.0625rem);display:block}
+      .icon img{width:18px;height:18px;object-fit:contain;border-radius:3px}
+      .icon:has(img)>.icon-symbol{display:none}
+      .tab-mark{display:none;position:absolute;right:-3px;bottom:-3px;padding:1px;background:Canvas;border-radius:4px;color:CanvasText}
+      .tab-mark svg{width:12px;height:12px}
+      .icon:hover .tab-mark,.icon[data-marked=true] .tab-mark{display:block}
+      #resize svg{margin:auto;width:13px;height:13px}
+      .text{min-width:0;flex:1}.title{font-weight:600}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .url:empty{display:none}.url{font-size:.75rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
+      kbd{font:inherit;font-size:.6875rem;border:1px solid var(--line);border-radius:4px;padding:1px 4px;white-space:nowrap}.footer-action{flex-shrink:0;border:0;background:transparent;display:flex;align-items:center;gap:5px;font-size:.6875rem;padding:2px;color:var(--fg)}.footer-action:hover{color:Highlight}.footer-main{display:flex;align-items:center;gap:6px;min-width:0}.footer-status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}footer{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:grab;touch-action:none;user-select:none;padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
       footer.dragging{cursor:grabbing}
       dialog[data-sized]{display:flex;flex-direction:column}
       dialog[data-sized] input,dialog[data-sized] footer,dialog[data-sized] #error{flex-shrink:0}
       dialog[data-sized] #results{flex:1;min-height:0;max-height:none}
       #resize{position:absolute;right:3px;bottom:3px;width:20px;height:20px;padding:0;border:0;background:transparent;color:GrayText;cursor:nwse-resize;touch-action:none}
-      #error{color:#b3261e;padding:0 22px;font-size:.75rem}
+      #error{margin:0;padding:8px 16px;color:#b3261e;font-size:.75rem;overflow-wrap:anywhere}
+      #error:empty,#results:empty{display:none}
       button:focus-visible{outline:2px solid Highlight;outline-offset:-2px}
+      @media (max-width:480px){
+        dialog{width:calc(100vw - 20px);border-radius:14px}
+        input{padding:14px 12px;font-size:1rem}
+        button.result{gap:8px;padding:7px 8px}
+        .metadata{max-width:30%;min-width:0}
+        .source-badge{font-size:.625rem;white-space:nowrap;padding-inline:2px}
+        .group-badge{font-size:.625rem}
+        footer{padding:8px 24px 8px 10px}
+      }
+      @media (max-width:340px){
+        .metadata{display:none}
+      }
+      @media (max-height:420px){
+        dialog{max-height:calc(100vh - 16px)}
+        #results{max-height:calc(100vh - 126px)}
+      }
       @media(prefers-color-scheme:dark){#error{color:#f2b8b5}}
       @media(prefers-contrast:more){dialog{--line:CanvasText}.url,.hint,footer{color:CanvasText}}
       @media(forced-colors:active){button.result[aria-selected=true]{background:Highlight;color:HighlightText}
         button.result[aria-selected=true] .url,button.result[aria-selected=true] .hint{color:HighlightText}}
       `;
     root.append(style);
+    if (newTab) {
+      const tabStyle = document.createElement('style');
+      tabStyle.textContent = 'dialog::backdrop{background:transparent}';
+      root.append(tabStyle);
+    }
+    if (actionPopup) {
+      const popupStyle = document.createElement('style');
+      popupStyle.textContent = `
+        dialog{inset:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;
+          border:0;border-radius:0;box-shadow:none;display:flex;flex-direction:column}
+        dialog::backdrop{background:transparent}
+        input{padding:15px 17px;font-size:1.125rem}
+        #results{flex:1;min-height:0;max-height:none;scrollbar-width:thin;padding:6px 8px}
+        #results[hidden]{display:none}
+        #note-body:not([hidden]){flex:1;min-height:0;max-height:none}
+        #error:empty{display:none}
+        footer{padding:9px 14px;cursor:default}
+        input,footer,#error{flex-shrink:0}
+      `;
+      root.append(popupStyle);
+    }
     const dialog = document.createElement('dialog');
     dialog.setAttribute('aria-label', 'Search tabs or the web');
     const input = document.createElement('input');
@@ -102,12 +155,53 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const noteBody=document.createElement('textarea');noteBody.id='note-body';noteBody.hidden=true;noteBody.maxLength=20000;noteBody.placeholder='Write your note…';noteBody.setAttribute('aria-label','Note text');
     const error = document.createElement('p'); error.id = 'error'; error.setAttribute('role','status');
     const footer = document.createElement('footer');footer.textContent = '↑ ↓ select · Tab complete address · Enter open · Esc return';
-    const resizeHandle=document.createElement('button');resizeHandle.id='resize';resizeHandle.type='button';resizeHandle.textContent='◢';
+    // Draw bundled icons with currentColor so page fonts and network access are irrelevant.
+    const iconPaths = {
+      tab:'M4 5h16v14H4z M4 9h16 M7 7h2',
+      bookmark:'M6 4h12v16l-6-4-6 4z',
+      history:'M12 5a7 7 0 1 0 7 7 7 7 0 0 0-7-7z M12 8v4l3 2',
+      domain:'M3 11l9-7 9 7 M6 10v10h12V10 M10 20v-6h4v6',
+      navigate:'M7 17 17 7 M8 7h9v9',
+      command:'m9 6 6 6-6 6',
+      closed:'M9 7 5 11l4 4 M5 11h9a5 5 0 0 1 0 10',
+      site:'M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12z M15 15l5 5',
+      move:'M4 12h16 M8 8l-4 4 4 4 M16 8l4 4-4 4',
+      settings:'M5 6h14 M5 12h14 M5 18h14 M9 4v4 M15 10v4 M10 16v4',
+      calculator:'M7 4h10v16H7z M10 8h4 M10 12h1 M13 12h1 M10 16h1 M13 16h1',
+      note:'M5 4h14v16H5z M8 8h8 M8 12h8 M8 16h5',
+      keyboard:'M3 6h18v12H3z M6 10h1 M11 10h1 M16 10h1 M7 14h10',
+      folder:'M3 7h7l2 2h9v11H3z',
+      mark:'M5 5h14v14H5z',
+      checked:'M5 5h14v14H5z M8 12l3 3 5-6',
+      resize:'M10 19l9-9 M15 19l4-4'
+    };
+    const resultIcons = {
+      'order-tab':'tab','browser-page':'settings','site-query':'site',
+      'ai-draft':'closed','quicklink':'navigate','quicklink-save':'bookmark',
+      'bookmark-folder':'folder','activity':'history','note-save':'note','shortcut':'keyboard'
+    };
+    function drawIcon(name) {
+      const namespace = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(namespace,'svg');
+      svg.setAttribute('viewBox','0 0 24 24');
+      svg.setAttribute('aria-hidden','true');
+      svg.setAttribute('focusable','false');
+      const path = document.createElementNS(namespace,'path');
+      path.setAttribute('d',iconPaths[name] || iconPaths.command);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','currentColor');
+      path.setAttribute('stroke-width','1.7');
+      path.setAttribute('stroke-linecap','round');
+      path.setAttribute('stroke-linejoin','round');
+      svg.append(path);
+      return svg;
+    }
+    const resizeHandle=document.createElement('button');resizeHandle.id='resize';resizeHandle.type='button';resizeHandle.append(drawIcon('resize'));
     resizeHandle.setAttribute('aria-label','Resize Spotlight');resizeHandle.title='Drag corner to resize · Arrow keys when focused · Enter reset size';
     const sites = Array.isArray(context.sites) ? context.sites : [];
     footer.title='Drag to move · Ctrl+Alt+arrows move · Shift for larger steps · Ctrl+Alt+0 reset';
     footer.id='hints';input.setAttribute('aria-describedby','hints');
-    dialog.append(input,noteBody,results,error,footer,resizeHandle); root.append(dialog);document.documentElement.append(host);
+    dialog.append(input,noteBody,results,error,footer);if(!actionPopup)dialog.append(resizeHandle); root.append(dialog);document.documentElement.append(host);
     let positioned=false;
     let customSize=null;
     let drag=null;
@@ -148,7 +242,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       drag={id:event.pointerId,kind,x:event.clientX,y:event.clientY,left:bounds.left,top:bounds.top,width:bounds.width,height:bounds.height};
       event.currentTarget.setPointerCapture(event.pointerId);footer.classList.add('dragging');
     }
-    footer.addEventListener('pointerdown',event=>{if(!event.target.closest('button'))beginPointer(event,'move');});
+    footer.addEventListener('pointerdown',event=>{if(!actionPopup && !event.target.closest('button'))beginPointer(event,'move');});
     resizeHandle.addEventListener('pointerdown',event=>beginPointer(event,'resize'));
     // Track the frame document too: modal backdrop retargeting can bypass the handle.
     document.addEventListener('pointermove',event=>{
@@ -305,23 +399,41 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const icons=new Map();
     async function decorateIcons() {
       if(!context.favicons)return;
-      const urls=[...new Set(choices.map(choice=>choice.url).filter(url=>webUrl(url)))].slice(0,20);
+      const urls=[...new Set(choices.filter(choice=>['tab','bookmark','history','quicklink'].includes(choice.kind)).map(choice=>choice.url).filter(url=>webUrl(url)))].slice(0,20);
       const missing=urls.filter(url=>!icons.has(url));
       for(const url of missing)icons.set(url,null);
       if(missing.length){try{const reply=await chrome.runtime.sendMessage({type:'palette:icons',urls:missing});if(reply?.ok)missing.forEach((url,index)=>{const data=reply.images?.[index];if(typeof data==='string' && data.startsWith('data:image/png;base64,') && data.length<90000)icons.set(url,data);});}catch{}}
       if(dismissed || closing)return;
       while(icons.size>100)icons.delete(icons.keys().next().value);
-      [...results.children].forEach((row,index)=>{const data=icons.get(choices[index]?.url);const icon=row.querySelector('.icon');if(!data || !icon)return;icon.textContent='';const image=document.createElement('img');image.alt='';image.src=data;image.addEventListener('error',()=>{image.remove();icon.textContent='↗';},{once:true});icon.append(image);});
+      [...results.children].forEach((row,index) => {
+        const choice = choices[index];
+        if (!choice || !['tab','bookmark','history','quicklink'].includes(choice.kind)) return;
+        const data = icons.get(choice.url);
+        const icon = row.querySelector('.icon');
+        if (!data || !icon || icon.querySelector('img')) return;
+        const image = document.createElement('img');
+        image.alt = '';
+        image.addEventListener('error',() => image.remove(),{once:true});
+        image.src = data;
+        icon.append(image);
+      });
     }
     let queryRevision = 0;
     let timer;
+    let searchPort;
+    function disconnectSearch() { searchPort?.disconnect(); searchPort = undefined; }
     let suggestions = [];
     let domains = [];
     const labels = {tab:'Open tab',bookmark:'Bookmark',history:'History',domain:'Homepage · New tab',command:'Command',closed:'Restore session',site:'Site search','browser-page':'Chrome page',navigate:'Open / Search',move:'Tab placement','ai-draft':'Saved AI prompt','bookmark-folder':'Bookmark folder',group:'Tab group',quicklink:'Quicklink',calculator:'Calculator','result-action':'Action','quicklink-save':'Quicklink',activity:'Recent action',note:'Note','note-save':'Note',shortcut:'Shortcut'};
     const heldKeys = new Set();
     let closing = false;
     function close() {
+      if (newTab) {
+        setMode('search');
+        return;
+      }
       moveQueue.length=0;
+      disconnectSearch();
       clearTimeout(timer);
       finishPending();
       queryRevision++;
@@ -413,8 +525,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       busy=true;error.textContent='';
       const actionRevision=queryRevision;
       try {
-        // Do not commit the provisional list while smart suggestions are still loading.
-        await pendingQuery;
+        // An explicitly selected row can be opened while other sources are loading.
+        if (!selectionMoved || !choices[selected] || mode !== 'search') await pendingQuery;
         if(dismissed || closing || actionRevision!==queryRevision) return;
         let choice=choices[selected];
         let fromActions=false;
@@ -467,7 +579,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           return;
         }
         if(choice.kind==='site') {enterSite(sites.find(site=>site.key===choice.site));return;}
-        const target=event.altKey?'current':event.shiftKey?'background':(mode==='edit' && !(event.metaKey||event.ctrlKey))?'current':'new';
+        const target=event.altKey?'current':event.shiftKey?'background':((newTab || mode==='edit') && !(event.metaKey||event.ctrlKey))?'current':'new';
         const targetField=target==='new'?{}:{target};
         let message;
         if(choice.kind==='move') message={type:'palette:move',tabId:orderTabId,placement:choice.placement,...(choice.beforeTabId===undefined?{}:{beforeTabId:choice.beforeTabId})};
@@ -476,7 +588,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         else if(choice.kind==='site-query') message={type:'palette:site',site:choice.site,query:choice.query,...targetField};
         else if(mode.startsWith('site:')) message={type:'palette:site',site:mode.slice(5),query:input.value,...targetField};
         else if(choice.id!==undefined && mode!=='edit' && !event.altKey && !event.shiftKey && !event.metaKey && !event.ctrlKey)
-          message={type:'palette:activate',tabId:choice.id};
+          message={type:'palette:activate',tabId:choice.id,...(mode==='search'?{selectionQuery:input.value}: {})};
         else message={type:'palette:navigate',query:choice.kind==='navigate'?input.value:choice.url,...targetField};
         const response=await chrome.runtime.sendMessage(message);
         if(!response?.ok) throw new Error(response?.error || 'Could not open result');
@@ -517,21 +629,45 @@ export function mountPalette(tabs, floating = false, context = {}) {
       const oldPositions=new Map([...results.children].map(row=>[row.dataset.key,row.getBoundingClientRect().top]));
       const previous = choices[selected];
       const previousKey = choiceKey(previous);
-      choices = [...suggestions.filter(item => item.kind === 'calculator'),...suggestions.filter(item => item.kind === 'tab'), ...suggestions.filter(item => item.kind === 'browser-page'), ...domains, ...suggestions.filter(item => !['calculator','tab','browser-page'].includes(item.kind))];
+      choices = [...suggestions, ...domains];
       const query=input.value.trim();
       if(['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name','notes','note-editor','shortcuts'].includes(mode) || mode.startsWith('group')) choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
-        const navigation={kind:'navigate',title:mode==='edit'?`Go to ${query}`:`Open ${query}`,url:mode==='edit'?'Replace current page':'New tab · URL or default search provider'};
-        if(mode==='edit' || completedAddress===query) choices.unshift(navigation);else choices.push(navigation);
-        if(mode==='search' && completedAddress!==query) {
-          const siteRows=siteMatches(query).map(({site})=>({kind:'site',site:site.key,title:`Search ${site.name}`,url:site.detected?'Detected from your browsing · Tab to search':'Site search · Tab to search'}));
-          const open=choices.filter(item=>item.kind==='tab');
-          choices=[...open,...siteRows,...choices.filter(item=>item.kind!=='tab')];
+        const address = /^(?:https?:\/\/|chrome:\/\/|localhost(?:[:/]|$)|\[::1\]|[^\s/:]+\.[^\s/:]+)\S*$/i.test(query);
+        const navigation = {
+          kind:'navigate',
+          title:address ? `Go to ${query}` : `Search the web for “${query}”`,
+          url:newTab || mode==='edit' ? 'Use this tab' : 'Open in a new tab'
+        };
+        const existingAddress = choices.find(row => {
+          if (row.kind !== 'tab' || !address || !row.url) return false;
+          return row.url.replace(/^https?:\/\//i,'').replace(/\/$/,'') ===
+            query.replace(/^https?:\/\//i,'').replace(/\/$/,'');
+        });
+        if (mode==='edit' || completedAddress===query || (address && !existingAddress)) choices.unshift(navigation);
+        else choices.push(navigation);
+        if (existingAddress && mode==='search' && completedAddress!==query) {
+          choices = [existingAddress,...choices.filter(row => row !== existingAddress)];
         }
-      }
-      if(mode==='search' && query && completedAddress!==query && !suggestions.some(row=>['tab','bookmark','history','quicklink','calculator','browser-page','note'].includes(row.kind))) {
-        choices.push(...sites.filter(site=>['provider:google','provider:chatgpt','provider:gemini'].includes(site.key)).map(site=>({kind:'site-query',site:site.key,query,alias:'',title:`Search ${site.name}`,url:query,section:'Search elsewhere',sources:['site']})));
+        if(mode==='search' && completedAddress!==query) {
+          const normalized = query.toLocaleLowerCase();
+          if (normalized.length >= 3) {
+            const matchingCommands = (context.commands || []).filter(row =>
+              row.title.toLocaleLowerCase().startsWith(normalized) ||
+              row.command === normalized ||
+              row.aliases.toLocaleLowerCase().split(/\s+/).includes(normalized));
+            const actions = matchingCommands.slice(0, 3).map(({command,title}) => ({
+              kind:'command', command, title, url:'Browser action', sources:['command']
+            }));
+            // Keep ordinary search as the default Enter action when there are
+            // no local matches; command suggestions must never run implicitly.
+            choices.splice(Math.min(1, choices.length), 0, ...actions);
+          }
+
+          const siteRows=siteMatches(query).map(({site})=>({kind:'site',site:site.key,title:`Search ${site.name}`,url:site.detected?'Detected from your browsing · Tab to search':'Site search · Tab to search'}));
+          choices.splice(choices[0] ? 1 : 0, 0, ...siteRows);
+        }
       }
       const inline=mode==='search' && completedAddress!==query?query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/us):null;
       const inlineSites=inline?siteMatches(inline[1],true):[];
@@ -541,6 +677,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
           title:`Search ${site.name}: ${inline[2]}`,url:new URL(site.template.replace('%s','query')).origin,sources:['site']}));
         if(uniqueInline)choices=[...siteRows,...choices];
         else choices=[...choices.filter(choice=>choice.kind==='navigate'),...siteRows,...choices.filter(choice=>choice.kind!=='navigate')];
+      }
+      if (mode === 'search' && query) {
+        const fallback = choices.find(row => row.kind === 'navigate');
+        const limit = 8;
+        if (fallback && choices.indexOf(fallback) >= limit) {
+          choices = [...choices.slice(0,limit - 1),fallback];
+        } else {
+          choices = choices.slice(0,limit);
+        }
       }
       footer.textContent=mode==='drafts'?'Saved AI prompts · Enter recover · Edit shortcut to redirect · Esc back':mode==='order'?(orderTabId===undefined?'Arrange tabs · Alt+←/→ or ↑/↓ move · +Shift first/last · Enter place'
         :'Choose a destination · Enter move · Esc back'):mode==='commands'?'Commands · ↑ ↓ select · Enter run · Esc back'
@@ -565,15 +710,31 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const tabId=choice.kind==='tab'?choice.id:choice.kind==='order-tab'?choice.tabId:undefined;
         if(tabId!==undefined){row.dataset.marked=String(markedTabs.has(tabId));row.setAttribute('aria-checked',String(markedTabs.has(tabId)));}
         row.tabIndex = -1;row.dataset.key=String(choice.tabId ?? choice.id ?? `other:${index}`);
-        const icon = document.createElement('span');icon.className = 'icon';icon.textContent = ({tab:'▣',bookmark:'☆',history:'◷',domain:'⌂',navigate:'↗',command:'›',closed:'↶',site:'⌕','order-tab':'▣',move:'↔','ai-draft':'↶','browser-page':'⚙','site-query':'⌕',quicklink:'↗',calculator:'=', 'result-action':'›','quicklink-save':'↗',activity:'◷',note:'▤','note-save':'▤',shortcut:'⌨'})[choice.kind] || '›';
-        if(tabId!==undefined){icon.dataset.selectable='true';icon.dataset.marked=String(markedTabs.has(tabId));icon.textContent=markedTabs.has(tabId)?'☑':'☐';icon.title='Select tab · Shift+Space';icon.addEventListener('click',event=>{event.stopPropagation();markTab(tabId);});}
-        else if(choice.kind.startsWith('group-'))icon.textContent='▤';
-        else if(choice.kind==='bookmark-folder'){icon.textContent=bookmarkOperation==='add'?'☆':'−';row.title=choice.title;}
+        const icon = document.createElement('span');
+        icon.className = 'icon';
+        const symbol = drawIcon(choice.kind.startsWith('group') ? 'folder' : resultIcons[choice.kind] || choice.kind);
+        symbol.classList.add('icon-symbol');
+        icon.append(symbol);
+        if (tabId !== undefined) {
+          const marked = markedTabs.has(tabId);
+          icon.dataset.marked = String(marked);
+          icon.title = 'Select tab · Shift+Space';
+          const indicator = document.createElement('span');
+          indicator.className = 'tab-mark';
+          indicator.append(drawIcon(marked ? 'checked' : 'mark'));
+          icon.append(indicator);
+          icon.addEventListener('click',event => {event.stopPropagation();markTab(tabId);});
+        } else if (choice.kind === 'bookmark-folder') row.title = choice.title;
         const text = document.createElement('span');text.className = 'text';
         const title = document.createElement('span');title.className = 'title';title.textContent = choice.title || 'Untitled tab';
-        const url = document.createElement('span');url.className = 'url';url.textContent = choice.description || (webUrl(choice.url)?choice.url.replace(/^https?:\/\/(www\.)?/,''):choice.url || '');url.title=choice.description || choice.url || '';
+        const url = document.createElement('span');
+        url.className = 'url';
+        const detail = choice.description || choice.url || '';
+        url.textContent = choice.kind === 'command' && !choice.description ? '' :
+          webUrl(detail) ? detail.replace(/^https?:\/\/(www\.)?/,'') : detail;
+        url.title = detail;
         if(choice.groupColor || choice.groupTitle)row.dataset.groupColor=choice.groupColor || 'grey';
-        if (choice.match) url.textContent += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
+        if (choice.match) url.title += choice.match === 'layout' ? ' · Keyboard layout match' : ' · Similar spelling';
         text.append(title);
         const metadata=document.createElement('span');metadata.className='metadata';
         if(choice.groupTitle) {
@@ -582,13 +743,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
           badge.title=`Tab group: ${choice.groupTitle}`;metadata.append(badge);
         }
         const sources=Array.from(new Set(choice.sources || [choice.kind==='order-tab'?'tab':choice.kind==='site-query'?'site':choice.kind.startsWith('group-')?'group':choice.kind])).filter(source=>labels[source]);
-        if(sources.length) {
-          const badges=document.createElement('span');badges.className='source-badges';
-          for(const source of sources) {
-            const badge=document.createElement('span');badge.className='source-badge';badge.dataset.source=source;
-            badge.textContent=labels[source];badges.append(badge);
-          }
-          metadata.append(badges);
+        const source = sources[0];
+        if (source && !choice.groupTitle && !['navigate','result-action','shortcut'].includes(choice.kind)) {
+          const badge = document.createElement('span');
+          badge.className = 'source-badge';
+          badge.dataset.source = source;
+          badge.textContent = labels[source];
+          badge.title = sources.map(value => labels[value]).join(' · ');
+          metadata.append(badge);
         }
         text.append(url);row.append(icon,text,metadata);
         const section=choice.section || (mode==='search' && !query?(choice.kind==='tab'?'Open tabs':choice.kind==='quicklink'?'Quicklinks':choice.kind==='command'?'Frequent commands':''):null);
@@ -596,7 +758,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(section && section!==previousSection){row.dataset.section=section;const label=document.createElement('span');label.className='section-label';label.textContent=section;label.setAttribute('aria-hidden','true');row.append(label);}
         if(choice.shortcut){const key=document.createElement('kbd');key.textContent=shortcutLabel(choice.shortcut);row.append(key);}
         row.addEventListener('click',event => {if(busy)return;selected=index;selectionMoved=true;activate(event);});
-        row.addEventListener('mousemove',() => {if(!busy){selected=index;selectionMoved=true;highlight();}});
         return row;
       }));highlight();decorateIcons();
       if(mode==='order' && !view.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -613,14 +774,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(mode==='search' && input.value.startsWith('#')){try{startGrouping(input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && prefixMode) {setMode(prefixMode,input.value.slice(1).trimStart());return;}
       const revision=++queryRevision;
+      disconnectSearch();
       clearTimeout(timer);finishPending();suggestionsPending=false;
       let resolvePending;
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
       suggestions=['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name','notes','note-editor','shortcuts'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
-        :tabs.filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
-          .slice(0,8).map(tab=>({...tab,kind:'tab',sources:['tab']}));
+        :[...tabs].sort((a,b) => query ? 0 : (b.lastAccessed || 0) - (a.lastAccessed || 0)).filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
+          .slice(0,query ? 8 : 5).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
       if(mode==='actions') {
         const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
@@ -649,6 +811,31 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       if(mode.startsWith('site:')) {resolvePending();return;}
       suggestionsPending=true;
+      if (mode === 'search' && query && chrome.runtime.connect) {
+        const port = chrome.runtime.connect({name:'palette-search'});
+        searchPort = port;
+        const finish = () => {
+          if (searchPort === port) searchPort = undefined;
+          if (revision === queryRevision) suggestionsPending = false;
+          resolvePending();
+        };
+        port.onDisconnect.addListener(finish);
+        port.onMessage.addListener(response => {
+          if (revision !== queryRevision || dismissed || closing) return;
+          if (response.ok) {
+            suggestions = response.suggestions;
+            domains = response.domains || [];
+            error.textContent = (response.warnings || []).join(' · ');
+            render(preferredId);
+          } else error.textContent = response.error || 'Suggestions unavailable';
+          if (!response.partial) {
+            finish();
+            port.disconnect();
+          }
+        });
+        timer = setTimeout(() => { if (searchPort === port) port.postMessage({query}); }, 60);
+        return;
+      }
       timer=setTimeout(async()=>{
         try {
           const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions','bookmark-folders','quicklinks','notes'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
@@ -699,7 +886,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         const directions={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
         if(directions[event.key]) {
           event.preventDefault();const [x,y]=directions[event.key];const step=event.shiftKey?64:16;
-          move(x*step,y*step);return;
+          if(!actionPopup)move(x*step,y*step);return;
         }
         if(event.key==='0') {event.preventDefault();resetPosition();return;}
       }
@@ -724,7 +911,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(mode==='note-editor') {
         if((event.metaKey || event.ctrlKey) && event.key==='Enter'){event.preventDefault();submitNote();return;}
         if(event.key==='Enter' && event.target!==noteBody){event.preventDefault();if(event.target===input)noteBody.focus();else if(event.target===resizeHandle)resetSize();else if(event.target===footer.querySelector('#actions'))openActions();else submitNote();return;}
-        if(event.key==='Tab') {event.preventDefault();const controls=[input,noteBody,footer.querySelector('#save-note'),footer.querySelector('#actions'),resizeHandle];controls[(controls.indexOf(root.activeElement)+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();return;}
+        if(event.key==='Tab') {event.preventDefault();const controls=[input,noteBody,footer.querySelector('#save-note'),footer.querySelector('#actions'),...(actionPopup?[]:[resizeHandle])];controls[(controls.indexOf(root.activeElement)+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();return;}
         if(event.target!==resizeHandle){if((event.metaKey || event.ctrlKey) && ['g','d'].includes(event.key.toLocaleLowerCase()))event.preventDefault();return;}
       }
       if(event.metaKey || event.ctrlKey) {
@@ -774,7 +961,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           input.setSelectionRange(input.value.length,input.value.length);
           updateSuggestions();
         } else {
-          const controls=[input,footer.querySelector('#actions'),resizeHandle];
+          const controls=[input,footer.querySelector('#actions'),...(actionPopup?[]:[resizeHandle])];
           controls[(controls.indexOf(root.activeElement)+(event.shiftKey?-1:1)+controls.length)%controls.length].focus();
         }
       }

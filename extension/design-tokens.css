@@ -1,0 +1,33 @@
+:root, :host {
+  color-scheme: light dark;
+  --arc-font: system-ui, -apple-system, sans-serif;
+  --arc-text: CanvasText;
+  --arc-muted: color-mix(in srgb, CanvasText 68%, Canvas);
+  --arc-surface: Canvas;
+  --arc-border: color-mix(in srgb, CanvasText 18%, Canvas);
+  --arc-hover: color-mix(in srgb, CanvasText 7%, Canvas);
+  --arc-selection: color-mix(in srgb, Highlight 17%, Canvas);
+  --arc-focus: Highlight;
+  --arc-focus-text: HighlightText;
+  --arc-space-1: .25rem;
+  --arc-space-2: .5rem;
+  --arc-space-3: .75rem;
+  --arc-space-4: 1rem;
+  --arc-space-6: 1.5rem;
+  --arc-radius-control: .5rem;
+  --arc-radius-row: .625rem;
+  --arc-radius-panel: 1rem;
+  --arc-icon-size: 1.0625rem;
+  --arc-icon-tile: 1.75rem;
+}
+@media (prefers-contrast: more) {
+  :root, :host { --arc-muted: CanvasText; --arc-border: CanvasText; }
+}
+@media (forced-colors: active) {
+  :root, :host {
+    --arc-muted: CanvasText;
+    --arc-border: CanvasText;
+    --arc-hover: Canvas;
+    --arc-selection: Highlight;
+  }
+}

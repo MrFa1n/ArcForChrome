@@ -1,3 +1,5 @@
+import {loadDesignTokens} from './design-tokens.js';
+import {rememberTabChoice} from './search-preferences.js';
 import {launcherContext} from './launcher-catalog.js';
 import {noteSuggestions,noteAction} from './notes.js';
 import {faviconImages} from './favicons.js';
@@ -19,27 +21,30 @@ import { COMMANDS,commandSuggestions } from './command-catalog.js';
 export async function openPalette(api,mount,mode='search') {
   const [tab]=await api.tabs.query({active:true,currentWindow:true});
   if(!tab) return;
-  const [tabs,sites,launcher]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api,tab.windowId),launcherContext(api)]);
-  const context={...launcher,mode,sourceUrl:tab.url || '',sourceTabId:tab.id,groupColors:GROUP_COLORS,sites,favicons:true};
+  const [tabs,sites,launcher,designTokens]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api,tab.windowId),launcherContext(api),loadDesignTokens()]);
+  const context={...launcher,designTokens,mode,sourceUrl:tab.url || '',sourceTabId:tab.id,groupColors:GROUP_COLORS,sites,favicons:true};
   try {
-    await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url})=>({id,title,url})),false,context]});
+    await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url,lastAccessed})=>({id,title,url,lastAccessed})),false,context]});
   } catch {
     const url=`${api.runtime.getURL('palette.html')}?window=${tab.windowId}&tab=${tab.id}&mode=${mode}`;
-    if(api.action?.openPopup && api.action?.setPopup) {
-      try {
-        await api.action.setPopup({tabId:tab.id,popup:`${url}&surface=action`});
-        await api.action.openPopup({windowId:tab.windowId});
-        return;
-      } catch { /* Older Chrome or a rejected native popup uses the legacy window. */ }
-      finally {await api.action.setPopup({tabId:tab.id,popup:''}).catch(()=>{});}
-    }
-    await api.windows.create({type:'popup',width:680,height:620,url});
+    const width = 480;
+    const height = 420;
+    const sourceWindow = await api.windows.get?.(tab.windowId).catch(() => null);
+    const position = sourceWindow && [sourceWindow.left, sourceWindow.top,
+      sourceWindow.width, sourceWindow.height].every(Number.isFinite) ? {
+      left: Math.round(sourceWindow.left + (sourceWindow.width - width) / 2),
+      top: Math.round(sourceWindow.top + (sourceWindow.height - height) / 2)
+    } : {};
+    await api.windows.create({type:'popup',width,height,...position,url:`${url}&surface=window`});
   }
 }
 
 function sourceContext(api,sender) {
   if(sender.id!==api.runtime.id) throw new Error('Unknown sender');
-  if(sender.tab) return {windowId:sender.tab.windowId,tabId:sender.tab.id};
+  if(sender.tab) {
+    const newTab = typeof sender.url === 'string' && sender.url === api.runtime.getURL('newtab.html');
+    return {windowId:sender.tab.windowId,tabId:sender.tab.id,...(newTab?{newTab:true}:{})};
+  }
   const url=new URL(sender.url || 'about:blank');
   const expected=new URL(api.runtime.getURL('palette.html'));
   if(url.protocol!==expected.protocol || url.host!==expected.host || url.pathname!==expected.pathname) throw new Error('Unknown search page');
@@ -54,6 +59,14 @@ async function sourceTab(api,context) {
   const tab=await api.tabs.get(context.tabId);
   if(tab.windowId!==context.windowId) throw new Error('Source tab moved to another window');
   return tab;
+}
+
+async function removeSearchTab(api,context) {
+  if (!context.newTab) return;
+  const tab = await api.tabs.get(context.tabId).catch(() => null);
+  if (tab?.windowId === context.windowId &&
+      [api.runtime.getURL('newtab.html'),'chrome://newtab/'].includes(tab.url) &&
+      !tab.pendingUrl) await api.tabs.remove(tab.id).catch(() => {});
 }
 
 async function navigate(api,context,input,target='new') {
@@ -105,7 +118,7 @@ async function executeAction(api,context,id) {
   if(id==='copy-url') return {copyText:tab.url || ''};
 }
 
-async function performAction(api,message,context) {
+async function performAction(api,message,context,publish) {
   if(message.type==='palette:icons')return {images:await faviconImages(api,message.urls)};
   if(message.type==='palette:suggest') {
     if(typeof message.query!=='string' || message.query.length>8192) throw new Error('Invalid query');
@@ -122,7 +135,7 @@ async function performAction(api,message,context) {
     if(message.mode==='order') return {suggestions:await orderSuggestions(api,context.windowId,message.query,message.tabId),domains:[],warnings:[]};
     if(message.mode==='commands') return {suggestions:commandSuggestions(message.query),domains:[],warnings:[]};
     if(message.mode==='closed') return {suggestions:await closedSuggestions(api,message.query),domains:[],warnings:[]};
-    const [found,links,notes]=await Promise.all([findSuggestions(api,context.windowId,message.query),quicklinks(api,message.query).catch(()=>[]),noteSuggestions(api,message.query).catch(()=>[])]);
+    const [found,links,notes]=await Promise.all([findSuggestions(api,context.windowId,message.query,publish,context.newTab ? context.tabId : undefined),quicklinks(api,message.query).catch(()=>[]),noteSuggestions(api,message.query).catch(()=>[])]);
     const calculation=calculate(message.query);
     const extra=calculation?[{kind:'calculator',title:calculation.result,url:calculation.expression,copyText:calculation.result,sources:['calculator']}]:[];
     let recent=[],recentActions=[];
@@ -171,7 +184,10 @@ async function performAction(api,message,context) {
     if(!Number.isInteger(message.tabId)) throw new Error('Invalid tab');
     const tab=await api.tabs.get(message.tabId);
     if(tab.windowId!==context.windowId) throw new Error('Tab is outside this window');
-    await api.tabs.update(tab.id,{active:true});await api.windows.update(context.windowId,{focused:true});return;
+    await api.tabs.update(tab.id,{active:true});await api.windows.update(context.windowId,{focused:true});
+    await rememberTabChoice(api,message.selectionQuery,tab.url);
+    if(tab.id!==context.tabId) await removeSearchTab(api,context);
+    return;
   }
   if(message.type==='palette:navigate') return navigate(api,context,message.query,message.target);
   if(message.type==='palette:site') {
@@ -213,11 +229,11 @@ function activityEvent(message,status) {
   if(action==='tab-action')label=`Tab · ${message.action}`;
   return {action,label,status,text:typeof message.query==='string'?message.query:undefined};
 }
-export async function paletteAction(api,message,sender) {
+export async function paletteAction(api,message,sender,publish) {
   const context=sourceContext(api,sender);
   const logged=!(message.type==='palette:note' && message.operation==='get') && !['palette:suggest','palette:icons','palette:remember-site'].includes(message.type) && message.command!=='activity';
   try {
-    const result=await performAction(api,message,context);
+    const result=await performAction(api,message,context,publish);
     if(logged) {
       const recording=recordActivity(api,activityEvent(message,'ok')).catch(()=>{});
       if(message.type!=='palette:move')await recording;
