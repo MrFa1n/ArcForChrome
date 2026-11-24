@@ -12,14 +12,14 @@ Chrome can preserve older assignments or reject conflicts. Check `chrome://exten
 
 ## Modes
 
-| Mode | How to enter | Behavior |
-| --- | --- | --- |
-| Search | Cmd+T / extension toolbar button | Search open tabs, bookmarks and history; open addresses and default-engine queries |
-| Edit current URL | Cmd+L / `> edit current URL` | Select the source URL for editing; Enter replaces that page, unchanged URL reloads |
-| Commands | Tab on empty Search input or `>` prefix | Search explicit browser actions; ordinary search text never executes a command |
-| Site Search | A detected site name/shortcut + Tab | Search using a template observed in your browsing data |
-| Arrange tabs | `@` prefix or Commands → Arrange tabs | Choose a tab, then a relative move or destination in the same window |
-| Recently closed | `<` prefix or `> recently closed tabs` | Search and restore a recently closed tab with its original browser session |
+| Mode             | How to enter                            | Behavior                                                                           |
+| ---------------- | --------------------------------------- | ---------------------------------------------------------------------------------- |
+| Search           | Cmd+T / extension toolbar button        | Search open tabs, bookmarks and history; open addresses and default-engine queries |
+| Edit current URL | Cmd+L / `> edit current URL`            | Select the source URL for editing; Enter replaces that page, unchanged URL reloads |
+| Commands         | Tab on empty Search input or `>` prefix | Search explicit browser actions; ordinary search text never executes a command     |
+| Site Search      | A detected site name/shortcut + Tab     | Search using a template observed in your browsing data                             |
+| Arrange tabs     | `@` prefix or Commands → Arrange tabs   | Choose a tab, then a relative move or destination in the same window               |
+| Recently closed  | `<` prefix or `> recently closed tabs`  | Search and restore a recently closed tab with its original browser session         |
 
 Escape returns from a scoped mode to Search; Escape in Search closes. Repeating Cmd+T closes the overlay; repeating the edit command in Edit mode closes it. Backspace on an empty site query returns to the site's keyword.
 
@@ -33,14 +33,14 @@ The final **Open…** row uses the typed address or Chrome's chosen default sear
 
 ### Enter behavior
 
-| Input | Action for URL/search results |
-| --- | --- |
-| Enter in Search | Activate selected open tab, or open selected URL/query in a new foreground tab |
-| Cmd/Ctrl+Enter | Open in a new foreground tab, including a copy of a selected open tab |
-| Shift+Enter | Open in a new background tab |
-| Alt/Option+Enter | Replace the original source tab |
-| Enter in Edit mode | Replace the original source tab |
-| Cmd/Ctrl+Enter in Edit mode | Open a new tab instead |
+| Input                       | Action for URL/search results                                                  |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| Enter in Search             | Activate selected open tab, or open selected URL/query in a new foreground tab |
+| Cmd/Ctrl+Enter              | Open in a new foreground tab, including a copy of a selected open tab          |
+| Shift+Enter                 | Open in a new background tab                                                   |
+| Alt/Option+Enter            | Replace the original source tab                                                |
+| Enter in Edit mode          | Replace the original source tab                                                |
+| Cmd/Ctrl+Enter in Edit mode | Open a new tab instead                                                         |
 
 Commands and session restoration have their own explicit actions; navigation modifiers do not redefine them. This is the extension's documented contract, not a claim to reproduce every Arc modifier exactly.
 
@@ -74,19 +74,19 @@ Native CSS colors follow effective light/dark rendering preferences, with rem-ba
 
 No telemetry, backend, online autocomplete, permanent host access or persistent content scripts. Typing suggestions is processed locally. Selecting a web search contacts the default provider; Site Search contacts the chosen site; opening a URL or restoring a session contacts its destination normally.
 
-| Permission | Purpose |
-| --- | --- |
-| `tabs` | Read tab titles/URLs and perform explicit navigation/actions |
-| `activeTab`, `scripting` | Show search after explicit invocation |
-| `history` | Read local suggestions without editing history |
-| `bookmarks` | Read suggestions and explicit folder-scoped bookmark edits |
-| `search` | Execute queries through Chrome's selected provider |
-| `sessions` | List and restore recently closed tabs |
-| `storage` | Site overrides/aliases, bounded action journal, local named quicklinks/notes and temporary AI recovery |
-| `alarms` | Schedule history expiry while Chrome runs |
-| `tabGroups` | Group metadata, colors, titles and collapsed state |
-| `clipboardWrite` | Explicit URL/calculation copying; clipboard contents are not read |
-| `favicon` | Cached Chrome site icons, without an external favicon service |
+| Permission               | Purpose                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `tabs`                   | Read tab titles/URLs and perform explicit navigation/actions                                           |
+| `activeTab`, `scripting` | Show search after explicit invocation                                                                  |
+| `history`                | Read local suggestions without editing history                                                         |
+| `bookmarks`              | Read suggestions and explicit folder-scoped bookmark edits                                             |
+| `search`                 | Execute queries through Chrome's selected provider                                                     |
+| `sessions`               | List and restore recently closed tabs                                                                  |
+| `storage`                | Site overrides/aliases, bounded action journal, local named quicklinks/notes and temporary AI recovery |
+| `alarms`                 | Schedule history expiry while Chrome runs                                                              |
+| `tabGroups`              | Group metadata, colors, titles and collapsed state                                                     |
+| `clipboardWrite`         | Explicit URL/calculation copying; clipboard contents are not read                                      |
+| `favicon`                | Cached Chrome site icons, without an external favicon service                                          |
 
 No sidebar, spaces UI, global tab cycling, MRU tracking or numbered pin commands. Native Chrome pins/groups/tabs are retained. Session restoration uses Chrome's original session destination, which can belong to a different window. A failed default-provider query can leave its newly created blank tab; the original page is unaffected.
 
@@ -163,12 +163,11 @@ Search, Arrange and before-placement results carry shared source-window group me
 
 ## Folder-scoped bookmarks (0.20)
 
-Use marked tabs or the highlighted/source tab. Cmd/Ctrl+D opens save-folder selection; Cmd/Ctrl+Shift+D opens removal selection. *path enters save selection directly, with searchable commands as an alternative when Chrome intercepts a chord. Targets freeze on entry and remain unchanged when switching add/remove in that picker. Name/path matching is local, with up to 100 folder results; more specific text can find later folders. Account/device roots are distinguished when Chrome exposes syncing metadata.
+Use marked tabs or the highlighted/source tab. Cmd/Ctrl+D opens save-folder selection; Cmd/Ctrl+Shift+D opens removal selection. \*path enters save selection directly, with searchable commands as an alternative when Chrome intercepts a chord. Targets freeze on entry and remain unchanged when switching add/remove in that picker. Name/path matching is local, with up to 100 folder results; more specific text can find later folders. Account/device roots are distinguished when Chrome exposes syncing metadata.
 
 The complete path is shown (and available as a hover title). Root/managed folders are excluded. Saving canonicalizes HTTP(S)/known Chrome section URLs, rejects embedded credentials/unsupported schemes, deduplicates selected URLs and skips copies already directly in the destination without overwriting custom titles. Removal lists folders containing selected URLs and shows count; it removes all matching direct bookmark copies, not nested records, folders, unrelated pages or copies elsewhere. No selection action navigates or closes tabs. Native syncing may propagate changes.
 
 Mutation-time revalidation uses fresh tabs/tree/children; selected IDs must be distinct, current-window and bounded to 100. Extension-originated writes serialize to avoid own concurrent duplicate creation. Chrome provides no multi-record transaction: partial API failure reports the completed count and retains those changes. Retry refreshes state and skips successful additions. The footer reports success/skips and chosen path, and the palette stays open. Creating folders and arbitrary saved-bookmark editing are outside this feature. No new permission beyond the existing bookmarks grant.
-
 
 ## Compact launcher actions v0.21
 
@@ -178,10 +177,9 @@ For another destination, use Actions → Search this query with…, filter the p
 
 Quicklinks: select a web result → Actions → Save as quicklink… → name → Enter. Search saved names in ordinary Search or use $ / $work; Manage quicklinks is a command. Actions on a link offers rename/remove; Save selected page as quicklink in Commands uses the original page. Limits: 100 links, names of 1–80 characters, HTTP(S) without embedded credentials. Records persist locally until explicitly removed, independently of native bookmarks and action retention; no automatic sync.
 
-Calculator: 1250 * 0.18 → 225; Enter copies the result while keeping the overlay open. Arithmetic supports parentheses, + - * / ^ %, unary signs, × ÷ −, right-associative powers and 12-significant-digit formatting. % means remainder. No eval, network, calculator history or currency/date/unit conversion. Invalid expressions remain normal search input. URL/result copying reads no clipboard content.
+Calculator: 1250 _ 0.18 → 225; Enter copies the result while keeping the overlay open. Arithmetic supports parentheses, + - _ / ^ %, unary signs, × ÷ −, right-associative powers and 12-significant-digit formatting. % means remainder. No eval, network, calculator history or currency/date/unit conversion. Invalid expressions remain normal search input. URL/result copying reads no clipboard content.
 
 Site icons use Chrome's cached favicon endpoint and the new favicon permission, with generic fallback and no third-party icon service. They load separately from suggestions. Reload/re-enable the extension after updating if Chrome requests permission review. See README for current [workflow screenshots](../README.md#more-from-one-search-field).
-
 
 ## Notes and full shortcut discovery v0.22
 

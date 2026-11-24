@@ -103,10 +103,9 @@ calculator.js is a bounded arithmetic parser without dynamic code execution, fun
 
 quicklinks.js stores independent quicklink:UUID records in storage.local, separate from bookmarks/history, with serialized writes and a 100-entry cap. Name/URL/id validation limits writes to named HTTP(S) links without credentials. Creation from an open tab resolves its current source-window URL in the worker; rename uses an existing record id, removal cannot target unrelated storage. Ordinary matching merges quicklink metadata into a matching URL result when available, while $ and Manage quicklinks offer the explicit list. Links are local and persist until removed; activity cleanup does not own them.
 
-favicons.js reads only Chrome's extension-origin _favicon endpoint with the favicon permission. It strips paths/queries to the origin, validates PNG responses and bounds request count/image bytes/time/cache entries. The worker returns data PNGs, so web-accessible extension resources and host grants are unnecessary. UI icons load after rendering, keep the selection click control and degrade to generic icons. Worker/UI caches are memory-only and bounded; no external favicon provider is contacted. See Chrome's official favicon documentation: https://developer.chrome.com/docs/extensions/how-to/ui/favicons.
+favicons.js reads only Chrome's extension-origin \_favicon endpoint with the favicon permission. It strips paths/queries to the origin, validates PNG responses and bounds request count/image bytes/time/cache entries. The worker returns data PNGs, so web-accessible extension resources and host grants are unnecessary. UI icons load after rendering, keep the selection click control and degrade to generic icons. Worker/UI caches are memory-only and bounded; no external favicon provider is contacted. See Chrome's official favicon documentation: https://developer.chrome.com/docs/extensions/how-to/ui/favicons.
 
 The interactions were informed by Vicinae's publicly documented launcher patterns. No Vicinae source, screenshots, icons or other assets are distributed here; the project retains its original MIT implementation.
-
 
 ## Notes and shared shortcut catalogue (0.22)
 

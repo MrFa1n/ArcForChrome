@@ -24,14 +24,14 @@ Find an open tab, revisit a bookmarked page, search a website or run a browser c
 
 ![Arc for Chrome: open tabs, matching results, YouTube Site Search and browser commands](docs/assets/spotlight-demo.gif)
 
-*Actual extension interface with fictional browsing data. The loop shows Search → matching open tab → Site Search → Commands. [Static preview](docs/assets/spotlight-light.png) · [How the demo is made](docs/assets/README.md).*
+_Actual extension interface with fictional browsing data. The loop shows Search → matching open tab → Site Search → Commands. [Static preview](docs/assets/spotlight-light.png) · [How the demo is made](docs/assets/README.md)._
 
-| Find what you already have | Go somewhere new |
-| --- | --- |
-| **Open tabs first.** Match titles or URLs and switch to the existing tab. | **Search your way.** Ordinary queries use Chrome’s selected search provider. |
-| **Bookmarks + history.** Local suggestions bring saved and visited pages together. | **Just the domain.** Open a matched site’s homepage instead of its saved deep link. |
-| **Recently closed.** Restore a tab through Chrome’s original browser session. | **Site Search.** Discover search URLs from browsing data and learn the shortcuts you choose. |
-| **Forgiving matching.** EN/RU keyboard-layout recovery, accents and small typos. | **Browser actions.** Reload, duplicate, copy the URL, open downloads and more. |
+| Find what you already have                                                         | Go somewhere new                                                                             |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Open tabs first.** Match titles or URLs and switch to the existing tab.          | **Search your way.** Ordinary queries use Chrome’s selected search provider.                 |
+| **Bookmarks + history.** Local suggestions bring saved and visited pages together. | **Just the domain.** Open a matched site’s homepage instead of its saved deep link.          |
+| **Recently closed.** Restore a tab through Chrome’s original browser session.      | **Site Search.** Discover search URLs from browsing data and learn the shortcuts you choose. |
+| **Forgiving matching.** EN/RU keyboard-layout recovery, accents and small typos.   | **Browser actions.** Reload, duplicate, copy the URL, open downloads and more.               |
 
 ## Get started
 
@@ -50,26 +50,26 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 
 ## Make it muscle memory
 
-| Action | macOS | Windows / Linux |
-| --- | --- | --- |
-| Open Search | **⌘T** | **Alt+Shift+K** |
-| Open browser commands | **⌘E** | **Alt+Shift+E** |
-| Edit the current URL | **⌘L** | **Alt+Shift+L** |
-| Move selected tab left / right | **⌥← / ⌥→** | **Alt+← / Alt+→** |
-| Move selected tab to start / end | **⌥⇧← / ⌥⇧→** | **Alt+Shift+← / →** |
-| Mark / unmark a tab | **Shift+Space** | **Shift+Space** |
-| Create / add to a group | **⌘G** | **Ctrl+G** |
-| Remove from groups | **⌘⇧G** | **Ctrl+Shift+G** |
-| Manage groups | **⌘⌥G** | **Ctrl+Alt+G** |
-| Save in a bookmark folder | **⌘D** | **Ctrl+D** |
-| Remove from a bookmark folder | **⌘⇧D** | **Ctrl+Shift+D** |
-| Actions for the selected result | **⌘K** | **Ctrl+K** |
-| Choose a result | **↑ / ↓** | **↑ / ↓** |
-| Open / run the selection | **Enter** | **Enter** |
-| Open in a background tab | **Shift+Enter** | **Shift+Enter** |
-| Replace the source tab | **⌥Enter** | **Alt+Enter** |
-| Force a new foreground tab | **⌘Enter** | **Ctrl+Enter** |
-| Exit a mode / close Search | **Esc** | **Esc** |
+| Action                           | macOS           | Windows / Linux     |
+| -------------------------------- | --------------- | ------------------- |
+| Open Search                      | **⌘T**          | **Alt+Shift+K**     |
+| Open browser commands            | **⌘E**          | **Alt+Shift+E**     |
+| Edit the current URL             | **⌘L**          | **Alt+Shift+L**     |
+| Move selected tab left / right   | **⌥← / ⌥→**     | **Alt+← / Alt+→**   |
+| Move selected tab to start / end | **⌥⇧← / ⌥⇧→**   | **Alt+Shift+← / →** |
+| Mark / unmark a tab              | **Shift+Space** | **Shift+Space**     |
+| Create / add to a group          | **⌘G**          | **Ctrl+G**          |
+| Remove from groups               | **⌘⇧G**         | **Ctrl+Shift+G**    |
+| Manage groups                    | **⌘⌥G**         | **Ctrl+Alt+G**      |
+| Save in a bookmark folder        | **⌘D**          | **Ctrl+D**          |
+| Remove from a bookmark folder    | **⌘⇧D**         | **Ctrl+Shift+D**    |
+| Actions for the selected result  | **⌘K**          | **Ctrl+K**          |
+| Choose a result                  | **↑ / ↓**       | **↑ / ↓**           |
+| Open / run the selection         | **Enter**       | **Enter**           |
+| Open in a background tab         | **Shift+Enter** | **Shift+Enter**     |
+| Replace the source tab           | **⌥Enter**      | **Alt+Enter**       |
+| Force a new foreground tab       | **⌘Enter**      | **Ctrl+Enter**      |
+| Exit a mode / close Search       | **Esc**         | **Esc**             |
 
 In Search, Enter activates an existing tab or opens a new one. In **Edit current URL**, Enter replaces the source page; submitting its unchanged URL reloads it. Navigation modifiers apply to URL/search results; commands and session restoration keep their explicit actions.
 
@@ -122,8 +122,8 @@ Open **⌘/Ctrl+K → New note**. Enter a title, Tab to the multiline body, and 
 
 The same **⌘/Ctrl+K** menu now includes **every extension shortcut and prefix**, including marking, both tab axes/edges, groups/bookmarks, completion/focus, overlay positioning/resizing and note-save. Context actions execute normally; rows labelled **Shortcut** are a reference, explain the required scope, and **Enter copies their instructions**. **All keyboard shortcuts** opens the full searchable directory. Global Search/Edit rows show their actual Chrome assignments, including changed or unassigned bindings; an unavailable lookup says to check Chrome shortcuts rather than guessing. Notes and help remain available when Search has no matching result.
 
-| Multiline notes | All keyboard shortcuts |
-| --- | --- |
+| Multiline notes                                                                         | All keyboard shortcuts                                                                                |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | ![Local note editor with explicit save shortcut](docs/assets/spotlight-note-editor.png) | ![Searchable shortcut directory with scopes and actual bindings](docs/assets/spotlight-shortcuts.png) |
 
 [Notes list preview](docs/assets/spotlight-notes.png). All media use fictional notes and shortcut assignments.
@@ -132,12 +132,12 @@ The same **⌘/Ctrl+K** menu now includes **every extension shortcut and prefix*
 
 Type **`1250 * 0.18`** → **225** → Enter copies the result and keeps Spotlight open. Supports parentheses, `+ - * / ^ %`, unary signs and `× ÷ −`; `%` is remainder. Powers associate right-to-left. Calculations use a bounded local parser without `eval`, round to 12 significant digits and do not provide currency/date/unit conversion. Invalid or non-finite expressions stay ordinary search input. No calculator history is stored.
 
-| Contextual actions | Choose a provider |
-| --- | --- |
+| Contextual actions                                                       | Choose a provider                                                                  |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | ![Actions for a selected browser tab](docs/assets/spotlight-actions.png) | ![Search providers retain the original query](docs/assets/spotlight-providers.png) |
 
-| Local calculator | Named quicklinks |
-| --- | --- |
+| Local calculator                                                         | Named quicklinks                                                |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | ![Arithmetic result ready to copy](docs/assets/spotlight-calculator.png) | ![Named local quicklinks](docs/assets/spotlight-quicklinks.png) |
 
 ## Search that gets out of your way
@@ -166,15 +166,15 @@ Settings shows detected sites, lets you clear learned shortcuts and offers optio
 
 Type a shortcut, a space and your request, then press Enter—no Tab needed:
 
-| Input | Destination |
-| --- | --- |
-| `g browser extensions` | Google |
-| `ya погода завтра` or `я погода завтра` | Yandex |
-| `gpt explain closures` | ChatGPT |
-| `gem explain closures` | Google AI Mode (dialogue) |
-| `claude review this idea` | Claude |
-| `grok explain this topic` | Grok |
-| `pplx compare the options` | Perplexity |
+| Input                                   | Destination               |
+| --------------------------------------- | ------------------------- |
+| `g browser extensions`                  | Google                    |
+| `ya погода завтра` or `я погода завтра` | Yandex                    |
+| `gpt explain closures`                  | ChatGPT                   |
+| `gem explain closures`                  | Google AI Mode (dialogue) |
+| `claude review this idea`               | Claude                    |
+| `grok explain this topic`               | Grok                      |
+| `pplx compare the options`              | Perplexity                |
 
 These providers are built in. Other exact known/learned site shortcuts work too, for example `yt design` after YouTube is discovered. The top result names the destination; unknown shortcuts remain ordinary searches. Equal-priority shared aliases require choosing a site with ↓. Shortcut + Tab still works. Manual overrides can replace built-in destinations or take ownership of their shortcuts.
 
@@ -216,8 +216,8 @@ Additional modes label **Saved AI prompt**, **Bookmark folder**, **Tab group**, 
 2. Press **⌘/Ctrl+G**, type a group name and Enter to create it or choose an existing group.
 3. Or press **⌘/Ctrl+D**, find a folder by name/path and Enter to save the same pages. Use **⌘/Ctrl+Shift+D** to remove their bookmarks from a chosen folder.
 
-| Select tabs | Choose a group | Choose a bookmark folder |
-| --- | --- | --- |
+| Select tabs                                                               | Choose a group                                                        | Choose a bookmark folder                                                 |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | ![Two marked tabs with group labels](docs/assets/spotlight-selection.png) | ![Existing group and create action](docs/assets/spotlight-groups.png) | ![Bookmark folders with full paths](docs/assets/spotlight-bookmarks.png) |
 
 ### Put tabs in order
@@ -234,11 +234,11 @@ Grouped tabs have a named color badge and matching side stripe in Search and Arr
 
 In Search or `@`, mark tabs with **Shift+Space** or click the square beside a result. Marks survive query changes so you can collect tabs from different searches; at most 100 tabs per operation. Escape in Search clears marks before closing.
 
-| Action | Shortcut inside Spotlight |
-| --- | --- |
-| Create / add to a group | **Cmd/Ctrl+G** |
-| Remove marked tabs from groups | **Cmd/Ctrl+Shift+G** |
-| Manage groups | **Cmd/Ctrl+Alt+G** or `> Manage tab groups` |
+| Action                         | Shortcut inside Spotlight                   |
+| ------------------------------ | ------------------------------------------- |
+| Create / add to a group        | **Cmd/Ctrl+G**                              |
+| Remove marked tabs from groups | **Cmd/Ctrl+Shift+G**                        |
+| Manage groups                  | **Cmd/Ctrl+Alt+G** or `> Manage tab groups` |
 
 After **Cmd/Ctrl+G**, type a name and Enter to create a group; an exact existing name is offered first so Enter adds to that group. Choose other matching groups with ↓ and Enter, or select Create explicitly for a duplicate name. **`#Work`** opens the same picker. With no marks, the highlighted open tab is used, or the original page tab when entering through Commands.
 
@@ -248,10 +248,10 @@ Group management supports rename, color, collapse/expand and **Ungroup · Keep a
 
 Mark tabs using the same **Shift+Space** or result squares, then:
 
-| Action | Shortcut inside Spotlight |
-| --- | --- |
-| Save bookmarks | **Cmd/Ctrl+D** |
-| Remove bookmarks for selected pages | **Cmd/Ctrl+Shift+D** |
+| Action                              | Shortcut inside Spotlight |
+| ----------------------------------- | ------------------------- |
+| Save bookmarks                      | **Cmd/Ctrl+D**            |
+| Remove bookmarks for selected pages | **Cmd/Ctrl+Shift+D**      |
 
 Search for a folder by name or full path, such as `Bookmarks bar / Work / AI`, and press Enter. **`*Work`** opens the save picker. Commands include **Bookmark selected tabs in a folder** and **Remove selected bookmarks from a folder**. With no marks, the highlighted open tab or original source tab is used. Switching save/remove while choosing a folder keeps the same targets.
 
@@ -266,8 +266,8 @@ The overlay follows effective light/dark rendering preferences and uses browser-
 <details>
 <summary>Light and dark previews</summary>
 
-| Light | Dark |
-| --- | --- |
+| Light                                                    | Dark                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------ |
 | ![Search in light mode](docs/assets/spotlight-light.png) | ![Search in dark mode](docs/assets/spotlight-dark.png) |
 
 </details>
@@ -276,19 +276,19 @@ The overlay follows effective light/dark rendering preferences and uses browser-
 
 Suggestions are processed locally. There is **no telemetry, backend, online autocomplete or persistent content script**. Typed text is not sent to a completion service. Submitting a web or site search contacts the chosen provider normally, just as opening a link contacts its destination.
 
-| Permission | What it enables |
-| --- | --- |
-| `tabs` | Read tab titles/URLs, activate tabs and perform requested navigation |
-| `activeTab`, `scripting` | Show the overlay when invoked |
-| `history` | Read local suggestions without editing/deleting history |
-| `bookmarks` | Read suggestions and explicitly save/remove selected pages in a chosen folder |
-| `search` | Use Chrome’s chosen default provider |
-| `sessions` | List and restore recently closed tabs |
-| `storage` | Site templates/aliases, local action history, named quicklinks/notes and temporary AI prompt recovery |
-| `alarms` | Automatically expire action-history entries |
-| `tabGroups` | Read and update source-window group names, colors and state |
-| `clipboardWrite` | Copy URLs or calculator results on request; never read the clipboard |
-| `favicon` | Read site icons from Chrome’s cache; no external favicon service |
+| Permission               | What it enables                                                                                       |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `tabs`                   | Read tab titles/URLs, activate tabs and perform requested navigation                                  |
+| `activeTab`, `scripting` | Show the overlay when invoked                                                                         |
+| `history`                | Read local suggestions without editing/deleting history                                               |
+| `bookmarks`              | Read suggestions and explicitly save/remove selected pages in a chosen folder                         |
+| `search`                 | Use Chrome’s chosen default provider                                                                  |
+| `sessions`               | List and restore recently closed tabs                                                                 |
+| `storage`                | Site templates/aliases, local action history, named quicklinks/notes and temporary AI prompt recovery |
+| `alarms`                 | Automatically expire action-history entries                                                           |
+| `tabGroups`              | Read and update source-window group names, colors and state                                           |
+| `clipboardWrite`         | Copy URLs or calculator results on request; never read the clipboard                                  |
+| `favicon`                | Read site icons from Chrome’s cache; no external favicon service                                      |
 
 No permanent host access is requested. Automatically inferred site templates are not persisted; ordinary typed text is not saved while composing. Executed action metadata is stored locally with automatic limits; query/prompt text in that journal is opt-in. AI prompt recovery uses separate temporary session storage. [Security policy →](SECURITY.md)
 
