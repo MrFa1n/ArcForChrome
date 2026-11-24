@@ -578,14 +578,23 @@ try {
     [],
     "suggestion interactions stay isolated",
   );
-  await evaluate(`globalThis.chrome.runtime.sendMessage=async message=>{
-    if(message.type!=='palette:suggest'){messages.push(message);return {ok:true};}
-    return {ok:true,suggestions:[{kind:'bookmark',sources:['bookmark'],title:'Project',url:'https://github.com/org/project'}],
-      domains:[{kind:'domain',sources:['domain'],title:'Open github.com',url:'https://github.com/'}],warnings:[]};
-  }`);
+  await evaluate(`chrome.runtime.connect=()=>{let receive, disconnect;return {
+    onMessage:{addListener:listener=>{receive=listener;}},
+    onDisconnect:{addListener:listener=>{disconnect=listener;}},
+    disconnect:()=>disconnect(),
+    postMessage:()=>receive({ok:true,suggestions:[{kind:'history',sources:['history'],title:'Project',url:'https://github.com/org/project'}],
+      domains:[{kind:'domain',sources:['domain'],title:'Open github.com',url:'https://github.com/'}],warnings:[]})
+  };}`);
   await mount([]);
   await key("g", "KeyG", "g");
   await evaluate("new Promise(resolve=>setTimeout(resolve,220))");
+  assert.deepEqual(
+    await paletteCall(
+      `function(){return [...this.querySelectorAll('.result .title')].slice(0,2).map(row=>row.textContent);}`,
+    ),
+    ["Open github.com", "Project"],
+    "streamed history and homepage should appear without scrolling",
+  );
   const beforeCompletion = await evaluate("messages.length");
   await key("Tab", "Tab");
   assert.equal(
@@ -594,10 +603,12 @@ try {
     "Tab must not navigate",
   );
   await key("Enter", "Enter");
-  assert.deepEqual(
-    (await evaluate("messages")).at(-1),
-    { type: "palette:navigate", query: "https://github.com/org/project" },
-    "Tab must complete the initially selected saved page URL",
+  assert.equal(
+    (await evaluate("messages")).findLast(
+      (message) => message.type === "palette:navigate",
+    ).query,
+    "https://github.com/",
+    "Tab must complete the initially selected homepage",
   );
   await mount([]);
   await key("g", "KeyG", "g");
@@ -605,16 +616,19 @@ try {
   await key("ArrowDown", "ArrowDown");
   await key("Tab", "Tab");
   await key("Enter", "Enter");
-  assert.deepEqual(
-    (await evaluate("messages")).at(-1),
-    { type: "palette:navigate", query: "https://github.com/" },
-    "ArrowDown must select the homepage before Tab completes it",
+  assert.equal(
+    (await evaluate("messages")).findLast(
+      (message) => message.type === "palette:navigate",
+    ).query,
+    "https://github.com/org/project",
+    "ArrowDown must select the history page before Tab completes it",
   );
   assert.deepEqual(
     await evaluate("pageKeys"),
     [],
     "completion and homepage selection must stay isolated",
   );
+  await evaluate("delete chrome.runtime.connect");
   await evaluate(`globalThis.commandRows=${JSON.stringify(commandSuggestions(""))};globalThis.chrome.runtime.sendMessage=async message=>{
     if(message.type!=='palette:suggest'){messages.push(message);return {ok:true};}
     if(message.mode==='commands')return {ok:true,suggestions:commandRows.filter(row=>row.title.toLowerCase().includes(message.query.toLowerCase())),warnings:[]};

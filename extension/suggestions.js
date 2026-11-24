@@ -113,29 +113,46 @@ export function rankSuggestions(tabs, bookmarks, history, input, preferredUrl) {
 
 function domainSuggestions(suggestions, query) {
   if (!query) return [];
-  const known = new Set(suggestions.map((item) => item.url));
-  const domains = new Map();
+  const hosts = queryVariants(query).map(
+    (variant) =>
+      variant
+        .replace(/^https?:\/\//, "")
+        .replace(/^www\./, "")
+        .split(/[/?#]/, 1)[0],
+  );
   for (const item of suggestions) {
     try {
       const url = new URL(item.url);
-      if (!["http:", "https:"].includes(url.protocol)) continue;
+      if (
+        !["http:", "https:"].includes(url.protocol) ||
+        url.username ||
+        url.password
+      )
+        continue;
+      const host = url.host.replace(/^www\./, "");
+      if (!hosts.some((prefix) => prefix && host.startsWith(prefix))) continue;
       const home = `${url.origin}/`;
-      if (!known.has(home))
-        domains.set(home, {
+      const existing = suggestions.find((row) => row.url === home);
+      return [
+        existing || {
           kind: "domain",
           title: `Open ${url.host}`,
           url: home,
           sources: ["domain"],
-        });
+        },
+      ];
     } catch {
-      /* Open browser-internal tabs have no web homepage action. */
+      /* Browser-internal tabs have no web homepage action. */
     }
   }
-  return [...domains.values()].slice(0, 3);
+  return [];
 }
 
 async function sourceCandidates(api, source, query) {
   const variants = queryVariants(query);
+  const address = query.match(/^(?:https?:\/\/)?(?:www\.)?([^/\s]+)\/\S*$/i);
+  if (address && !variants.includes(address[1].toLocaleLowerCase()))
+    variants.push(address[1].toLocaleLowerCase());
   const results = await Promise.allSettled(
     variants.map((text) =>
       Promise.resolve().then(() =>

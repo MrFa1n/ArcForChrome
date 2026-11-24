@@ -891,9 +891,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let managedGroupId;
     let completedAddress = null;
     let suggestionsPending = false;
-    let deferredResult = null;
-    let deferredResultShown = false;
-    let deferredRevealRequested = false;
     let pendingQuery = Promise.resolve();
     let finishPending = () => {};
     let selected = 0;
@@ -1721,7 +1718,13 @@ export function mountPalette(tabs, floating = false, context = {}) {
       );
       const previous = choices[selected];
       const previousKey = choiceKey(previous);
-      choices = [...suggestions, ...domains];
+      const homepage = mode === "search" ? domains[0] : undefined;
+      choices = [
+        ...suggestions,
+        ...domains.filter(
+          (domain) => !suggestions.some((row) => row.url === domain.url),
+        ),
+      ];
       const query = input.value.trim();
       if (
         [
@@ -1851,6 +1854,20 @@ export function mountPalette(tabs, floating = false, context = {}) {
           ];
       }
       if (mode === "search" && query) {
+        if (homepage && !inlineSites.length && completedAddress !== query) {
+          const first = suggestions.find(
+            (row) =>
+              row.url !== homepage.url &&
+              ["tab", "bookmark", "history"].includes(row.kind),
+          );
+          choices = [
+            homepage,
+            ...(first ? [first] : []),
+            ...choices.filter(
+              (row) => row.url !== homepage.url && row !== first,
+            ),
+          ];
+        }
         const fallback = choices.find((row) => row.kind === "navigate");
         const limit = 8;
         if (fallback && choices.indexOf(fallback) >= limit) {
@@ -2157,9 +2174,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
       clearTimeout(timer);
       finishPending();
       suggestionsPending = false;
-      deferredResult = null;
-      deferredResultShown = false;
-      deferredRevealRequested = false;
       let resolvePending;
       pendingQuery = new Promise((resolve) => {
         resolvePending = resolve;
@@ -2330,34 +2344,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
         port.onMessage.addListener((response) => {
           if (revision !== queryRevision || dismissed || closing) return;
           if (response.ok) {
-            if (
-              response.partial ||
-              deferredResultShown ||
-              deferredRevealRequested
-            ) {
-              deferredResult = {
-                suggestions: response.suggestions,
-                domains: response.domains || [],
-              };
-              error.textContent = (response.warnings || []).join(" · ");
-              if (deferredResultShown || deferredRevealRequested) {
-                deferredResultShown = true;
-                suggestions = deferredResult.suggestions;
-                domains = deferredResult.domains;
-                render(preferredId);
-              }
-            } else if (!query) {
-              suggestions = response.suggestions;
-              domains = response.domains || [];
-              error.textContent = (response.warnings || []).join(" · ");
-              render(preferredId);
-            } else {
-              deferredResult = {
-                suggestions: response.suggestions,
-                domains: response.domains || [],
-              };
-              error.textContent = (response.warnings || []).join(" · ");
-            }
+            suggestions = response.suggestions;
+            domains = response.domains || [];
+            error.textContent = (response.warnings || []).join(" · ");
+            render(preferredId);
           } else if (!response.ok)
             error.textContent = response.error || "Suggestions unavailable";
           if (!response.partial) {
@@ -2491,29 +2481,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
     noteBody.addEventListener("beforeinput", (event) => {
       if (busy) event.preventDefault();
     });
-    const revealDeferredResults = () => {
-      if (mode !== "search" || deferredResultShown) return;
-      deferredRevealRequested = true;
-      if (!deferredResult) return;
-      deferredResultShown = true;
-      suggestions = deferredResult.suggestions;
-      domains = deferredResult.domains;
-      render();
-    };
-    results.addEventListener(
-      "wheel",
-      (event) => {
-        if (event.deltaY > 0) revealDeferredResults();
-      },
-      { passive: true },
-    );
-    results.addEventListener(
-      "scroll",
-      () => {
-        if (results.scrollTop > 0) revealDeferredResults();
-      },
-      { passive: true },
-    );
     input.addEventListener("input", () => {
       notice = "";
       completedAddress = null;

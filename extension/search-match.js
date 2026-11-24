@@ -66,9 +66,12 @@ export function matchPage(item, input) {
   const text = normalize(
     item.search || `${item.title || ""} ${item.url || ""}`,
   );
-  let host = "";
+  let host = "",
+    path = "";
   try {
-    host = normalize(new URL(item.url).hostname.replace(/^www\./, ""));
+    const url = new URL(item.url);
+    host = normalize(url.hostname.replace(/^www\./, ""));
+    path = normalize(url.pathname);
   } catch {
     /* Untitled/internal tabs still match by title. */
   }
@@ -76,11 +79,32 @@ export function matchPage(item, input) {
   let best = null;
   for (const [index, variant] of queryVariants(input).entries()) {
     const query = normalize(variant);
-    const match = scoreVariant(text, words, query, input.length <= 128);
+    const address = query.match(
+      /^(?:https?:\/\/)?(?:www\.)?([^/\s]+)(\/[^\s]*)$/,
+    );
+    const matchesAddress =
+      address && host.startsWith(address[1]) && path.startsWith(address[2]);
+    const match = matchesAddress
+      ? { score: 20, typo: false }
+      : scoreVariant(text, words, query, input.length <= 128);
     if (!match) continue;
     let score = match.score - (index ? 8 : 0);
     if (query && host === query) score += 100;
     else if (query && host.startsWith(query)) score += 80;
+    const pathQuery = (matchesAddress ? address[2] : query).replace(
+      /^\/+|\/+$/g,
+      "",
+    );
+    if (pathQuery) {
+      const pathname = path.replace(/^\/+|\/+$/g, "");
+      if (pathname === pathQuery) score += 20;
+      else if (
+        pathname.startsWith(pathQuery) ||
+        pathname.split("/").includes(pathQuery)
+      )
+        score += 15;
+      else if (pathname.includes(pathQuery)) score += 8;
+    }
     const title = normalize(item.title || "");
     if (query && title === query) score += 70;
     else if (query && title.startsWith(query)) score += 50;

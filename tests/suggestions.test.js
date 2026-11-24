@@ -175,7 +175,7 @@ test("homepage actions merge same-origin pages and preserve ports and subdomains
   assert.equal(result.domains.length, 1);
   assert.equal(result.domains[0].url, "http://docs.example.com:3000/");
 });
-test("empty input and already suggested homepages add no duplicate domain action", async () => {
+test("an open homepage is promoted as a tab and empty input has no homepage", async () => {
   const api = {
     tabs: {
       query: async () => [
@@ -186,7 +186,9 @@ test("empty input and already suggested homepages add no duplicate domain action
     history: { search: async () => [] },
   };
   assert.deepEqual((await findSuggestions(api, 2, "")).domains, []);
-  assert.deepEqual((await findSuggestions(api, 2, "example")).domains, []);
+  const result = await findSuggestions(api, 2, "example");
+  assert.deepEqual(result.domains, [result.suggestions[0]]);
+  assert.equal(result.domains[0].kind, "tab");
 });
 test("native history/bookmark queries include the corrected keyboard layout", async () => {
   const queries = [];
@@ -330,5 +332,35 @@ test("visit frequency breaks equally relevant history matches without displacing
       "https://frequent.example/",
       "https://archive.example/",
     ],
+  );
+});
+
+test("history supplies the homepage and ranks paths when only part of the hostname is typed", async () => {
+  const api = {
+    tabs: {
+      query: async () => [
+        { id: 1, title: "YouTube", url: "https://www.youtube.com/feed" },
+      ],
+    },
+    bookmarks: { search: async () => [] },
+    history: {
+      search: async ({ text }) =>
+        text === "youtube"
+          ? [
+              {
+                title: "Other page",
+                url: "https://www.youtube.com/other",
+                visitCount: 9,
+              },
+              { title: "Clip", url: "https://www.youtube.com/watch?v=abc" },
+            ]
+          : [],
+    },
+  };
+  const result = await findSuggestions(api, 2, "youtube/watch");
+  assert.equal(result.domains[0].url, "https://www.youtube.com/");
+  assert.equal(
+    result.suggestions[0].url,
+    "https://www.youtube.com/watch?v=abc",
   );
 });
