@@ -4,7 +4,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
   const actionPopup = context.actionPopup === true;
   const existing = document.querySelector('[data-arc-command-palette]');
   if (existing) {
-    existing.dispatchEvent(context.mode === 'edit'
+    existing.dispatchEvent(context.mode === 'commands' ? new Event('arc-palette-commands') : context.mode === 'edit'
       ? new CustomEvent('arc-palette-edit',{detail:context.sourceUrl || ''}) : new Event('arc-palette-close'));
     return;
   }
@@ -26,6 +26,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
   shell.append(frame); root.append(shell); document.documentElement.append(host);
   let requestClose = () => {};
   let editCurrent = () => {};
+  let openCommands = () => {};
   let dismissed = false;
   function dismiss() {
     if (dismissed) return;
@@ -34,6 +35,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     if (newTab) return;
     if (floating) window.close(); else if (previousFocus?.isConnected) previousFocus.focus();
   }
+  host.addEventListener('arc-palette-commands', () => openCommands());
   host.addEventListener('arc-palette-close', () => requestClose());
   host.addEventListener('arc-palette-edit',event => editCurrent(event.detail));
   shell.addEventListener('cancel', event => { event.preventDefault(); requestClose(); });
@@ -274,7 +276,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
     // Observer notifications only schedule work; geometry writes happen in the next frame.
     const sizeObserver=new view.ResizeObserver(scheduleKeepVisible);sizeObserver.observe(dialog);
     view.addEventListener('pagehide',()=>{view.cancelAnimationFrame(layoutFrame);sizeObserver.disconnect();},{once:true});
-    let mode = context.mode === 'edit' ? 'edit' : 'search';
+    let scope = context.activeGroupId >= 0 ? 'group' : 'window';
+    let routeUrl = '';
+    function toggleScope() {
+      if (!(context.activeGroupId >= 0)) throw new Error('Open a tab in a group first');
+      scope = scope === 'group' ? 'window' : 'group';
+      setMode('search',mode === 'actions' ? actionReturn.value : mode === 'search' ? input.value : '');
+      notice = scope === 'group' ? 'Tabs in this group' : 'Tabs in this window';
+      render();
+    }
+    let mode = ['edit','commands'].includes(context.mode) ? context.mode : 'search';
+    openCommands = () => setMode('commands');
     let orderTabId;
     const markedTabs=new Set();
     let groupTargetIds=[];
@@ -321,6 +333,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(['edit-note','copy-note','remove-note'].includes(action.id))return actionTarget?.kind==='note';
         if(action.id==='save-note')return actionReturn?.mode==='note-editor' && Boolean(noteDraft);
         if(['new','background'].includes(action.id))return page || ['navigate','site-query'].includes(actionTarget?.kind);
+        if (['copy-tabs','copy-markdown'].includes(action.id)) return actionIds.length > 0;
+        if (['preview','route','remove-route'].includes(action.id)) return page;
+        if (action.id === 'hide') return page && ['history','bookmark','domain'].includes(actionTarget?.kind);
+        if (action.id === 'instant') return Boolean(query) && actionReturn?.mode === 'search' && actionTarget?.kind === 'navigate';
+        if (action.id === 'toggle-search-scope') return context.activeGroupId >= 0;
+        if (action.id === 'paste-url') return actionReturn?.mode === 'search';
         if(action.id==='copy')return page || Boolean(actionTarget?.copyText);
         if(['group','ungroup','bookmark','remove-bookmark'].includes(action.id))return actionIds.length>0;
         if(['move','duplicate'].includes(action.id))return actionIds.length===1;
@@ -332,6 +350,39 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     async function runAction(id) {
       const revision=queryRevision;
+      if (id === 'toggle-search-scope') {toggleScope();return;}
+      if (id === 'route') {
+        routeUrl = actionTarget.url;
+        setMode('group-route');
+        return;
+      }
+      if (id === 'preview' || id === 'remove-route') {
+        const reply = await chrome.runtime.sendMessage({type:'palette:extra',
+          action:id === 'preview' ? 'preview' : 'route',url:actionTarget.url,groupId:null});
+        if (!reply?.ok) throw new Error(reply?.error || 'Action failed');
+        if (dismissed || closing || revision !== queryRevision) return;
+        if (id === 'preview') close();
+        else {leaveActions();notice='Domain route cleared';render();}
+        return;
+      }
+      if (['copy-tabs','copy-markdown','hide','paste-url','instant'].includes(id)) {
+        let clipboardUrl;
+        if (id === 'paste-url') {
+          try { clipboardUrl = (await window.navigator.clipboard.readText()).trim(); }
+          catch { setMode('paste-url');return; }
+        }
+        const action = id.startsWith('copy-') ? 'copy-tabs' : id;
+        const reply = await chrome.runtime.sendMessage({
+          type:'palette:extra',action,tabIds:actionIds,markdown:id==='copy-markdown',
+          url:id==='hide'?actionTarget.url:clipboardUrl,query:id==='instant'?actionReturn.value:undefined
+        });
+        if (!reply?.ok) throw new Error(reply?.error || 'Action failed');
+        if (dismissed || closing || revision!==queryRevision) return;
+        if (reply.copyText) {await copyText(reply.copyText);leaveActions();notice='Links copied';render();}
+        else if (id === 'hide') {returnKey=null;setMode('search',actionReturn.value);}
+        else close();
+        return;
+      }
       if(id==='new-note'){startNote();return;}
       if(id==='notes'){setMode('notes');return;}
       if(id==='commands'){setMode('commands');return;}
@@ -469,11 +520,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if(alias.trim()) chrome.runtime.sendMessage({type:'palette:remember-site',site:site.key,alias}).catch(()=>{});
       setMode(`site:${site.key}`,value);
     }
-    function selectedTabIds() {
+    function selectedTabIds(useCurrentTab = false) {
       if(mode==='actions' && actionIds.length)return actionIds;
       if(markedTabs.size)return [...markedTabs];
-      const choice=choices[selected];
-      const id=choice?.kind==='order-tab'?choice.tabId:choice?.kind==='tab'?choice.id:context.sourceTabId;
+      const choice=useCurrentTab ? null : choices[selected];
+      const id=choice?.kind==='order-tab'?choice.tabId:choice?.kind==='tab'?choice.id:(newTab ? context.actionTabId : context.sourceTabId);
       if(!Number.isInteger(id))throw new Error('Choose an open tab or mark tabs with Shift+Space');
       return [id];
     }
@@ -484,8 +535,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       else {error.textContent='Select at most 100 tabs';return;}
       render();
     }
-    function startBookmarks(operation='add',value='') {
-      if(mode!=='bookmark-folders')bookmarkTargetIds=selectedTabIds();bookmarkOperation=operation;setMode('bookmark-folders',value);
+    function startBookmarks(operation='add',value='',useCurrentTab=false) {
+      if(mode!=='bookmark-folders')bookmarkTargetIds=selectedTabIds(useCurrentTab);bookmarkOperation=operation;setMode('bookmark-folders',value);
     }
     async function performBookmark(folderId,revision) {
       const response=await chrome.runtime.sendMessage({type:'palette:bookmark',operation:bookmarkOperation,tabIds:bookmarkTargetIds,folderId});
@@ -496,20 +547,22 @@ export function mountPalette(tabs, floating = false, context = {}) {
       notice=`${action} ${response.changed ?? 0}${response.skipped?` · ${response.skipped} already saved`:''} · ${response.folderPath || 'Selected folder'}`;
       render();
     }
-    function startGrouping(value='') {groupTargetIds=selectedTabIds();managedGroupId=undefined;setMode('groups',value);}
+    function startGrouping(value='',useCurrentTab=false) {groupTargetIds=selectedTabIds(useCurrentTab);managedGroupId=undefined;setMode('groups',value);}
     async function performGroup(message,revision=queryRevision) {
       const response=await chrome.runtime.sendMessage({type:'palette:group',...message});
       if(!response?.ok)throw new Error(response?.error || 'Could not change group');
       if(dismissed || closing || revision!==queryRevision)return;
-      markedTabs.clear();groupTargetIds=[];setMode('search');
+      markedTabs.clear();groupTargetIds=[];
+      if (message.action === 'switch') close();
+      else setMode('search');
     }
     function setMode(next,value='',tabId,preferredId,keepResults=false) {
       if(!keepResults){moveQueue.length=0;notice='';}
       if(mode==='search' && !['search','edit'].includes(next) && !'>@<?$#*:'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;
       orderTabId=next==='order'?tabId:undefined;
       mode=next;completedAddress=null;input.maxLength=['quicklink-name','note-editor'].includes(mode)?80:8192;input.value=value;
-      input.placeholder=mode==='note-editor'?'Note title…':mode==='notes'?'Search note titles and text…':mode==='shortcuts'?'Find any shortcut or prefix…':mode==='actions'?`Actions · ${actionTarget?.title || (actionReturn?.mode==='note-editor'?'Note editor':'Spotlight')}`:mode==='providers'?`Search with… · ${providerQuery.slice(0,80)}`:mode==='quicklink-name'?'Name this quicklink…':mode==='quicklinks'?'Find a quicklink…':mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':mode==='group-manage'?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
-        :mode.startsWith('site:')?'Enter a site search query…':'Search tabs or enter a URL…';
+      input.placeholder=mode==='paste-url'?'Paste an address, then press Enter…':mode==='note-editor'?'Note title…':mode==='notes'?'Search note titles and text…':mode==='shortcuts'?'Find any shortcut or prefix…':mode==='actions'?`Actions · ${actionTarget?.title || (actionReturn?.mode==='note-editor'?'Note editor':'Spotlight')}`:mode==='providers'?`Search with… · ${providerQuery.slice(0,80)}`:mode==='quicklink-name'?'Name this quicklink…':mode==='quicklinks'?'Find a quicklink…':mode==='bookmark-folders'?(bookmarkOperation==='add'?'Choose a folder to save bookmarks…':'Choose a folder to remove matching bookmarks…'):mode==='groups'?'Type a new group name, or choose an existing group…':['group-manage','group-switch','group-route'].includes(mode)?'Find a tab group…':mode==='group-actions'?'Choose a group action…':mode==='group-rename'?'New group name…':mode==='group-colors'?'Choose a group color…':mode==='order'?(orderTabId===undefined?'Choose a tab to move…':'Choose a position or a destination tab…'):mode==='drafts'?'Recover a recent AI prompt…':mode==='commands'?'Find a browser command…':mode==='closed'?'Find a recently closed tab…'
+        :mode.startsWith('site:')?'Enter a site search query…':mode==='search' && scope==='group'?'Search tabs in this group or enter a URL…':'Search tabs or enter a URL…';
       input.setAttribute('aria-label',input.placeholder);noteBody.hidden=mode!=='note-editor';results.hidden=mode==='note-editor';input.setAttribute('role',mode==='note-editor'?'textbox':'combobox');input.setAttribute('aria-expanded',String(mode!=='note-editor'));
       if(!keepResults)updateSuggestions(preferredId);input.focus();
       if(mode==='edit' || mode==='group-rename') input.select();
@@ -537,6 +590,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
           suggestions=actionReturn.suggestions;domains=actionReturn.domains;completedAddress=actionReturn.completedAddress;returnKey=choiceKey(choice);render();
           event=actionId==='background'?{shiftKey:true}:actionId==='new'?{ctrlKey:true}:{};
         }
+        if (choice.kind === 'paste-address') {
+          const reply = await chrome.runtime.sendMessage({type:'palette:extra',action:'paste-url',url:input.value.trim()});
+          if (!reply?.ok) throw new Error(reply?.error || 'Could not open address');
+          if (!dismissed && !closing && actionRevision === queryRevision) close();
+          return;
+        }
         if(choice.kind==='note-save'){await saveNote();return;}
         if(choice.kind==='note'){await openNote(choice.noteId);return;}
         if(choice.kind==='shortcut'){await copyText(choice.copyText);if(dismissed || closing || actionRevision!==queryRevision)return;notice='Shortcut copied';render();return;}
@@ -559,6 +618,19 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if(choice.command==='remove-bookmarks'){startBookmarks('remove');return;}
         if(choice.kind==='bookmark-folder'){await performBookmark(choice.folderId,actionRevision);return;}
         if(choice.command==='group-tabs'){startGrouping();return;}
+        if (choice.command === 'toggle-search-scope') {toggleScope();return;}
+        if (choice.kind === 'group-route') {
+          const reply = await chrome.runtime.sendMessage({type:'palette:extra',action:'route',url:routeUrl,groupId:choice.groupId});
+          if (!reply?.ok) throw new Error(reply?.error || 'Could not save route');
+          if (dismissed || closing || actionRevision !== queryRevision) return;
+          setMode('search');notice='Domain route saved';render();return;
+        }
+        if (choice.command === 'switch-space') {setMode('group-switch');return;}
+        if (choice.command === 'new-space') {startGrouping('',true);return;}
+        if (choice.kind === 'group-switch') {
+          await performGroup({action:'switch',groupId:choice.groupId},actionRevision);
+          return;
+        }
         if(choice.command==='manage-groups'){setMode('group-manage');return;}
         if(choice.command==='ungroup-tabs'){await performGroup({action:'remove',tabIds:selectedTabIds()},actionRevision);return;}
         if(choice.kind==='group-create'){await performGroup({action:'create',tabIds:groupTargetIds,title:choice.name},actionRevision);return;}
@@ -580,9 +652,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
         }
         if(choice.kind==='site') {enterSite(sites.find(site=>site.key===choice.site));return;}
         const target=event.altKey?'current':event.shiftKey?'background':((newTab || mode==='edit') && !(event.metaKey||event.ctrlKey))?'current':'new';
-        const targetField=target==='new'?{}:{target};
+        const targetField={...(target==='new'?{}:{target}),...(mode==='search'?{scope}:{})};
         let message;
         if(choice.kind==='move') message={type:'palette:move',tabId:orderTabId,placement:choice.placement,...(choice.beforeTabId===undefined?{}:{beforeTabId:choice.beforeTabId})};
+        else if (['pin-tab','unpin-tab','mute-tab','unmute-tab','new-split','close-split'].includes(choice.command)) {
+          message = {type:'palette:tab-action',action:choice.command,tabIds:choice.command === 'close-split' ? selectedTabIds(true).slice(0,1) : selectedTabIds(true)};
+        }
         else if(choice.kind==='command') message={type:'palette:command',command:choice.command};
         else if(choice.kind==='closed') message={type:'palette:restore',sessionId:choice.sessionId};
         else if(choice.kind==='site-query') message={type:'palette:site',site:choice.site,query:choice.query,...targetField};
@@ -600,7 +675,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     editCurrent=value=>mode==='edit'?close():setMode('edit',value);
     function primaryLabel(choice) {
-      const titles={tab:'Switch tab',command:'Run',calculator:'Copy result',closed:'Restore','site-query':'Search',site:'Choose site','result-action':'Choose action','quicklink-save':'Save',quicklink:'Open link','bookmark-folder':'Choose folder','ai-draft':'Recover prompt','order-tab':'Choose position',move:'Move tab','group-create':'Create group','group-add':'Add to group','group-manage':'Manage group','group-rename':'Rename','group-colors':'Choose color','group-change':'Apply',activity:'View history',note:'Edit note','note-save':'Save note',shortcut:'Copy shortcut'};
+      const titles={tab:'Switch tab',command:'Run',calculator:'Copy result',closed:'Restore','site-query':'Search',site:'Choose site','result-action':'Choose action','quicklink-save':'Save',quicklink:'Open link','bookmark-folder':'Choose folder','ai-draft':'Recover prompt','order-tab':'Choose position',move:'Move tab','group-create':'Create group','group-add':'Add to group','group-manage':'Manage group','group-switch':'Switch to group','group-route':'Save route','group-rename':'Rename','group-colors':'Choose color','group-change':'Apply',activity:'View history',note:'Edit note','note-save':'Save note',shortcut:'Copy shortcut'};
       return titles[choice?.kind] || 'Open';
     }
     function paintFooter() {
@@ -632,6 +707,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       choices = [...suggestions, ...domains];
       const query=input.value.trim();
       if(['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name','notes','note-editor','shortcuts'].includes(mode) || mode.startsWith('group')) choices=suggestions;
+      else if(mode === 'paste-url') choices=suggestions;
       else if(mode.startsWith('site:')) choices=query?[{kind:'navigate',title:`Search ${sites.find(site=>site.key===mode.slice(5))?.name || 'site'}: ${query}`,url:'Site search'}]:[];
       else if(query) {
         const address = /^(?:https?:\/\/|chrome:\/\/|localhost(?:[:/]|$)|\[::1\]|[^\s/:]+\.[^\s/:]+)\S*$/i.test(query);
@@ -769,6 +845,39 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
     }
     function updateSuggestions(preferredId) {
+      if (mode === 'paste-url') {
+        disconnectSearch();
+        clearTimeout(timer);
+        finishPending();
+        ++queryRevision;
+        suggestionsPending = false;
+        const url = input.value.trim();
+        suggestions = webUrl(url) ? [{kind:'paste-address',title:'Open pasted address',url}] : [];
+        domains = [];
+        render();
+        return;
+      }
+      if (mode === 'search' && /^\/\s/u.test(input.value)) {
+        setMode('commands',input.value.slice(1).trimStart());
+        return;
+      }
+      if (mode === 'search' || mode === 'commands') {
+        const typed = input.value.trimStart().normalize('NFC');
+        const normalized = typed.toLocaleLowerCase();
+        for (const {kind,prefixes} of context.targetCommands || []) {
+          const prefix = prefixes.find(value => normalized.startsWith(value+' '));
+          if (!prefix) continue;
+          const target = typed.slice(prefix.length).trimStart();
+          try {
+            if (kind === 'switch-group') setMode('group-switch',target);
+            else if (kind === 'group') startGrouping(target,true);
+            else startBookmarks('add',target,true);
+          } catch (failure) {
+            error.textContent = failure.message;
+          }
+          return;
+        }
+      }
       const prefixMode={'>':'commands','@':'order','<':'closed','?':'drafts','$':'quicklinks',':':'notes'}[input.value[0]];
       if(mode==='search' && input.value.startsWith('*')){try{startBookmarks('add',input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
       if(mode==='search' && input.value.startsWith('#')){try{startGrouping(input.value.slice(1).trimStart());}catch(failure){error.textContent=failure.message;}return;}
@@ -781,7 +890,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       const query=input.value.trim();
       const terms=query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
       suggestions=['commands','closed','order','drafts','bookmark-folders','actions','providers','quicklinks','quicklink-name','notes','note-editor','shortcuts'].includes(mode) || mode.startsWith('group') || mode.startsWith('site:')?[]
-        :[...tabs].sort((a,b) => query ? 0 : (b.lastAccessed || 0) - (a.lastAccessed || 0)).filter(tab=>terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
+        :[...tabs].sort((a,b) => query ? 0 : (b.lastAccessed || 0) - (a.lastAccessed || 0)).filter(tab=>(scope !== 'group' || tab.groupId === context.activeGroupId) && terms.every(term=>`${tab.title || ''} ${tab.url || ''}`.toLocaleLowerCase().includes(term)))
           .slice(0,query ? 8 : 5).map(tab=>({...tab,kind:'tab',sources:['tab']}));
       domains=[];choices=[];selected=0;selectionMoved=false;error.textContent='';render(preferredId);
       if(mode==='actions') {
@@ -833,12 +942,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
             port.disconnect();
           }
         });
-        timer = setTimeout(() => { if (searchPort === port) port.postMessage({query}); }, 60);
+        timer = setTimeout(() => { if (searchPort === port) port.postMessage({query,scope}); }, 60);
         return;
       }
       timer=setTimeout(async()=>{
         try {
-          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,...(['commands','closed','order','drafts','groups','group-manage','group-actions','bookmark-folders','quicklinks','notes'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
+          const response=await chrome.runtime.sendMessage({type:'palette:suggest',query,scope,...(['commands','closed','order','drafts','groups','group-manage','group-switch','group-route','group-actions','bookmark-folders','quicklinks','notes'].includes(mode)?{mode}:{}),...(mode==='bookmark-folders'?{operation:bookmarkOperation,tabIds:bookmarkTargetIds}:{}),...(mode==='group-actions'?{groupId:managedGroupId}:{}),...(mode==='order' && orderTabId!==undefined?{tabId:orderTabId}:{})});
           if(revision!==queryRevision || dismissed || closing) return;
           if(!response?.ok || !Array.isArray(response.suggestions)) throw new Error(response?.error || 'Suggestions unavailable');
           suggestions=response.suggestions;domains=Array.isArray(response.domains)?response.domains:[];

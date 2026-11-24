@@ -18,13 +18,17 @@ import { findSuggestions } from './suggestions.js';
 import { loadSites,siteDestination,rememberSite } from './site-search.js';
 import { COMMANDS,commandSuggestions } from './command-catalog.js';
 
+import {copyTabs,editHidden,hiddenSuggestions,publicUrl} from './palette-extras.js';
+
+import {destinationGroup,saveDomainRoute,openPreview,promotePreview} from './workspace-navigation.js';
+
 export async function openPalette(api,mount,mode='search') {
   const [tab]=await api.tabs.query({active:true,currentWindow:true});
   if(!tab) return;
   const [tabs,sites,launcher,designTokens]=await Promise.all([api.tabs.query({windowId:tab.windowId}),loadSites(api,tab.windowId),launcherContext(api),loadDesignTokens()]);
-  const context={...launcher,designTokens,mode,sourceUrl:tab.url || '',sourceTabId:tab.id,groupColors:GROUP_COLORS,sites,favicons:true};
+  const context={...launcher,designTokens,mode,sourceUrl:tab.url || '',sourceTabId:tab.id,activeGroupId:tab.groupId,groupColors:GROUP_COLORS,sites,favicons:true};
   try {
-    await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url,lastAccessed})=>({id,title,url,lastAccessed})),false,context]});
+    await api.scripting.executeScript({target:{tabId:tab.id},func:mount,args:[tabs.map(({id,title,url,lastAccessed,groupId})=>({id,title,url,lastAccessed,groupId})),false,context]});
   } catch {
     const url=`${api.runtime.getURL('palette.html')}?window=${tab.windowId}&tab=${tab.id}&mode=${mode}`;
     const width = 480;
@@ -69,13 +73,20 @@ async function removeSearchTab(api,context) {
       !tab.pendingUrl) await api.tabs.remove(tab.id).catch(() => {});
 }
 
-async function navigate(api,context,input,target='new') {
+async function navigate(api,context,input,target='new',wholeWindow=false) {
   if(!['new','background','current'].includes(target)) throw new Error('Invalid navigation target');
   const parsed=destination(input);
   if(!parsed) return;
+  const groupId = target !== 'current' || context.newTab
+    ? await destinationGroup(api,context.windowId,context.tabId,context.newTab,parsed.url,!wholeWindow).catch(()=>null)
+    : null;
+  const placeInGroup = async id => {
+    if (groupId !== null) await api.tabs.group({groupId,tabIds:[id]}).catch(()=>{});
+  };
   if(target==='current') {
     const tab=await sourceTab(api,context);
     if(input.trim()===tab.url) {await api.tabs.reload(tab.id);return;}
+    await placeInGroup(tab.id);
     if(parsed.type==='url') {
       if(parsed.url===tab.url) await api.tabs.reload(tab.id);
       else await api.tabs.update(tab.id,{url:parsed.url});
@@ -83,6 +94,7 @@ async function navigate(api,context,input,target='new') {
     return;
   }
   const tab=await api.tabs.create({windowId:context.windowId,active:target!=='background',...(parsed.type==='url'?{url:parsed.url}:{})});
+  await placeInGroup(tab.id);
   if(parsed.type==='search') await api.search.query({text:parsed.text,tabId:tab.id});
 }
 
@@ -105,6 +117,25 @@ async function executeAction(api,context,id) {
   if(!COMMANDS.some(item=>item.command===id)) throw new Error('Unknown command');
   const browserUrl=browserCommandUrl(id);
   if(browserUrl) return navigate(api,context,browserUrl);
+  if (id === 'open-sidebar' || id === 'close-sidebar') {
+    const method = id === 'open-sidebar' ? 'open' : 'close';
+    if (typeof api.sidePanel?.[method] !== 'function') throw new Error('This version of Chrome cannot perform that sidebar action');
+    await api.sidePanel[method]({windowId:context.windowId});
+    return;
+  }
+  if (id === 'previous-tab') {
+    const tabs = await api.tabs.query({windowId:context.windowId});
+    const candidate = tabs.filter(tab => tab.id !== context.tabId && (!tab.active || context.newTab) &&
+      tab.url !== api.runtime.getURL('newtab.html') && tab.url !== 'chrome://newtab/')
+      .sort((a,b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+    if (!candidate) throw new Error('No previous tab in this window');
+    await api.tabs.update(candidate.id,{active:true});
+    await api.windows.update(context.windowId,{focused:true});
+    await removeSearchTab(api,context);
+    return;
+  }
+  if (id === 'promote-preview' || id === 'split-preview') return promotePreview(api,context,id==='split-preview');
+  if (id === 'restore-suggestions') return editHidden(api,null);
   if(id==='activity') return api.tabs.create({windowId:context.windowId,url:api.runtime.getURL('activity.html')});
   if(id==='clear-prompts') return clearPrompts(api);
   if(['notes','new-note','shortcuts','quicklinks','save-quicklink','search-with','order-tabs','closed-tabs','edit-url','recover-prompts','group-tabs','manage-groups','ungroup-tabs','bookmark-tabs','remove-bookmarks'].includes(id)) throw new Error('Choose this mode in the command bar');
@@ -119,6 +150,24 @@ async function executeAction(api,context,id) {
 }
 
 async function performAction(api,message,context,publish) {
+  if (message.type === 'palette:extra') {
+    if (message.action === 'route') return saveDomainRoute(api,context.windowId,message.url,message.groupId);
+    if (message.action === 'preview') return openPreview(api,context,message.url);
+    if (message.action === 'copy-tabs') return copyTabs(api,context.windowId,message.tabIds,message.markdown === true);
+    if (message.action === 'hide') return editHidden(api,message.url);
+    if (message.action === 'instant') {
+      if (typeof message.query !== 'string' || !message.query.trim() || message.query.length > 2048) throw new Error('Enter a search query');
+      const url = new URL('https://duckduckgo.com/');
+      url.searchParams.set('q',String.fromCharCode(92) + message.query.trim());
+      return navigate(api,context,url.href,context.newTab ? 'current' : 'new');
+    }
+    if (message.action === 'paste-url') {
+      const url = publicUrl(message.url);
+      if (!url) throw new Error('The clipboard does not contain an HTTP(S) address');
+      return navigate(api,context,url.href,context.newTab ? 'current' : 'new');
+    }
+    throw new Error('Unknown search action');
+  }
   if(message.type==='palette:icons')return {images:await faviconImages(api,message.urls)};
   if(message.type==='palette:suggest') {
     if(typeof message.query!=='string' || message.query.length>8192) throw new Error('Invalid query');
@@ -129,13 +178,23 @@ async function performAction(api,message,context,publish) {
       return {suggestions,domains:[],warnings:suggestions.length?[]:[message.operation==='remove'?'No matching bookmarks in writable folders':'No matching writable folders']};
     }
     if(message.mode==='groups')return {suggestions:await groupSuggestions(api,context.windowId,message.query),domains:[],warnings:[]};
+    if (['group-switch','group-route'].includes(message.mode)) {
+      const groups = await manageGroupSuggestions(api,context.windowId,message.query);
+      return {suggestions:groups.map(row => ({...row,kind:message.mode,url:message.mode==='group-route'?'Route domain to group':'Switch to group'})),domains:[],warnings:[]};
+    }
     if(message.mode==='group-manage')return {suggestions:await manageGroupSuggestions(api,context.windowId,message.query),domains:[],warnings:[]};
     if(message.mode==='group-actions')return {suggestions:await groupActionSuggestions(api,context.windowId,message.groupId,message.query),domains:[],warnings:[]};
     if(message.mode==='drafts') return {suggestions:await listPrompts(api,message.query),domains:[],warnings:[]};
     if(message.mode==='order') return {suggestions:await orderSuggestions(api,context.windowId,message.query,message.tabId),domains:[],warnings:[]};
     if(message.mode==='commands') return {suggestions:commandSuggestions(message.query),domains:[],warnings:[]};
     if(message.mode==='closed') return {suggestions:await closedSuggestions(api,message.query),domains:[],warnings:[]};
-    const [found,links,notes]=await Promise.all([findSuggestions(api,context.windowId,message.query,publish,context.newTab ? context.tabId : undefined),quicklinks(api,message.query).catch(()=>[]),noteSuggestions(api,message.query).catch(()=>[])]);
+    const hidden = new Set(await hiddenSuggestions(api).catch(()=>[]));
+    const visible = row => row.kind === 'tab' || !hidden.has(row.url);
+    const publishVisible = publish && (result => publish({...result,suggestions:result.suggestions.filter(visible),domains:result.domains.filter(visible)}));
+    const groupId = message.scope === 'group'
+      ? await destinationGroup(api,context.windowId,context.tabId,context.newTab).catch(()=>null)
+      : null;
+    const [found,links,notes]=await Promise.all([findSuggestions(api,context.windowId,message.query,publishVisible,context.newTab ? context.tabId : undefined,groupId),quicklinks(api,message.query).catch(()=>[]),noteSuggestions(api,message.query).catch(()=>[])]);
     const calculation=calculate(message.query);
     const extra=calculation?[{kind:'calculator',title:calculation.result,url:calculation.expression,copyText:calculation.result,sources:['calculator']}]:[];
     let recent=[],recentActions=[];
@@ -149,13 +208,13 @@ async function performAction(api,message,context,publish) {
       if(!hasFrequent)recent=commandSuggestions('').filter(row=>['order-tabs','closed-tabs','settings'].includes(row.command));
       recent=recent.map(row=>({...row,section:hasFrequent?'Frequent commands':'Commands'}));
     }
-    const rows=found.suggestions.slice(),remaining=[];
-    for(const link of links.slice(0,8)) {
+    const rows=found.suggestions.filter(visible),remaining=[];
+    for(const link of links.filter(visible).slice(0,8)) {
       const index=rows.findIndex(row=>row.url===link.url);
       if(index<0)remaining.push(link);
       else rows[index]={...rows[index],linkId:link.linkId,linkName:link.title,sources:[...new Set([...(rows[index].sources || [rows[index].kind]),'quicklink'])]};
     }
-    return {...found,suggestions:[...extra,...rows,...remaining,...notes.slice(0,message.query.trim()?8:3).map(note=>({...note,...(!message.query.trim()?{section:'Notes'}:{})})),...recentActions,...recent]};
+    return {...found,domains:found.domains.filter(visible),suggestions:[...extra,...rows,...remaining,...notes.slice(0,message.query.trim()?8:3).map(note=>({...note,...(!message.query.trim()?{section:'Notes'}:{})})),...recentActions,...recent]};
   }
   if(message.type==='palette:note')return noteAction(api,message);
   if(message.type==='palette:quicklink') {
@@ -169,6 +228,47 @@ async function performAction(api,message,context,publish) {
     return changeQuicklink(api,request);
   }
   if(message.type==='palette:tab-action') {
+    if (message.action === 'new-split' || message.action === 'close-split') {
+      const ids = message.tabIds;
+      if (!Array.isArray(ids) || !ids.length || ids.length > 2 ||
+          new Set(ids).size !== ids.length || !ids.every(Number.isInteger)) {
+        throw new Error('Choose one tab, or mark two adjacent tabs to pair them');
+      }
+      if (typeof api.tabs.createSplit !== 'function' || typeof api.tabs.unsplit !== 'function') {
+        throw new Error('Split View commands require Chrome 155 or later');
+      }
+      const tabs = await Promise.all(ids.map(id => api.tabs.get(id)));
+      if (tabs.some(tab => tab.windowId !== context.windowId)) throw new Error('Tab is outside this window');
+      const [first,second] = tabs;
+      if (message.action === 'close-split') {
+        if (first.splitViewId >= 0) await api.tabs.unsplit(first.splitViewId);
+        else throw new Error('This tab is not in Split View');
+      } else if (second) {
+        if (Math.abs(first.index - second.index) !== 1 || first.groupId !== second.groupId ||
+            first.pinned !== second.pinned || tabs.some(tab => tab.splitViewId >= 0)) {
+          throw new Error('Choose adjacent tabs in the same group with the same pin state');
+        }
+        await api.tabs.createSplit(ids);
+      } else {
+        if (first.splitViewId >= 0) throw new Error('This tab is already in Split View');
+        await api.tabs.create({windowId:context.windowId,splitWithTabId:first.id});
+      }
+      return;
+    }
+    const changes = {
+      'pin-tab':{pinned:true},'unpin-tab':{pinned:false},
+      'mute-tab':{muted:true},'unmute-tab':{muted:false}
+    };
+    if (Object.hasOwn(changes,message.action)) {
+      const ids = message.tabIds;
+      if (!Array.isArray(ids) || !ids.length || ids.length > 100 || !ids.every(Number.isInteger)) {
+        throw new Error('Invalid tab selection');
+      }
+      const tabs = await Promise.all([...new Set(ids)].map(id => api.tabs.get(id)));
+      if (tabs.some(tab => tab.windowId !== context.windowId)) throw new Error('Tab is outside this window');
+      for (const tab of tabs) await api.tabs.update(tab.id,changes[message.action]);
+      return;
+    }
     if(!Number.isInteger(message.tabId) || message.action!=='duplicate')throw Error('Invalid tab action');
     const tab=await api.tabs.get(message.tabId);
     if(tab.windowId!==context.windowId)throw Error('Tab is outside this window');
@@ -189,14 +289,14 @@ async function performAction(api,message,context,publish) {
     if(tab.id!==context.tabId) await removeSearchTab(api,context);
     return;
   }
-  if(message.type==='palette:navigate') return navigate(api,context,message.query,message.target);
+  if(message.type==='palette:navigate') return navigate(api,context,message.query,message.target,message.scope==='window');
   if(message.type==='palette:site') {
     const sites=await loadSites(api,context.windowId);
     const url=siteDestination(sites,message.site,message.query);
     if(!['new','background','current',undefined].includes(message.target))throw new Error('Invalid navigation target');
     const site=sites.find(site=>site.key===message.site);
     if(site.ai)await savePrompt(api,site,message.query);
-    return navigate(api,context,url,message.target);
+    return navigate(api,context,url,message.target,message.scope==='window');
   }
   if(message.type==='palette:recover') return recoverPrompt(api,message.draftId,await loadSites(api,context.windowId));
   if(message.type==='palette:remember-site') return rememberSite(api,context.windowId,message.site,message.alias);

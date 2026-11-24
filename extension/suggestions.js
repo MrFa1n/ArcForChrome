@@ -86,12 +86,12 @@ async function sourceCandidates(api, source, query) {
   return results.flatMap(result => result.status==='fulfilled'?result.value:[]);
 }
 
-export async function findSuggestions(api, windowId, input, publish, excludedTabId) {
+export async function findSuggestions(api, windowId, input, publish, excludedTabId, groupId = null) {
   if (typeof input !== 'string' || input.length > 8192) throw new Error('Invalid query');
   const query = input.trim();
   const groups=groupMetadata(api,windowId);
   const preference = preferredTab(api,query);
-  const requests = [async () => (await api.tabs.query({windowId})).filter(tab => tab.id !== excludedTabId)];
+  const requests = [async () => (await api.tabs.query({windowId})).filter(tab => tab.id !== excludedTabId && (groupId === null || tab.groupId === groupId))];
   if (query) requests.push(() => sourceCandidates(api,'bookmarks',query), () => sourceCandidates(api,'history',query));
   const candidates = [[], [], []];
   const pending = requests.map(request => Promise.resolve().then(request));

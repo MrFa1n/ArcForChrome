@@ -1,5 +1,27 @@
 import {browserPageCommands} from './browser-pages.js';
+export const TARGET_COMMANDS = [
+  {kind:'switch-group',prefixes:['switch to space','switch to group','открыть пространство','перейти в группу']},
+  {kind:'group',prefixes:['move to','move tab to','переместить в','переместить вкладку в']},
+  {kind:'bookmark',prefixes:['pin to','save to','закрепить в','сохранить в']}
+];
+
 export const COMMANDS = [
+  {command:'toggle-search-scope',title:'Switch group / window search',aliases:'группа окно область поиска'},
+  {command:'promote-preview',title:'Keep preview as tab',aliases:'перенести предпросмотр во вкладку'},
+  {command:'split-preview',title:'Keep preview in Split View',aliases:'перенести предпросмотр в разделённый экран'},
+  {command:'previous-tab',title:'Previous tab',aliases:'last recent tab предыдущая вкладка вернуться'},
+  {command:'restore-suggestions',title:'Restore hidden suggestions',aliases:'восстановить скрытые подсказки'},
+  {command:'switch-space',title:'Switch to a space',aliases:'switch group spaces workspace открыть пространство перейти в группу'},
+  {command:'new-space',title:'New space',aliases:'new group workspace создать пространство новая группа'},
+  {command:'new-split',title:'New Split View',aliases:'split tabs разделить экран открыть рядом'},
+  {command:'close-split',title:'Close Split View',aliases:'unsplit закрыть разделение убрать разделение'},
+  {command:'open-sidebar',title:'Open sidebar',aliases:'side panel открыть боковую панель'},
+  {command:'close-sidebar',title:'Close sidebar',aliases:'hide side panel закрыть боковую панель'},
+  {command:'browser:extensions',title:'Manage extensions',aliases:'extension addons управление расширениями расширения'},
+  {command:'pin-tab',title:'Pin tab',aliases:'закрепить вкладку'},
+  {command:'unpin-tab',title:'Unpin tab',aliases:'открепить вкладку'},
+  {command:'mute-tab',title:'Mute tab',aliases:'заглушить выключить звук вкладки'},
+  {command:'unmute-tab',title:'Unmute tab',aliases:'включить звук вкладки'},
   {command:'notes',title:'Search / manage notes',aliases:'заметки найти текст список'},
   {command:'new-note',title:'New note',aliases:'создать новая заметка текст'},
   {command:'shortcuts',title:'All keyboard shortcuts',aliases:'все хоткеи сочетания клавиши справка'},
@@ -25,7 +47,7 @@ export const COMMANDS = [
   {command:'reopen',title:'Reopen last closed tab',aliases:'restore восстановить закрытую'},
   {command:'settings',title:'Search settings',aliases:'site search настройки поиск'},
   {command:'new-window',title:'New browser window',aliases:'новое окно'},
-  ...browserPageCommands()
+  ...browserPageCommands().filter(row => row.command !== 'browser:extensions')
 ];
 
 export function commandSuggestions(query) {

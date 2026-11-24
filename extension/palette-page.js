@@ -15,9 +15,15 @@ async function open() {
   const [tabs,sites,launcher,designTokens] = await Promise.all([
     chrome.tabs.query({windowId}),loadSites(chrome,windowId),launcherContext(chrome),loadDesignTokens()
   ]);
-  mountPalette(tabs.filter(row => !newTab || row.id !== tab.id),!newTab,{
+  const openTabs = tabs.filter(row => !newTab || row.id !== tab.id);
+  const actionTabId = newTab
+    ? [...openTabs].filter(row => row.url && !['chrome://newtab/',location.href].includes(row.url))
+      .sort((a,b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0]?.id
+    : tab.id;
+  const mode = params.get('mode');
+  mountPalette(openTabs,!newTab,{
     ...launcher,designTokens,actionPopup,newTab,sites,favicons:true,sourceUrl:tab.url || '',
-    sourceTabId:tab.id,groupColors:GROUP_COLORS,mode:params.get('mode')==='edit'?'edit':'search'
+    sourceTabId:tab.id,actionTabId,activeGroupId:tabs.find(row=>row.id===actionTabId)?.groupId,groupColors:GROUP_COLORS,mode:['edit','commands'].includes(mode)?mode:'search'
   });
 }
 

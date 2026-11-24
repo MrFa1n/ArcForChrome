@@ -16,9 +16,11 @@
     "clipboardWrite",
     "alarms",
     "tabGroups",
-    "favicon"
+    "favicon",
+    "sidePanel"
   ],
   "chrome_url_overrides": { "newtab": "newtab.html" },
+  "side_panel": { "default_path": "sidebar.html" },
   "background": {
     "service_worker": "worker.js",
     "type": "module"
@@ -39,6 +41,17 @@
         "mac": "Command+T"
       },
       "description": "Open Spotlight-style search"
+    },
+    "open-commands": {
+      "suggested_key": {
+        "default": "Alt+Shift+E",
+        "mac": "Command+E"
+      },
+      "description": "Open browser commands"
+    },
+    "previous-tab": {
+      "suggested_key": { "mac": "MacCtrl+Shift+Space", "default": "Ctrl+Shift+Space" },
+      "description": "Switch to previous tab"
     },
     "edit-address": {
       "suggested_key": {

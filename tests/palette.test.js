@@ -266,3 +266,81 @@ test('switching from the new tab dismisses only the temporary search tab', async
   await paletteAction(api,{type:'palette:activate',tabId:8},newTabSender);
   assert.deepEqual(api.calls,[['update',8,{active:true}]]);
 });
+test('pin and mute only change tabs in the source window', async () => {
+  const api = browser();
+  await paletteAction(api,{type:'palette:tab-action',action:'pin-tab',tabIds:[8,8]},sender);
+  assert.deepEqual(api.calls,[['update',8,{pinned:true}]]);
+  api.calls.length = 0;
+  api.tabs.get = async id => ({id,windowId:id===9?3:2});
+  await assert.rejects(() => paletteAction(api,{type:'palette:tab-action',action:'mute-tab',tabIds:[8,9]},sender));
+  assert.deepEqual(api.calls,[]);
+});
+
+test('Split View pairs adjacent tabs and rejects cross-window selections', async () => {
+  const api = browser();
+  api.tabs.get = async id => ({id,index:id,windowId:id===10?3:2,groupId:-1,pinned:false,splitViewId:-1});
+  api.tabs.createSplit = async ids => api.calls.push(['split',ids]);
+  api.tabs.unsplit = async () => {};
+  await paletteAction(api,{type:'palette:tab-action',action:'new-split',tabIds:[8,9]},sender);
+  assert.deepEqual(api.calls,[['split',[8,9]]]);
+  await assert.rejects(() => paletteAction(api,{type:'palette:tab-action',action:'new-split',tabIds:[9,10]},sender));
+  assert.equal(api.calls.length,1);
+});
+
+test('switching spaces opens the most recent tab in the group', async () => {
+  const api = browser();
+  api.tabGroups = {
+    get:async id => ({id,windowId:2,collapsed:true}),
+    update:async (...args) => api.calls.push(['group update',...args])
+  };
+  api.tabs.query = async () => [
+    {id:8,windowId:2,groupId:7,lastAccessed:10},
+    {id:9,windowId:2,groupId:7,lastAccessed:30}
+  ];
+  await paletteAction(api,{type:'palette:group',action:'switch',groupId:7},sender);
+  assert.deepEqual(api.calls,[['group update',7,{collapsed:false}],['update',9,{active:true}]]);
+});
+
+test('sidebar commands are scoped to the source window', async () => {
+  const api = browser();
+  api.sidePanel = {
+    open:async options => api.calls.push(['open sidebar',options]),
+    close:async options => api.calls.push(['close sidebar',options])
+  };
+  await paletteAction(api,{type:'palette:command',command:'open-sidebar'},sender);
+  await paletteAction(api,{type:'palette:command',command:'close-sidebar'},sender);
+  assert.deepEqual(api.calls,[['open sidebar',{windowId:2}],['close sidebar',{windowId:2}]]);
+});
+
+test('Super Copy formats marked tabs and validates the window', async () => {
+  const api = browser();
+  api.tabs.get = async id => ({id,windowId:id===9?3:2,url:`https://example.com/${id}`,title:`Tab [${id}]`});
+  const reply = await paletteAction(api,{type:'palette:extra',action:'copy-tabs',tabIds:[7,8],markdown:true},sender);
+  assert.equal(reply.copyText,'[Tab \\[7\\]](<https://example.com/7>)\n[Tab \\[8\\]](<https://example.com/8>)');
+  await assert.rejects(()=>paletteAction(api,{type:'palette:extra',action:'copy-tabs',tabIds:[7,9]},sender),/another window/);
+});
+
+test('group scope filters open tabs and routes new pages to a named group', async () => {
+  const api = browser();
+  api.tabs.get = async id => ({id,windowId:2,groupId:4});
+  api.tabs.query = async () => [
+    {id:8,windowId:2,groupId:4,title:'Inside',url:'https://example.com/inside'},
+    {id:9,windowId:2,groupId:5,title:'Outside',url:'https://example.com/outside'}
+  ];
+  api.tabGroups = {query:async()=>[{windowId:2,id:5,title:'Work'}]};
+  api.tabs.group = async options => api.calls.push(['group',options]);
+  api.storage = {local:{get:async key => key === 'domain-group-routes'
+    ? {[key]:[{host:'example.com',group:'Work'}]} : {}}};
+  const result = await paletteAction(api,{type:'palette:suggest',scope:'group',query:''},sender);
+  assert.deepEqual(result.suggestions.filter(item=>item.kind==='tab').map(item=>item.id),[8]);
+  await paletteAction(api,{type:'palette:navigate',scope:'window',query:'https://example.com/page'},sender);
+  assert.deepEqual(api.calls.at(-1),['group',{groupId:5,tabIds:[99]}]);
+});
+
+test('Instant Link only sends an explicit query to DuckDuckGo', async () => {
+  const api = browser();
+  await paletteAction(api,{type:'palette:extra',action:'instant',query:'arc browser'},sender);
+  const url = new URL(api.calls[0][1].url);
+  assert.equal(url.hostname,'duckduckgo.com');
+  assert.equal(url.searchParams.get('q'),'\\arc browser');
+});

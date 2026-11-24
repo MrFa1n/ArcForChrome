@@ -42,6 +42,17 @@ export async function groupActionSuggestions(api,windowId,id,query) {
   ].filter(row=>match(row,query));
 }
 export async function changeGroup(api,windowId,message) {
+  if (message.action === 'switch') {
+    const item = await group(api,windowId,message.groupId);
+    const tabs = await api.tabs.query({windowId,groupId:item.id});
+    const target = tabs.filter(tab => tab.windowId === windowId && tab.groupId === item.id)
+      .sort((a,b) => (b.lastAccessed || 0) - (a.lastAccessed || 0))[0];
+    if (!target) throw new Error('This group has no open tabs');
+    if (item.collapsed) await api.tabGroups.update(item.id,{collapsed:false});
+    await api.tabs.update(target.id,{active:true});
+    await api.windows.update(windowId,{focused:true});
+    return;
+  }
   if(['create','add','remove'].includes(message.action)) {
     const name=message.action==='create'?title(message.title):undefined;
     const tabs=await selection(api,windowId,message.tabIds,message.action==='remove');

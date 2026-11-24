@@ -1,6 +1,15 @@
-import {COMMANDS} from './command-catalog.js';
+import {COMMANDS,TARGET_COMMANDS} from './command-catalog.js';
 // Shared by injected and protected-page palettes; data only, no remote code.
 export const ACTIONS=[
+      {id:'toggle-search-scope',title:'Switch group / window search',aliases:'группа окно область поиска'},
+      {id:'preview',title:'Open temporary preview',aliases:'временный предпросмотр'},
+      {id:'route',title:'Route this domain to a group',aliases:'отправлять домен в группу'},
+      {id:'remove-route',title:'Clear route for this domain',aliases:'убрать маршрут домена'},
+      {id:'copy-tabs',title:'Copy links from selected tabs',aliases:'скопировать ссылки отмеченных вкладок'},
+      {id:'copy-markdown',title:'Copy links as Markdown',aliases:'копировать ссылки маркдаун'},
+      {id:'hide',title:'Hide this suggestion',aliases:'скрыть подсказку'},
+      {id:'paste-url',title:'Paste and go',aliases:'вставить и открыть'},
+      {id:'instant',title:'Open first web result via DuckDuckGo',aliases:'мгновенная ссылка первый результат'},
       {id:'new-note',title:'New note',aliases:'создать заметку текст'},
       {id:'notes',title:'Search / manage notes',aliases:'заметки найти список'},
       {id:'shortcuts',title:'All keyboard shortcuts',aliases:'все хоткеи сочетания клавиши справка'},
@@ -27,7 +36,9 @@ export const ACTIONS=[
     ];
 
 export const SHORTCUTS=[
+  {id:'global-previous',title:'Switch to previous tab',global:'previous-tab',description:'Return to the last used tab in this window.',aliases:'предыдущая вкладка'},
   {id:'global-search',title:'Open / close Spotlight',global:'open-search',description:'Global in Chrome. Check or change the assigned shortcut in chrome://extensions/shortcuts.',aliases:'поиск открыть закрыть spotlight'},
+  {id:'global-commands',title:'Open browser commands',global:'open-commands',description:'Open the command catalog. Slash followed by space also opens it from Search.',aliases:'команды действия'},
   {id:'global-edit',title:'Edit current URL',global:'edit-address',description:'Global in Chrome. Enter replaces the source page; unchanged URL reloads it.',aliases:'адрес изменить текущий'},
   {id:'actions',title:'Actions for selected result',shortcut:'⌘/Ctrl K',description:'Inside Spotlight. Toggle the contextual actions; Esc returns to the same query and result.',aliases:'действия меню'},
   {id:'select',title:'Choose previous / next result',shortcut:'↑ / ↓',description:'With the query field focused. Changes the highlighted result without navigating.',aliases:'выбрать результат стрелки'},
@@ -60,5 +71,5 @@ export const SHORTCUTS=[
 export async function launcherContext(api){
   let commands=null;
   try {if(api.commands?.getAll)commands=await api.commands.getAll();}catch{/* Show an explicit unknown binding rather than guess. */}
-  return {actions:ACTIONS,commands:COMMANDS.filter(row => !row.command.startsWith("browser:")),shortcuts:SHORTCUTS.map(row=>!row.global?row:{...row,shortcut:commands?commands.find(command=>command.name===row.global)?.shortcut || 'Not assigned':'Check Chrome shortcuts'})};
+  return {actions:ACTIONS,targetCommands:TARGET_COMMANDS,commands:COMMANDS.filter(row => !row.command.startsWith("browser:") || row.command === "browser:extensions"),shortcuts:SHORTCUTS.map(row=>!row.global?row:{...row,shortcut:commands?commands.find(command=>command.name===row.global)?.shortcut || 'Not assigned':'Check Chrome shortcuts'})};
 }

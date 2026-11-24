@@ -53,6 +53,7 @@ Chrome may keep an older key assignment or reject a conflicting binding. Open `c
 | Action | macOS | Windows / Linux |
 | --- | --- | --- |
 | Open Search | **⌘T** | **Alt+Shift+K** |
+| Open browser commands | **⌘E** | **Alt+Shift+E** |
 | Edit the current URL | **⌘L** | **Alt+Shift+L** |
 | Move selected tab left / right | **⌥← / ⌥→** | **Alt+← / Alt+→** |
 | Move selected tab to start / end | **⌥⇧← / ⌥⇧→** | **Alt+Shift+← / →** |
@@ -75,6 +76,19 @@ In Search, Enter activates an existing tab or opens a new one. In **Edit current
 **Prefixes replace mode controls:** `>` commands · `@` arrange tabs · `<` recently closed · `?` recover AI prompts · `$` quicklinks · `:` notes. For example, `> settings` finds extension/browser settings commands and `> edit current URL` enters address editing without a global shortcut. Backspace on an empty scoped input returns to Search.
 
 These action shortcuts work while Spotlight is open. For vertical tabs, use **Alt/Option+↑/↓**; add Shift for start/end. **`#Work`** chooses a group; **`*Work`** chooses a bookmark folder.
+
+**Commands with destinations.** Type `move to Work` to pick a Chrome tab group or `pin to Work` to pick a bookmark folder, then confirm with Enter. `pin tab` pins the tab itself. Russian equivalents include `переместить в Работа`, `закрепить в Работа` and `закрепить вкладку`. Use `/ ` (slash and space) to open Commands from Search.
+
+**Spaces and layouts.** `New space` creates a Chrome tab group. Type `switch to space Work` to find a group and switch to its most recent open tab. `New Split View` opens a blank second pane, or pairs two marked adjacent tabs in the same group with the same pin state. `Close Split View` separates the panes and keeps both tabs. Split View commands require Chrome 155+. `Open sidebar` opens the searchable tab list. `Manage extensions` opens Chrome's extensions page.
+
+### Quick actions inspired by Arc for Mac
+
+- **Previous tab** jumps to the most recently used tab in the window. The suggested Mac shortcut is **Control+Shift+Space**.
+- **Actions → Copy links from selected tabs** copies marked tabs as URLs. **Copy links as Markdown** includes their titles.
+- **Hide this suggestion** removes a history, bookmark or homepage suggestion from Search. **Restore hidden suggestions** resets the list.
+- **Paste and go** reads the clipboard only when selected. If Chrome denies access, paste into the field manually. **Open first web result via DuckDuckGo** sends the query on explicit selection.
+- Search from a grouped tab scopes open-tab matches to the group. **Switch group / window search** changes the scope. **Route this domain to a group** sends matching web URLs opened by the palette to one uniquely named group in the current window.
+- **Open temporary preview** opens a compact window. In that window, **Keep preview as tab** or **Keep preview in Split View** sends the page back to the original window.
 
 **Tab does three useful things:**
 
