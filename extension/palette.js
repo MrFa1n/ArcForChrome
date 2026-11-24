@@ -55,12 +55,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
       dialog{--bg:var(--arc-surface,Canvas);--fg:var(--arc-text,CanvasText);--muted:var(--arc-muted,GrayText);
       --hover:var(--arc-hover,color-mix(in srgb,CanvasText 7%,Canvas));--selection:var(--arc-selection,color-mix(in srgb,Highlight 17%,Canvas));--line:var(--arc-border,color-mix(in srgb,CanvasText 18%,Canvas));
       color-scheme:light dark;border:1px solid var(--line);border-radius:var(--arc-radius-panel,1rem);padding:0;width:min(600px,calc(100vw - 32px));
-      max-height:calc(100vh - 32px);margin:auto;background:var(--bg);color:var(--fg);box-shadow:0 20px 64px #0006,0 2px 8px #0002;
+      height:min(420px,calc(100vh - 32px));max-height:calc(100vh - 32px);margin:auto;background:var(--bg);color:var(--fg);box-shadow:0 20px 64px #0006,0 2px 8px #0002;
+      display:flex;flex-direction:column;
       font:.875rem/1.45 var(--arc-font,system-ui);overflow:hidden}
       dialog::backdrop{background:#0005}
       input{font:inherit;font-size:1.1875rem;width:100%;padding:17px 18px;border:0;outline:none;color:var(--fg);background:transparent}
       [hidden]{display:none!important}#note-body{display:block;resize:none;width:100%;height:220px;min-height:80px;max-height:45vh;border:0;border-top:1px solid var(--line);outline:none;padding:14px 22px;font:inherit;line-height:1.7;background:Canvas;color:CanvasText}#note-body:focus-visible{box-shadow:inset 0 0 0 1px Highlight}dialog[data-sized] #note-body{flex:1;max-height:none;height:auto}button.result[data-shortcut=true] .url{white-space:normal;line-height:1.45}button.result[data-shortcut=true]>kbd{max-width:38%;white-space:normal;text-align:right}
-      #results{padding:6px 8px;max-height:55vh;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;border-top:1px solid var(--line)}
+      #results{flex:1;min-height:0;padding:6px 8px;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;border-top:1px solid var(--line)}
+      dialog input,dialog footer,dialog #error{flex-shrink:0}
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:10px;width:100%;border:0;
       border-radius:var(--arc-radius-row,.625rem);background:transparent;text-align:left;padding:8px 11px}button.result:hover{background:var(--hover)}button.result[aria-selected=true]{background:var(--selection);outline:1px solid color-mix(in srgb,Highlight 22%,transparent);outline-offset:-1px}
       button.result[data-marked=true]{box-shadow:inset 3px 0 Highlight}
@@ -96,7 +98,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
       kbd{font:inherit;font-size:.6875rem;border:1px solid var(--line);border-radius:4px;padding:1px 4px;white-space:nowrap}.footer-action{flex-shrink:0;border:0;background:transparent;display:flex;align-items:center;gap:5px;font-size:.6875rem;padding:2px;color:var(--fg)}.footer-action:hover{color:Highlight}.footer-main{display:flex;align-items:center;gap:6px;min-width:0}.footer-status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}footer{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:grab;touch-action:none;user-select:none;padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
       footer.dragging{cursor:grabbing}
       dialog[data-sized]{display:flex;flex-direction:column}
-      dialog[data-sized] input,dialog[data-sized] footer,dialog[data-sized] #error{flex-shrink:0}
       dialog[data-sized] #results{flex:1;min-height:0;max-height:none}
       #resize{position:absolute;right:3px;bottom:3px;width:20px;height:20px;padding:0;border:0;background:transparent;color:GrayText;cursor:nwse-resize;touch-action:none}
       #error{margin:0;padding:8px 16px;color:#b3261e;font-size:.75rem;overflow-wrap:anywhere}
@@ -115,8 +116,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         .metadata{display:none}
       }
       @media (max-height:420px){
-        dialog{max-height:calc(100vh - 16px)}
-        #results{max-height:calc(100vh - 126px)}
+        dialog{height:calc(100vh - 16px);max-height:calc(100vh - 16px)}
       }
       @media(prefers-color-scheme:dark){#error{color:#f2b8b5}}
       @media(prefers-contrast:more){dialog{--line:CanvasText}.url,.hint,footer{color:CanvasText}}
@@ -439,6 +439,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let managedGroupId;
     let completedAddress = null;
     let suggestionsPending=false;
+    let deferredResult=null;
+    let deferredResultShown=false;
+    let deferredRevealRequested=false;
     let pendingQuery = Promise.resolve();
     let finishPending = () => {};
     let selected = 0;
@@ -885,6 +888,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       const revision=++queryRevision;
       disconnectSearch();
       clearTimeout(timer);finishPending();suggestionsPending=false;
+      deferredResult=null;deferredResultShown=false;deferredRevealRequested=false;
       let resolvePending;
       pendingQuery=new Promise(resolve=>{resolvePending=resolve;finishPending=resolve;});
       const query=input.value.trim();
@@ -932,11 +936,18 @@ export function mountPalette(tabs, floating = false, context = {}) {
         port.onMessage.addListener(response => {
           if (revision !== queryRevision || dismissed || closing) return;
           if (response.ok) {
-            suggestions = response.suggestions;
-            domains = response.domains || [];
-            error.textContent = (response.warnings || []).join(' · ');
-            render(preferredId);
-          } else error.textContent = response.error || 'Suggestions unavailable';
+            if(response.partial || deferredResultShown || deferredRevealRequested) {
+              deferredResult={suggestions:response.suggestions,domains:response.domains || []};
+              error.textContent = (response.warnings || []).join(' · ');
+              if(deferredResultShown || deferredRevealRequested){deferredResultShown=true;suggestions=deferredResult.suggestions;domains=deferredResult.domains;render(preferredId);}
+            } else if(!query) {
+              suggestions=response.suggestions;domains=response.domains || [];
+              error.textContent=(response.warnings || []).join(' · ');render(preferredId);
+            } else {
+              deferredResult={suggestions:response.suggestions,domains:response.domains || []};
+              error.textContent=(response.warnings || []).join(' · ');
+            }
+          } else if (!response.ok) error.textContent = response.error || 'Suggestions unavailable';
           if (!response.partial) {
             finish();
             port.disconnect();
@@ -987,6 +998,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     noteBody.addEventListener('input',()=>{if(mode==='note-editor' && noteDraft){noteDraft.body=noteBody.value;noteDirty=true;notice='';updateSuggestions();}});
     noteBody.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
+    const revealDeferredResults=()=>{
+      if(mode!=='search' || deferredResultShown)return;
+      deferredRevealRequested=true;
+      if(!deferredResult)return;
+      deferredResultShown=true;suggestions=deferredResult.suggestions;domains=deferredResult.domains;render();
+    };
+    results.addEventListener('wheel',event=>{if(event.deltaY>0)revealDeferredResults();},{passive:true});
+    results.addEventListener('scroll',()=>{if(results.scrollTop>0)revealDeferredResults();},{passive:true});
     input.addEventListener('input',()=>{notice='';completedAddress=null;if(mode==='note-editor' && noteDraft){noteDraft.title=input.value;noteDirty=true;updateSuggestions();return;}if(mode==='search' && !'>@<?$#*:'.includes(input.value[0] || '\0'))lastSearchQuery=input.value;updateSuggestions();});
     input.addEventListener('beforeinput',event=>{if(busy)event.preventDefault();});
     dialog.addEventListener('keydown', event => {
