@@ -83,7 +83,7 @@ These action shortcuts work while Spotlight is open. For vertical tabs, use **Al
 
 ### Quick actions inspired by Arc for Mac
 
-- **Previous tab** jumps to the most recently used tab in the window. The suggested Mac shortcut is **Control+Shift+Space**.
+- **Previous tab** jumps to the most recently used tab in the window. The suggested shortcut is **Option+Shift+Q** on Mac and **Alt+Shift+Q** on Windows/Linux.
 - **Actions → Copy links from selected tabs** copies marked tabs as URLs. **Copy links as Markdown** includes their titles.
 - **Hide this suggestion** removes a history, bookmark or homepage suggestion from Search. **Restore hidden suggestions** resets the list.
 - **Paste and go** reads the clipboard only when selected. If Chrome denies access, paste into the field manually. **Open first web result via DuckDuckGo** sends the query on explicit selection.

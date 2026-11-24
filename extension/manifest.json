@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.23.1",
+  "version": "0.23.3",
   "description": "Spotlight-style search for open tabs, bookmarks, history and the web.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -50,7 +50,7 @@
       "description": "Open browser commands"
     },
     "previous-tab": {
-      "suggested_key": { "mac": "MacCtrl+Shift+Space", "default": "Ctrl+Shift+Space" },
+      "suggested_key": { "mac": "Option+Shift+Q", "default": "Alt+Shift+Q" },
       "description": "Switch to previous tab"
     },
     "edit-address": {
