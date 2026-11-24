@@ -11,10 +11,17 @@
   min-inline-size: 0;
   flex-direction: column;
   gap: var(--arc-space-1);
-  font-size: .75rem;
+  font-size: 0.75rem;
 }
-.site .template { grid-column: 1 / -1; }
+.site .template {
+  grid-column: 1 / -1;
+}
 @media (max-width: 32rem) {
-  .site { grid-template-columns: minmax(0, 1fr) minmax(4rem, 5rem); }
-  .site button { grid-column: 1 / -1; justify-self: start; }
+  .site {
+    grid-template-columns: minmax(0, 1fr) minmax(4rem, 5rem);
+  }
+  .site button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
 }

@@ -1,8 +1,22 @@
-main { padding: var(--arc-space-4); }
-header { margin-block-end: var(--arc-space-4); gap: var(--arc-space-2); }
-section { border: 0; padding: 0; }
-h2 { font-size: .8125rem; color: var(--arc-muted); }
-.tab-list { display: grid; gap: var(--arc-space-1); }
+main {
+  padding: var(--arc-space-4);
+}
+header {
+  margin-block-end: var(--arc-space-4);
+  gap: var(--arc-space-2);
+}
+section {
+  border: 0;
+  padding: 0;
+}
+h2 {
+  font-size: 0.8125rem;
+  color: var(--arc-muted);
+}
+.tab-list {
+  display: grid;
+  gap: var(--arc-space-1);
+}
 .tab-list button {
   text-align: start;
   overflow: hidden;
@@ -15,5 +29,7 @@ h2 { font-size: .8125rem; color: var(--arc-muted); }
   border-color: var(--arc-border);
 }
 @media (forced-colors: active) {
-  .tab-list button[aria-current="true"] { color: var(--arc-focus-text); }
+  .tab-list button[aria-current="true"] {
+    color: var(--arc-focus-text);
+  }
 }

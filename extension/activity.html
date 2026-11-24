@@ -1,12 +1,87 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spotlight activity history</title><link rel="icon" href="icons/icon-32.png"><link rel="stylesheet" href="design-tokens.css"><link rel="stylesheet" href="page.css"><link rel="stylesheet" href="activity.css"></head><body><main>
-<header><img src="icons/icon-48.png" width="48" height="48" alt=""><div><h1>Spotlight activity history</h1><p>Local history · История действий</p></div></header>
-<section><h2>Automatic cleanup / Автоочистка</h2><form id="limits">
-<label class="check"><input type="checkbox" name="enabled"> Record actions / Записывать действия</label>
-<label class="check"><input type="checkbox" name="includeText"> Include query and prompt text / Сохранять текст запросов</label>
-<p>Text recording is off by default. AI recovery copies are separate and temporary. Text already recorded stays until it expires or is cleared.</p>
-<div class="limits"><label>Delete after / Удалять через (hours)<input name="retentionHours" type="number" min="0" max="8760" required></label><label>Maximum entries / Лимит записей<input name="maxEntries" type="number" min="1" max="5000" required></label></div>
-<p>168 hours = 7 days. Use 0 for no age limit; the entry limit still applies. Cleanup runs automatically while Chrome is running.</p>
-<div class="actions"><button type="submit" class="primary">Save limits / Сохранить</button><button type="button" id="clear">Clear history / Очистить всё</button></div><p id="status" role="status" aria-live="polite"></p>
-</form></section>
-<section><h2>Actions / Действия</h2><p>Status describes the Chrome operation, not whether the destination loaded or an AI answered.</p><label>Search history / Поиск по истории<input id="filter" type="search" placeholder="Service, action or saved text…"></label><p id="count" role="status"></p><ol id="entries"></ol></section>
-</main><script type="module" src="activity.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Spotlight activity history</title>
+    <link rel="icon" href="icons/icon-32.png" />
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="page.css" />
+    <link rel="stylesheet" href="activity.css" />
+  </head>
+
+  <body>
+    <main>
+      <header>
+        <img src="icons/icon-48.png" width="48" height="48" alt="" />
+        <div>
+          <h1>Spotlight activity history</h1>
+          <p>Local history · История действий</p>
+        </div>
+      </header>
+      <section>
+        <h2>Automatic cleanup / Автоочистка</h2>
+        <form id="limits">
+          <label class="check"
+            ><input type="checkbox" name="enabled" /> Record actions /
+            Записывать действия</label
+          >
+          <label class="check"
+            ><input type="checkbox" name="includeText" /> Include query and
+            prompt text / Сохранять текст запросов</label
+          >
+          <p>
+            Text recording is off by default. AI recovery copies are separate
+            and temporary. Text already recorded stays until it expires or is
+            cleared.
+          </p>
+          <div class="limits">
+            <label
+              >Delete after / Удалять через (hours)<input
+                name="retentionHours"
+                type="number"
+                min="0"
+                max="8760"
+                required /></label
+            ><label
+              >Maximum entries / Лимит записей<input
+                name="maxEntries"
+                type="number"
+                min="1"
+                max="5000"
+                required
+            /></label>
+          </div>
+          <p>
+            168 hours = 7 days. Use 0 for no age limit; the entry limit still
+            applies. Cleanup runs automatically while Chrome is running.
+          </p>
+          <div class="actions">
+            <button type="submit" class="primary">
+              Save limits / Сохранить</button
+            ><button type="button" id="clear">
+              Clear history / Очистить всё
+            </button>
+          </div>
+          <p id="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+      <section>
+        <h2>Actions / Действия</h2>
+        <p>
+          Status describes the Chrome operation, not whether the destination
+          loaded or an AI answered.
+        </p>
+        <label
+          >Search history / Поиск по истории<input
+            id="filter"
+            type="search"
+            placeholder="Service, action or saved text…"
+        /></label>
+        <p id="count" role="status"></p>
+        <ol id="entries"></ol>
+      </section>
+    </main>
+    <script type="module" src="activity.js"></script>
+  </body>
+</html>
