@@ -22,9 +22,22 @@ Find an open tab, revisit a bookmarked page, search a website or run a browser c
 
 ## See it in action
 
-![Arc for Chrome: open tabs, matching results, YouTube Site Search and browser commands](docs/assets/spotlight-demo.gif)
+Spotlight uses **live glass** over the current page, with a pill-shaped search field, a separate results surface and a compact footer for keyboard actions.
 
-_Actual extension interface with fictional browsing data. The loop shows Search → matching open tab → Site Search → Commands. [Static preview](docs/assets/spotlight-light.png) · [How the demo is made](docs/assets/README.md)._
+| Light · warm pearl                                                                      | Dark · graphite                                                                            |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| ![Spotlight in the light pearl theme over a warm page](docs/assets/spotlight-light.png) | ![Spotlight in the dark graphite theme over a tinted page](docs/assets/spotlight-dark.png) |
+
+_Screenshots of the current extension in Chrome with fictional tabs._
+
+<details>
+<summary>Keyboard workflow demo in the previous design</summary>
+
+![Search for an open tab, scope a search to YouTube, then open browser commands](docs/assets/spotlight-demo.gif)
+
+[How the demo was made](docs/assets/README.md)
+
+</details>
 
 | Find what you already have                                                         | Go somewhere new                                                                             |
 | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -146,7 +159,7 @@ Drag the bottom hint strip to move Spotlight within the browser viewport. **Ctrl
 
 ### Resize the overlay
 
-Drag Spotlight’s bottom-right corner. Bounds are **360×220 to 1000×800 pixels**, further limited by the available viewport; small viewports also lower the minimum. Results scroll within the chosen height. Shift+Tab can focus the corner: arrows resize, Shift increases the step and Enter resets size. Ctrl+Alt+0 resets both size and position. The backdrop is dimmed without blur.
+Drag the bottom-right corner of Spotlight to resize. The resize area has no visible icon. The palette ranges from **360×220 to 1000×800 pixels**, bounded by the available viewport. From the search field, press **Shift+Tab** to focus the corner. Use the arrow keys to resize, hold **Shift** for larger steps, and press **Enter** to reset the size. **Ctrl+Alt+0** resets both size and position. The result list scrolls inside the panel. When you move with the arrow keys, the selected row keeps a gap from the list edges and the first row keeps its section heading visible.
 
 ### Keep your place
 
@@ -271,18 +284,11 @@ Saving checks the chosen folder and skips existing URLs without overwriting thei
 
 Root/managed destinations cannot be modified. Web pages and known Chrome sections are supported; creating folders is outside this mode. Native bookmark changes can sync through Chrome. No new permission: the existing bookmarks grant now also supports these explicit edits. If a browser intercepts a chord, use the prefix or commands.
 
-### Use the browser’s appearance
+### Live glass in both themes
 
-The overlay follows effective light/dark rendering preferences and uses browser-native colors and scalable type. Custom Chrome wallpaper and profile accents are not imported.
+Spotlight follows Chrome’s effective light or dark appearance. Light mode uses warm pearl and dark mode uses graphite. On ordinary web pages, Chrome blurs the page inside the palette’s outline. The glass picks up color as the content underneath changes or as you move the palette. The result list lets some color through, while the search field and selected row use denser fills for readability.
 
-<details>
-<summary>Light and dark previews</summary>
-
-| Light                                                    | Dark                                                   |
-| -------------------------------------------------------- | ------------------------------------------------------ |
-| ![Search in light mode](docs/assets/spotlight-light.png) | ![Search in dark mode](docs/assets/spotlight-dark.png) |
-
-</details>
+The new-tab page and the separate search window for protected pages use the extension’s own background. When Chrome reports reduced transparency, increased contrast or forced colors, Spotlight uses opaque system surfaces. [Design system and tokens](docs/DESIGN_SYSTEM.md)
 
 ## Built for your browser
 
