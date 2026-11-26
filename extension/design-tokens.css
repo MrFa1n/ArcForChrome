@@ -3,37 +3,114 @@
   color-scheme: light dark;
   --arc-font: system-ui, -apple-system, sans-serif;
   --arc-text: CanvasText;
-  --arc-muted: color-mix(in srgb, CanvasText 68%, Canvas);
-  --arc-surface: Canvas;
-  --arc-border: color-mix(in srgb, CanvasText 18%, Canvas);
-  --arc-hover: color-mix(in srgb, CanvasText 7%, Canvas);
-  --arc-selection: color-mix(in srgb, Highlight 17%, Canvas);
-  --arc-focus: Highlight;
-  --arc-focus-text: HighlightText;
+  --arc-muted: #504d47;
+  --arc-surface: #f2efea;
+  --arc-glass: rgb(250 247 241 / 94%);
+  --arc-live-glass: rgb(250 247 241 / 75%);
+  --arc-live-field: rgb(250 247 241 / 88%);
+  --arc-live-results: rgb(250 247 241 / 67%);
+  --arc-field: #faf7f1;
+  --arc-border: #b9b3a9;
+  --arc-divider: rgb(75 67 55 / 22%);
+  --arc-highlight: rgb(255 255 255 / 90%);
+  --arc-hover: #ebe6de;
+  --arc-selection: #e3ded6;
+  --arc-selection-edge: #817a70;
+  --arc-focus: #403c36;
+  --arc-focus-text: #fff;
+  --arc-danger: #942d3e;
+  --arc-scrim: rgb(40 35 28 / 23%);
+  --arc-lens:
+    radial-gradient(ellipse at 3% 0%, rgb(255 255 255 / 38%), transparent 63%),
+    radial-gradient(
+      ellipse at 100% 95%,
+      rgb(224 209 188 / 34%),
+      transparent 57%
+    );
+  --arc-workspace:
+    radial-gradient(ellipse at 8% 0%, #e7ded0, transparent 66%),
+    radial-gradient(ellipse at 94% 90%, #d6c9b9, transparent 63%),
+    linear-gradient(145deg, #f2ece2, #eae4dc);
+  --arc-panel-shadow:
+    inset 0 1px 0 var(--arc-highlight), 0 16px 48px rgb(48 40 31 / 23%),
+    0 3px 12px rgb(48 40 31 / 12%);
+  --arc-card-shadow:
+    inset 0 1px 0 var(--arc-highlight), 0 6px 24px rgb(48 40 31 / 9%);
+  --arc-control-shadow: inset 0 1px 0 var(--arc-highlight);
+  --arc-frost: blur(18px) saturate(130%);
   --arc-space-1: 0.25rem;
   --arc-space-2: 0.5rem;
   --arc-space-3: 0.75rem;
   --arc-space-4: 1rem;
   --arc-space-6: 1.5rem;
-  --arc-radius-control: 0.5rem;
-  --arc-radius-row: 0.625rem;
-  --arc-radius-panel: 1rem;
+  --arc-radius-control: 0.625rem;
+  --arc-radius-row: 0.75rem;
+  --arc-radius-panel: 1.375rem;
+  --arc-radius-palette: 2rem;
+  --arc-radius-results: 1rem;
+  --arc-radius-pill: 999px;
   --arc-icon-size: 1.0625rem;
   --arc-icon-tile: 1.75rem;
 }
-@media (prefers-contrast: more) {
+@media (prefers-color-scheme: dark) {
   :root,
   :host {
-    --arc-muted: CanvasText;
-    --arc-border: CanvasText;
+    --arc-muted: #c4c4c4;
+    --arc-surface: #1b1b1b;
+    --arc-glass: rgb(16 16 16 / 94%);
+    --arc-live-glass: rgb(14 14 14 / 76%);
+    --arc-live-field: rgb(23 23 23 / 88%);
+    --arc-live-results: rgb(26 26 26 / 60%);
+    --arc-field: #252525;
+    --arc-border: #555555;
+    --arc-divider: rgb(206 206 206 / 24%);
+    --arc-highlight: rgb(255 255 255 / 17%);
+    --arc-hover: #303030;
+    --arc-selection: #393939;
+    --arc-selection-edge: #858585;
+    --arc-focus: #dedede;
+    --arc-focus-text: #181818;
+    --arc-danger: #ffafbd;
+    --arc-scrim: rgb(0 0 0 / 40%);
+    --arc-lens:
+      radial-gradient(ellipse at 3% 0%, rgb(255 255 255 / 9%), transparent 65%),
+      radial-gradient(ellipse at 100% 95%, rgb(0 0 0 / 19%), transparent 60%);
+    --arc-workspace:
+      radial-gradient(ellipse at 8% 0%, #333333, transparent 66%),
+      radial-gradient(ellipse at 94% 90%, #242424, transparent 63%),
+      linear-gradient(145deg, #121212, #191919);
+    --arc-panel-shadow:
+      inset 0 1px 0 var(--arc-highlight), 0 16px 48px rgb(0 0 0 / 48%),
+      0 3px 12px rgb(0 0 0 / 32%);
+    --arc-card-shadow:
+      inset 0 1px 0 var(--arc-highlight), 0 6px 24px rgb(0 0 0 / 20%);
   }
 }
-@media (forced-colors: active) {
+@media (prefers-reduced-transparency: reduce),
+  (prefers-contrast: more),
+  (forced-colors: active) {
   :root,
   :host {
     --arc-muted: CanvasText;
+    --arc-surface: Canvas;
+    --arc-glass: Canvas;
+    --arc-live-glass: Canvas;
+    --arc-live-field: Canvas;
+    --arc-live-results: Canvas;
+    --arc-field: Canvas;
     --arc-border: CanvasText;
+    --arc-divider: CanvasText;
     --arc-hover: Canvas;
     --arc-selection: Highlight;
+    --arc-selection-edge: Highlight;
+    --arc-focus: Highlight;
+    --arc-focus-text: HighlightText;
+    --arc-danger: CanvasText;
+    --arc-lens: none;
+    --arc-workspace: none;
+    --arc-frost: none;
+    --arc-panel-shadow: none;
+    --arc-card-shadow: none;
+    --arc-control-shadow: none;
   }
 }

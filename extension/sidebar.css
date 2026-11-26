@@ -6,10 +6,11 @@ header {
   gap: var(--arc-space-2);
 }
 section {
-  border: 0;
-  padding: 0;
+  padding: var(--arc-space-2);
+  border-radius: var(--arc-radius-row);
 }
 h2 {
+  padding-inline: var(--arc-space-2);
   font-size: 0.8125rem;
   color: var(--arc-muted);
 }
@@ -23,12 +24,15 @@ h2 {
   text-overflow: ellipsis;
   white-space: nowrap;
   border-color: transparent;
+  box-shadow: none;
 }
 .tab-list button[aria-current="true"] {
   background: var(--arc-selection);
-  border-color: var(--arc-border);
+  border-color: var(--arc-selection-edge);
 }
-@media (forced-colors: active) {
+@media (prefers-reduced-transparency: reduce),
+  (prefers-contrast: more),
+  (forced-colors: active) {
   .tab-list button[aria-current="true"] {
     color: var(--arc-focus-text);
   }

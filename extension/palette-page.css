@@ -8,19 +8,10 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: Canvas;
+  background: var(--arc-workspace) var(--arc-surface);
 }
 
 .new-tab {
   min-height: 100%;
-  background: radial-gradient(
-    ellipse at 50% 30%,
-    color-mix(in srgb, Highlight 10%, Canvas),
-    Canvas 75%
-  );
-}
-@media (forced-colors: active) {
-  .new-tab {
-    background: Canvas;
-  }
+  background: var(--arc-workspace) var(--arc-surface);
 }

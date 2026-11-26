@@ -23,11 +23,28 @@ export function mountPalette(tabs, floating = false, context = {}) {
   shell.setAttribute("aria-label", "Arc command bar");
   shell.style.cssText =
     "border:0;padding:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;overflow:hidden;";
-  if (actionPopup || newTab) {
-    const style = document.createElement("style");
-    style.textContent = "dialog::backdrop{background:transparent}";
-    root.append(style);
+  const liveGlass =
+    !actionPopup && !newTab && CSS.supports("backdrop-filter", "blur(1px)")
+      ? document.createElement("div")
+      : null;
+  const backdropStyle = document.createElement("style");
+  backdropStyle.textContent =
+    (context.designTokens || "") +
+    (actionPopup || newTab
+      ? "dialog::backdrop{background:transparent}"
+      : "dialog::backdrop{background:var(--arc-scrim,#0004)}");
+  if (liveGlass) {
+    // The parent document can blur the page beneath the frame; the frame cannot.
+    backdropStyle.textContent += `
+      .page-glass{position:absolute;inset:0 auto auto 0;pointer-events:none;
+        backdrop-filter:var(--arc-frost,blur(18px) saturate(130%))}
+      iframe{position:relative}
+    `;
+    liveGlass.className = "page-glass";
+    liveGlass.setAttribute("aria-hidden", "true");
+    shell.append(liveGlass);
   }
+  root.append(backdropStyle);
   const frame = document.createElement("iframe");
   frame.title = "Arc search";
   frame.style.cssText =
@@ -73,30 +90,34 @@ export function mountPalette(tabs, floating = false, context = {}) {
       (context.designTokens || "") +
       `
       :host{all:initial;color-scheme:light dark}*{box-sizing:border-box}
-      dialog{--bg:var(--arc-surface,Canvas);--fg:var(--arc-text,CanvasText);--muted:var(--arc-muted,GrayText);
+      dialog{--inset:var(--arc-space-3,.75rem);--footer-inset:var(--arc-space-2,.5rem);--bg:var(--arc-glass,Canvas);--fg:var(--arc-text,CanvasText);--muted:var(--arc-muted,GrayText);
       --hover:var(--arc-hover,color-mix(in srgb,CanvasText 7%,Canvas));--selection:var(--arc-selection,color-mix(in srgb,Highlight 17%,Canvas));--line:var(--arc-border,color-mix(in srgb,CanvasText 18%,Canvas));
-      color-scheme:light dark;border:1px solid var(--line);border-radius:var(--arc-radius-panel,1rem);padding:0;width:min(600px,calc(100vw - 32px));
-      height:min(420px,calc(100vh - 32px));max-height:calc(100vh - 32px);margin:auto;background:var(--bg);color:var(--fg);box-shadow:0 20px 64px #0006,0 2px 8px #0002;
+      color-scheme:light dark;border:1px solid var(--line);border-radius:var(--arc-radius-palette,2rem);padding:var(--inset);padding-block-end:var(--footer-inset);gap:var(--footer-inset);width:min(600px,calc(100vw - 32px));
+      height:min(420px,calc(100vh - 32px));max-height:calc(100vh - 32px);margin:auto;background:var(--arc-lens,none) var(--bg);color:var(--fg);box-shadow:var(--arc-panel-shadow,0 20px 64px #0006);backdrop-filter:var(--arc-frost,none);
       display:flex;flex-direction:column;
       font:.875rem/1.45 var(--arc-font,system-ui);overflow:hidden}
-      dialog::backdrop{background:#0005}
-      input{font:inherit;font-size:1.1875rem;width:100%;padding:17px 18px;border:0;outline:none;color:var(--fg);background:transparent}
-      [hidden]{display:none!important}#note-body{display:block;resize:none;width:100%;height:220px;min-height:80px;max-height:45vh;border:0;border-top:1px solid var(--line);outline:none;padding:14px 22px;font:inherit;line-height:1.7;background:Canvas;color:CanvasText}#note-body:focus-visible{box-shadow:inset 0 0 0 1px Highlight}dialog[data-sized] #note-body{flex:1;max-height:none;height:auto}button.result[data-shortcut=true] .url{white-space:normal;line-height:1.45}button.result[data-shortcut=true]>kbd{max-width:38%;white-space:normal;text-align:right}
-      #results{flex:1;min-height:0;padding:6px 8px;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;border-top:1px solid var(--line)}
+      dialog[data-live-glass]{--bg:var(--arc-live-glass,var(--arc-glass,Canvas));backdrop-filter:none}
+      dialog[data-live-glass] input{background:var(--arc-live-field,var(--arc-field,Canvas))}
+      dialog[data-live-glass] #results{background:var(--arc-live-results,var(--arc-field,Canvas))}
+      dialog::backdrop{background:transparent}
+      input{font:inherit;font-size:1.1875rem;width:100%;padding:11px 16px;margin:0;margin-block-end:calc(var(--inset) - var(--footer-inset));border:1px solid var(--line);border-radius:var(--arc-radius-pill,999px);outline:none;color:var(--fg);background:var(--arc-field,Canvas);box-shadow:var(--arc-control-shadow,none)}
+      input::placeholder,#note-body::placeholder{color:var(--muted);opacity:1}input:focus-visible{outline:2px solid var(--arc-focus,Highlight);outline-offset:-2px}
+      [hidden]{display:none!important}#note-body{display:block;resize:none;width:100%;height:220px;min-height:80px;max-height:45vh;border:1px solid var(--line);border-radius:var(--arc-radius-panel,1.375rem);outline:none;padding:var(--inset);font:inherit;line-height:1.7;background:var(--arc-field,Canvas);color:var(--fg)}#note-body:focus-visible{box-shadow:inset 0 0 0 1px Highlight}dialog[data-sized] #note-body{flex:1;max-height:none;height:auto}button.result[data-shortcut=true] .url{white-space:normal;line-height:1.45}button.result[data-shortcut=true]>kbd{max-width:38%;white-space:normal;text-align:right}
+      #results{flex:1;min-height:0;--results-inset:var(--arc-space-2,.5rem);padding:var(--results-inset);scroll-padding-block:var(--results-inset);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;border:1px solid var(--arc-divider,var(--line));border-radius:var(--arc-radius-results,1rem);background:var(--arc-field,Canvas);box-shadow:var(--arc-control-shadow,none)}
       dialog input,dialog footer,dialog #error{flex-shrink:0}
       button{font:inherit;color:inherit;cursor:pointer}button.result{display:flex;align-items:center;gap:10px;width:100%;border:0;
-      border-radius:var(--arc-radius-row,.625rem);background:transparent;text-align:left;padding:8px 11px}button.result:hover{background:var(--hover)}button.result[aria-selected=true]{background:var(--selection);outline:1px solid color-mix(in srgb,Highlight 22%,transparent);outline-offset:-1px}
-      button.result[data-marked=true]{box-shadow:inset 3px 0 Highlight}
+      border-radius:var(--arc-radius-row,.625rem);background:transparent;text-align:left;padding:8px 11px}button.result:hover{background:var(--hover)}button.result[aria-selected=true]{background:var(--selection);outline:1px solid var(--arc-selection-edge,Highlight);outline-offset:-1px;box-shadow:var(--arc-control-shadow,none)}
+      button.result[data-marked=true]{box-shadow:inset 3px 0 var(--arc-focus,Highlight)}
       .result[data-group-color]{border-left:3px solid var(--group-color)}
       [data-group-color=grey]{--group-color:#80868b}[data-group-color=blue]{--group-color:#4285f4}
       [data-group-color=red]{--group-color:#ea4335}[data-group-color=yellow]{--group-color:#fbbc04}
       [data-group-color=green]{--group-color:#34a853}[data-group-color=pink]{--group-color:#e871bd}
       [data-group-color=purple]{--group-color:#a142f4}[data-group-color=cyan]{--group-color:#24c1e0}
       [data-group-color=orange]{--group-color:#fa903e}
-      .group-badge{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;padding:1px 7px;margin:0;border-radius:6px;font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--group-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--group-color) 35%,Canvas)}
+      .group-badge{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;padding:1px 7px;margin:0;border-radius:var(--arc-radius-pill,999px);font-size:.6875rem;color:CanvasText;background:color-mix(in srgb,var(--group-color) 12%,Canvas);border:1px solid color-mix(in srgb,var(--group-color) 35%,Canvas)}
       .group-badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--group-color);margin-right:6px;vertical-align:middle}
-      .metadata{display:flex;min-width:0;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;max-width:34%;flex-shrink:0}.group-badge{margin:0}.result{position:relative}.result[data-section]{margin-top:23px}.section-label{position:absolute;left:10px;top:-20px;color:var(--muted);font-size:.6875rem;font-weight:600;pointer-events:none}
-      .source-badge{--source-color:#526174;display:inline-flex;align-items:center;gap:5px;padding:1px 5px;border-radius:5px;font-size:.6875rem;color:var(--muted);background:transparent;border:1px solid transparent}
+      .metadata{display:flex;min-width:0;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:5px;max-width:34%;flex-shrink:0}.group-badge{margin:0}.result{position:relative}.result[data-section]{--section-gap:23px;margin-block-start:var(--section-gap);scroll-margin-block-start:var(--section-gap)}.section-label{position:absolute;left:10px;top:-20px;color:var(--muted);font-size:.6875rem;font-weight:600;pointer-events:none}
+      .source-badge{--source-color:#526174;display:inline-flex;align-items:center;gap:5px;padding:1px 5px;border-radius:var(--arc-radius-pill,999px);font-size:.6875rem;color:var(--muted);background:var(--arc-field,Canvas);border:1px solid var(--arc-divider,transparent)}
       .source-badge::before{flex:none;content:'';width:6px;height:6px;border-radius:50%;background:var(--source-color)}
       [data-source=tab]{--source-color:#3685ec}[data-source=bookmark]{--source-color:#be8500}
       [data-source=history]{--source-color:#a16be0}[data-source=domain]{--source-color:#168e70}
@@ -106,32 +127,30 @@ export function mountPalette(tabs, floating = false, context = {}) {
       [data-source=ai-draft]{--source-color:#d46676}[data-source=bookmark-folder]{--source-color:#be8500}
       [data-source=group]{--source-color:#b75cb0}[data-source=quicklink],[data-source=quicklink-save]{--source-color:#c0784d}[data-source=calculator]{--source-color:#27a189}[data-source=note]{--source-color:#8a9b3c}[data-source=shortcut]{--source-color:#73859b}[data-source=activity]{--source-color:#748795}[data-source=result-action]{--source-color:#7b8795}
       @media (forced-colors:active){.source-badge{border-color:CanvasText}.source-badge::before{background:CanvasText}}
-      .icon{position:relative;width:var(--arc-icon-tile,1.75rem);height:var(--arc-icon-tile,1.75rem);border-radius:var(--arc-radius-control,.5rem);background:var(--hover);display:grid;place-items:center;flex-shrink:0}
-      .icon svg,#resize svg{width:var(--arc-icon-size,1.0625rem);height:var(--arc-icon-size,1.0625rem);display:block}
+      .icon{position:relative;width:var(--arc-icon-tile,1.75rem);height:var(--arc-icon-tile,1.75rem);border-radius:var(--arc-radius-control,.5rem);background:var(--arc-field,Canvas);box-shadow:var(--arc-control-shadow,none);display:grid;place-items:center;flex-shrink:0}
+      .icon svg{width:var(--arc-icon-size,1.0625rem);height:var(--arc-icon-size,1.0625rem);display:block}
       .icon img{width:18px;height:18px;object-fit:contain;border-radius:3px}
       .icon:has(img)>.icon-symbol{display:none}
       .tab-mark{display:none;position:absolute;right:-3px;bottom:-3px;padding:1px;background:Canvas;border-radius:4px;color:CanvasText}
       .tab-mark svg{width:12px;height:12px}
       .icon:hover .tab-mark,.icon[data-marked=true] .tab-mark{display:block}
-      #resize svg{margin:auto;width:13px;height:13px}
       .text{min-width:0;flex:1}.title{font-weight:600}.title,.url{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .url:empty{display:none}.url{font-size:.75rem;color:var(--muted)}.hint{font-size:.625rem;color:var(--muted);flex-shrink:0}
-      kbd{font:inherit;font-size:.6875rem;border:1px solid var(--line);border-radius:4px;padding:1px 4px;white-space:nowrap}.footer-action{flex-shrink:0;border:0;background:transparent;display:flex;align-items:center;gap:5px;font-size:.6875rem;padding:2px;color:var(--fg)}.footer-action:hover{color:Highlight}.footer-main{display:flex;align-items:center;gap:6px;min-width:0}.footer-status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}footer{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:grab;touch-action:none;user-select:none;padding:12px 22px;color:var(--muted);font-size:.6875rem;border-top:1px solid var(--line)}
+      kbd{font:inherit;font-size:.6875rem;border:1px solid var(--line);border-radius:5px;background:var(--arc-field,Canvas);padding:1px 4px;white-space:nowrap}.footer-action{flex-shrink:0;border:0;background:transparent;display:flex;align-items:center;gap:5px;font-size:.6875rem;padding:2px;color:var(--fg)}.footer-action:hover{color:var(--arc-focus,Highlight)}.footer-main{display:flex;align-items:center;gap:6px;min-width:0}.footer-status{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}footer{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:grab;touch-action:none;user-select:none;margin-block-start:auto;padding:0 var(--footer-inset);color:var(--muted);font-size:.6875rem}
       footer.dragging{cursor:grabbing}
       dialog[data-sized]{display:flex;flex-direction:column}
       dialog[data-sized] #results{flex:1;min-height:0;max-height:none}
-      #resize{position:absolute;right:3px;bottom:3px;width:20px;height:20px;padding:0;border:0;background:transparent;color:GrayText;cursor:nwse-resize;touch-action:none}
-      #error{margin:0;padding:8px 16px;color:#b3261e;font-size:.75rem;overflow-wrap:anywhere}
+      #resize{position:absolute;right:3px;bottom:3px;width:20px;height:20px;padding:0;border:0;background:transparent;cursor:nwse-resize;touch-action:none}
+      #error{margin:0;padding:8px 16px;color:var(--arc-danger,#b3261e);font-size:.75rem;overflow-wrap:anywhere}
       #error:empty,#results:empty{display:none}
-      button:focus-visible{outline:2px solid Highlight;outline-offset:-2px}
+      button:focus-visible{outline:2px solid var(--arc-focus,Highlight);outline-offset:-2px}
       @media (max-width:480px){
-        dialog{width:calc(100vw - 20px);border-radius:14px}
-        input{padding:14px 12px;font-size:1rem}
+        dialog{width:calc(100vw - 20px)}
+        input{padding:10px 16px;font-size:1rem}
         button.result{gap:8px;padding:7px 8px}
         .metadata{max-width:30%;min-width:0}
         .source-badge{font-size:.625rem;white-space:nowrap;padding-inline:2px}
         .group-badge{font-size:.625rem}
-        footer{padding:8px 24px 8px 10px}
       }
       @media (max-width:340px){
         .metadata{display:none}
@@ -139,10 +158,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       @media (max-height:420px){
         dialog{height:calc(100vh - 16px);max-height:calc(100vh - 16px)}
       }
-      @media(prefers-color-scheme:dark){#error{color:#f2b8b5}}
       @media(prefers-contrast:more){dialog{--line:CanvasText}.url,.hint,footer{color:CanvasText}}
-      @media(forced-colors:active){button.result[aria-selected=true]{background:Highlight;color:HighlightText}
-        button.result[aria-selected=true] .url,button.result[aria-selected=true] .hint{color:HighlightText}}
+      @media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){button.result[aria-selected=true]{background:Highlight;color:HighlightText}
+        button.result[aria-selected=true] .url,button.result[aria-selected=true] .hint{color:HighlightText}
+        button.result[aria-selected=true] kbd{color:CanvasText}}
       `;
     root.append(style);
     if (newTab) {
@@ -156,12 +175,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
         dialog{inset:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;
           border:0;border-radius:0;box-shadow:none;display:flex;flex-direction:column}
         dialog::backdrop{background:transparent}
-        input{padding:15px 17px;font-size:1.125rem}
-        #results{flex:1;min-height:0;max-height:none;scrollbar-width:thin;padding:6px 8px}
+        input{font-size:1.125rem}
         #results[hidden]{display:none}
         #note-body:not([hidden]){flex:1;min-height:0;max-height:none}
         #error:empty{display:none}
-        footer{padding:9px 14px;cursor:default}
+        footer{cursor:default}
         input,footer,#error{flex-shrink:0}
       `;
       root.append(popupStyle);
@@ -209,7 +227,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
       folder: "M3 7h7l2 2h9v11H3z",
       mark: "M5 5h14v14H5z",
       checked: "M5 5h14v14H5z M8 12l3 3 5-6",
-      resize: "M10 19l9-9 M15 19l4-4",
     };
     const resultIcons = {
       "order-tab": "tab",
@@ -242,7 +259,6 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const resizeHandle = document.createElement("button");
     resizeHandle.id = "resize";
     resizeHandle.type = "button";
-    resizeHandle.append(drawIcon("resize"));
     resizeHandle.setAttribute("aria-label", "Resize Spotlight");
     resizeHandle.title =
       "Drag corner to resize · Arrow keys when focused · Enter reset size";
@@ -260,6 +276,16 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let drag = null;
     let suppressDragClick = false;
     const view = document.defaultView;
+    let previousGlassGeometry = "";
+    function syncGlass() {
+      if (!liveGlass) return;
+      const { x, y, width, height } = dialog.getBoundingClientRect();
+      const radius = view.getComputedStyle(dialog).borderRadius;
+      const geometry = `width:${width}px;height:${height}px;transform:translate(${x}px,${y}px);border-radius:${radius}`;
+      if (geometry === previousGlassGeometry) return;
+      previousGlassGeometry = geometry;
+      liveGlass.style.cssText = geometry;
+    }
     function applyGeometry(values) {
       for (const [property, value] of Object.entries(values))
         if (dialog.style[property] !== value) dialog.style[property] = value;
@@ -283,6 +309,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         bottom: "auto",
       });
       positioned = true;
+      syncGlass();
     }
     function move(dx, dy) {
       const bounds = dialog.getBoundingClientRect();
@@ -317,6 +344,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       delete dialog.dataset.sized;
       dialog.removeAttribute("style");
       positioned = false;
+      syncGlass();
     }
     document.addEventListener(
       "pointerdown",
@@ -402,7 +430,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (layoutFrame || dismissed) return;
       layoutFrame = view.requestAnimationFrame(() => {
         layoutFrame = 0;
-        if (!dismissed) keepVisible();
+        if (dismissed) return;
+        keepVisible();
+        syncGlass();
       });
     }
     view.addEventListener("resize", scheduleKeepVisible);
@@ -2875,7 +2905,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
     dialog.addEventListener("click", (event) => {
       if (event.target === dialog) close();
     });
+    if (liveGlass) dialog.dataset.liveGlass = "";
     dialog.showModal();
+    syncGlass();
     setMode(mode, mode === "edit" ? context.sourceUrl || "" : "");
   }
   showPalette(frame.contentDocument);

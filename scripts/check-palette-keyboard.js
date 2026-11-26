@@ -36,6 +36,10 @@ const DISCOVERED_SITES = inferSites([
 ]);
 import { commandSuggestions } from "../extension/command-catalog.js";
 
+const designTokens = await readFile(
+  new URL("../extension/design-tokens.css", import.meta.url),
+  "utf8",
+);
 const profile = await mkdtemp(join(tmpdir(), "arc-keyboard-"));
 const binary =
   process.env.CHROME_BINARY ||
@@ -131,7 +135,7 @@ try {
   }
   async function mount(tabs, context = {}) {
     await evaluate(
-      `globalThis.mockTabs=${JSON.stringify(tabs)};(${mountPalette.toString()})(${JSON.stringify(tabs)},false,${JSON.stringify({ ...PALETTE_CATALOG, ...context })})`,
+      `globalThis.mockTabs=${JSON.stringify(tabs)};(${mountPalette.toString()})(${JSON.stringify(tabs)},false,${JSON.stringify({ ...PALETTE_CATALOG, designTokens, ...context })})`,
     );
   }
   await evaluate(`document.body.innerHTML='<input id="page-input"><video></video>';document.querySelector('input').focus();
@@ -220,12 +224,18 @@ try {
     0,
     "palette must open directly on the query without a toolbar",
   );
-  async function paletteCall(functionDeclaration, args = []) {
+  async function paletteCall(
+    functionDeclaration,
+    args = [],
+    pageGlass = false,
+  ) {
     const tree = await send("DOM.getDocument", { depth: -1, pierce: true });
     function find(node) {
       if (
-        node.nodeName === "DIALOG" &&
-        node.attributes?.includes("Search tabs or the web")
+        pageGlass
+          ? node.nodeName === "DIV" && node.attributes?.includes("page-glass")
+          : node.nodeName === "DIALOG" &&
+            node.attributes?.includes("Search tabs or the web")
       )
         return node;
       for (const child of [
@@ -238,7 +248,12 @@ try {
       }
     }
     const node = find(tree.root);
-    assert.ok(node, "search dialog should exist in its frame");
+    assert.ok(
+      node,
+      pageGlass
+        ? "page glass should exist"
+        : "search dialog should exist in its frame",
+    );
     const { object } = await send("DOM.resolveNode", {
       backendNodeId: node.backendNodeId,
     });
@@ -260,7 +275,8 @@ try {
       const probe=this.ownerDocument.createElement('span');
       probe.style.cssText='background:Canvas;color:CanvasText;color-scheme:light dark';this.append(probe);
       const view=this.ownerDocument.defaultView;
-      const theme={background:view.getComputedStyle(this).backgroundColor,color:view.getComputedStyle(this).color,
+      const style=view.getComputedStyle(this);
+      const theme={background:style.backgroundColor,lens:style.backgroundImage,frost:style.backdropFilter,color:style.color,
         canvas:view.getComputedStyle(probe).backgroundColor,canvasText:view.getComputedStyle(probe).color,
         fontSize:parseFloat(view.getComputedStyle(this).fontSize)};
       probe.remove();return theme;
@@ -302,11 +318,19 @@ try {
     "the tooltip explains merged sources",
   );
   const light = await paletteStyles();
-  assert.equal(
-    light.background,
-    light.canvas,
-    "palette should use native browser Canvas color",
-  );
+  assert.notEqual(light.background, light.canvas);
+  assert.match(light.lens, /radial-gradient/);
+  assert.equal(light.frost, "none");
+  const liveGlassStyles = () =>
+    paletteCall(
+      `function(){return {
+      frost: getComputedStyle(this).backdropFilter,
+      bounds: this.getBoundingClientRect().toJSON()
+    };}`,
+      [],
+      true,
+    );
+  assert.match((await liveGlassStyles()).frost, /blur/);
   assert.equal(light.color, light.canvasText);
   assert.equal(
     await paletteCall(
@@ -316,6 +340,17 @@ try {
     "backdrop must not blur the page",
   );
   await screenshot("light");
+  await send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-contrast", value: "more" }],
+  });
+  const opaque = await paletteStyles();
+  assert.equal(opaque.background, opaque.canvas);
+  assert.equal(opaque.lens, "none");
+  assert.equal(opaque.frost, "none");
+  assert.equal((await liveGlassStyles()).frost, "none");
+  await send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-color-scheme", value: "light" }],
+  });
   await evaluate(
     "globalThis.paletteErrors=[];window.addEventListener('error',event=>paletteErrors.push(event.message));",
   );
@@ -325,10 +360,12 @@ try {
   const initialPosition = await paletteCall(
     `function(){return this.getBoundingClientRect().toJSON();}`,
   );
+  assert.deepEqual((await liveGlassStyles()).bounds, initialPosition);
   await key("ArrowRight", "ArrowRight", undefined, 3);
   const nudgedPosition = await paletteCall(
     `function(){return this.getBoundingClientRect().toJSON();}`,
   );
+  assert.deepEqual((await liveGlassStyles()).bounds, nudgedPosition);
   assert.equal(
     Math.round(nudgedPosition.x - initialPosition.x),
     16,
@@ -532,7 +569,7 @@ try {
     features: [{ name: "prefers-color-scheme", value: "dark" }],
   });
   const dark = await paletteStyles();
-  assert.equal(dark.background, dark.canvas);
+  assert.equal(dark.color, dark.canvasText);
   assert.notEqual(
     dark.background,
     light.background,
@@ -2005,6 +2042,8 @@ try {
     "activity.js",
     "activity.css",
     "activity-store.js",
+    "design-tokens.css",
+    "page.css",
     "ai-learning/embeddings.js",
     "icons/icon-32.png",
     "icons/icon-48.png",

@@ -1,7 +1,8 @@
 :root {
   font: 100%/1.5 var(--arc-font);
   color: var(--arc-text);
-  background: var(--arc-surface);
+  min-block-size: 100%;
+  background: var(--arc-workspace) var(--arc-surface);
 }
 * {
   box-sizing: border-box;
@@ -22,6 +23,8 @@ header {
 }
 header img {
   flex: none;
+  border-radius: var(--arc-radius-control);
+  box-shadow: var(--arc-card-shadow);
 }
 h1 {
   margin: 0;
@@ -41,6 +44,14 @@ section {
   padding: clamp(1rem, 4vw, 1.5rem);
   border: 1px solid var(--arc-border);
   border-radius: var(--arc-radius-panel);
+  background: var(--arc-lens) var(--arc-surface);
+  box-shadow: var(--arc-card-shadow);
+}
+@supports (backdrop-filter: blur(1px)) {
+  section {
+    background: var(--arc-lens) var(--arc-glass);
+    backdrop-filter: var(--arc-frost);
+  }
 }
 p {
   font-size: 0.875rem;
@@ -56,7 +67,8 @@ button {
   padding: var(--arc-space-2) var(--arc-space-3);
   border: 1px solid var(--arc-border);
   border-radius: var(--arc-radius-control);
-  background: var(--arc-surface);
+  background: var(--arc-field);
+  box-shadow: var(--arc-control-shadow);
   font-size: 0.875rem;
 }
 button:hover:not(:disabled) {
@@ -72,15 +84,28 @@ input {
   padding: var(--arc-space-2);
   border: 1px solid var(--arc-border);
   border-radius: var(--arc-radius-control);
-  background: var(--arc-surface);
+  background: var(--arc-field);
   accent-color: var(--arc-focus);
 }
 button.primary {
   color: var(--arc-focus-text);
   background: var(--arc-focus);
 }
+@supports (color: contrast-color(black)) {
+  button.primary {
+    color: contrast-color(var(--arc-focus));
+  }
+  @media (prefers-reduced-transparency: reduce),
+    (prefers-contrast: more),
+    (forced-colors: active) {
+    button.primary {
+      color: var(--arc-focus-text);
+    }
+  }
+}
 button.primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--arc-focus) 85%, var(--arc-text));
+  background: var(--arc-focus);
+  text-decoration: underline;
 }
 :where(button, input, a):focus-visible {
   outline: 2px solid var(--arc-focus);
