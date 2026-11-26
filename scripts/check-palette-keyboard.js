@@ -138,6 +138,73 @@ try {
     globalThis.pageKeys=[];globalThis.messages=[];
     for(const type of ['keydown','keypress','keyup']) window.addEventListener(type,event=>pageKeys.push(type+':'+event.key),true);
     globalThis.chrome={runtime:{sendMessage:async message=>{if(message.type==='palette:suggest')return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:tab.sources || ['tab']})),warnings:[]};messages.push(message);return {ok:true};}}};`);
+  async function checkLearnedProvider() {
+    const providerContext = { sites: BUILTIN_SITES };
+    const lastAction = () =>
+      evaluate(
+        "messages.filter(message=>message.type!=='palette:remember-site').at(-1)",
+      );
+    await evaluate(`const sendBeforeLearning=chrome.runtime.sendMessage;chrome.runtime.sendMessage=async message=>{
+    if(message.type==='palette:suggest' && message.mode==='drafts')return {ok:true,suggestions:[{kind:'ai-draft',draftId:'saved-1',title:'Gemini: Original prompt',url:'Recover prompt'}]};
+    if(message.type==='palette:recover'){messages.push(message);return {ok:true,alias:'gem',query:'Original prompt',learnedProvider:'provider:claude'};}
+    const response=await sendBeforeLearning(message);
+    return message.type==='palette:suggest' && !message.mode ? {...response,learnedProvider:'provider:claude'} : response;
+  };`);
+    await mount([], providerContext);
+    await send("Input.insertText", { text: "explain closures" });
+    await key("Enter", "Enter");
+    assert.deepEqual(
+      await lastAction(),
+      {
+        type: "palette:navigate",
+        query: "explain closures",
+        scope: "window",
+      },
+      "a learned provider cannot replace the default Enter action",
+    );
+    await mount([], providerContext);
+    await send("Input.insertText", { text: "explain closures" });
+    await evaluate("new Promise(resolve=>setTimeout(resolve,220))");
+    await key("ArrowDown", "ArrowDown");
+    await key("Enter", "Enter");
+    assert.deepEqual(await lastAction(), {
+      type: "palette:site",
+      site: "provider:claude",
+      query: "explain closures",
+      scope: "window",
+    });
+    await mount([], providerContext);
+    await send("Input.insertText", { text: "gem explain closures" });
+    await key("Enter", "Enter");
+    assert.deepEqual(await lastAction(), {
+      type: "palette:site",
+      site: "provider:gemini",
+      query: "explain closures",
+      scope: "window",
+    });
+    await mount([], providerContext);
+    await send("Input.insertText", { text: "?" });
+    await key("Enter", "Enter");
+    assert.deepEqual(await lastAction(), {
+      type: "palette:recover",
+      draftId: "saved-1",
+    });
+    await key("ArrowDown", "ArrowDown");
+    await key("Enter", "Enter");
+    assert.deepEqual(await lastAction(), {
+      type: "palette:site",
+      site: "provider:claude",
+      query: "Original prompt",
+      scope: "window",
+    });
+    await evaluate(
+      "chrome.runtime.sendMessage=sendBeforeLearning;messages.length=0",
+    );
+    console.log(
+      "PASS: keyboard selection of a learned provider and priority of explicit aliases",
+    );
+  }
+  await checkLearnedProvider();
   await mount([
     {
       id: 1,
@@ -743,7 +810,7 @@ try {
 
   await evaluate(`const previousSend=chrome.runtime.sendMessage;chrome.runtime.sendMessage=async message=>{
     if(message.type==='palette:suggest' && message.mode==='drafts')return {ok:true,suggestions:[{kind:'ai-draft',draftId:'saved-1',title:'Gemini: Original prompt',url:'Recover prompt'}],warnings:[]};
-    if(message.type==='palette:recover'){messages.push(message);return {ok:true,alias:'gem',query:'Original prompt'};}
+    if(message.type==='palette:recover'){messages.push(message);return {ok:true,alias:'gem',query:'Original prompt',learnedProvider:'provider:claude'};}
     return previousSend(message);
   };`);
   await mount([], providerContext);
@@ -772,7 +839,13 @@ try {
   await key("Enter", "Enter");
   assert.deepEqual(
     (await evaluate("messages")).at(-1),
-    { type: "palette:command", command: "reload" },
+    {
+      type: "palette:command",
+      command: "reload",
+      selectionQuery: "reload",
+      selectionIndex: 0,
+      suggestedCommand: "reload",
+    },
     "empty Tab enters explicit commands",
   );
   await mount([], context);
@@ -1363,6 +1436,9 @@ try {
   assert.deepEqual((await evaluate("messages")).at(-1), {
     type: "palette:command",
     command: "settings",
+    selectionQuery: "settings",
+    selectionIndex: 0,
+    suggestedCommand: "settings",
   });
   await mount([], context);
   await send("Input.insertText", { text: "> edit current url" });
@@ -1929,6 +2005,7 @@ try {
     "activity.js",
     "activity.css",
     "activity-store.js",
+    "ai-learning/embeddings.js",
     "icons/icon-32.png",
     "icons/icon-48.png",
   ]);
@@ -2034,6 +2111,10 @@ try {
     await evaluate("document.querySelector('[name=includeText]').checked"),
     false,
   );
+  assert.equal(
+    await evaluate("document.querySelector('[name=learn]').checked"),
+    true,
+  );
   await screenshot("activity");
   await evaluate(
     "const field=document.querySelector('#filter');field.value='gemini';field.dispatchEvent(new Event('input'));",
@@ -2043,12 +2124,16 @@ try {
     1,
   );
   await evaluate(
-    "document.querySelector('[name=maxEntries]').value=1;document.querySelector('[name=includeText]').checked=true;document.querySelector('button[type=submit]').click();",
+    "document.querySelector('[name=maxEntries]').value=1;document.querySelector('[name=includeText]').checked=true;document.querySelector('[name=learn]').checked=false;document.querySelector('button[type=submit]').click();",
   );
   await evaluate("new Promise(resolve=>setTimeout(resolve,20))");
   assert.equal(
     await evaluate("activityData['activity:settings'].includeText"),
     true,
+  );
+  assert.equal(
+    await evaluate("activityData['activity:settings'].learn"),
+    false,
   );
   assert.equal(
     await evaluate(

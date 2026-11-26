@@ -1,3 +1,5 @@
+import { embed, similarity, MIN_SIMILARITY } from "./ai-learning/embeddings.js";
+
 const PREFIX = "ai-prompt:";
 const LIMIT = 20;
 const MAX_AGE = 24 * 60 * 60 * 1000;
@@ -48,21 +50,37 @@ export async function savePrompt(api, site, query) {
     .map(([key]) => key);
   if (expired.length) await api.storage.session.remove(expired);
 }
-export async function listPrompts(api, input) {
+export async function listPrompts(api, input, semantic = false) {
   const terms = input.trim().toLocaleLowerCase().split(/\s+/);
-  return (await records(api))
-    .slice(0, LIMIT)
-    .filter((row) =>
-      terms.every((term) =>
-        `${row.name} ${row.query}`.toLocaleLowerCase().includes(term),
-      ),
-    )
-    .map((row) => ({
-      kind: "ai-draft",
-      draftId: row.key,
-      title: `${row.name}: ${row.query}`,
-      url: "Recover prompt · This browser session",
-    }));
+  const recent = (await records(api)).slice(0, LIMIT);
+  const exact = (row) =>
+    terms.every((term) =>
+      `${row.name} ${row.query}`.toLocaleLowerCase().includes(term),
+    );
+  const rows = recent.filter(exact);
+  const vector = semantic && (await embed(input));
+  if (vector) {
+    const related = await Promise.all(
+      recent
+        .filter((row) => !exact(row))
+        .map(async (row) => ({
+          row,
+          score: similarity(vector, await embed(row.query)),
+        })),
+    );
+    rows.push(
+      ...related
+        .filter(({ score }) => score >= MIN_SIMILARITY)
+        .sort((a, b) => b.score - a.score)
+        .map(({ row }) => row),
+    );
+  }
+  return rows.map((row) => ({
+    kind: "ai-draft",
+    draftId: row.key,
+    title: `${row.name}: ${row.query}`,
+    url: "Recover prompt · This browser session",
+  }));
 }
 export async function recoverPrompt(api, id, sites) {
   if (typeof id !== "string" || !id.startsWith(PREFIX) || id.length > 100)

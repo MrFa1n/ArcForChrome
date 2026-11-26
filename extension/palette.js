@@ -960,6 +960,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
     }
     let suggestions = [];
     let domains = [];
+    let learnedProvider;
+    let recoveredRoute;
     const labels = {
       tab: "Open tab",
       bookmark: "Bookmark",
@@ -1153,6 +1155,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       input.maxLength = ["quicklink-name", "note-editor"].includes(mode)
         ? 80
         : 8192;
+      if (mode !== "search" || value !== recoveredRoute?.input)
+        recoveredRoute = undefined;
       input.value = value;
       input.placeholder =
         mode === "paste-url"
@@ -1486,12 +1490,16 @@ export function mountPalette(tabs, floating = false, context = {}) {
           if (!response?.ok)
             throw new Error(response?.error || "Could not recover prompt");
           if (dismissed || closing || actionRevision !== queryRevision) return;
-          setMode(
-            "search",
-            response.alias
-              ? `${response.alias} ${response.query}`
-              : response.query,
-          );
+          const value = response.alias
+            ? `${response.alias} ${response.query}`
+            : response.query;
+          if (response.learnedProvider)
+            recoveredRoute = {
+              input: value,
+              query: response.query,
+              site: response.learnedProvider,
+            };
+          setMode("search", value);
           if (response.alias) input.setSelectionRange(0, response.alias.length);
           return;
         }
@@ -1539,7 +1547,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
                 : selectedTabIds(true),
           };
         } else if (choice.kind === "command")
-          message = { type: "palette:command", command: choice.command };
+          message = {
+            type: "palette:command",
+            command: choice.command,
+            selectionQuery: input.value,
+            selectionIndex: choices.indexOf(choice),
+            suggestedCommand: choices.find((row) => row.kind === "command")
+              ?.command,
+          };
         else if (choice.kind === "closed")
           message = { type: "palette:restore", sessionId: choice.sessionId };
         else if (choice.kind === "site-query")
@@ -1868,6 +1883,23 @@ export function mountPalette(tabs, floating = false, context = {}) {
             ),
           ];
         }
+        const suggestedSite =
+          recoveredRoute?.site ||
+          (!inlineSites.length && !siteMatches(query, true).length
+            ? learnedProvider
+            : undefined);
+        const provider = sites.find((site) => site.key === suggestedSite);
+        if (provider && choices.length) {
+          const prompt = recoveredRoute?.query || query;
+          choices.splice(1, 0, {
+            kind: "site-query",
+            site: provider.key,
+            query: prompt,
+            title: `Ask ${provider.name}: ${prompt}`,
+            url: "Suggested from your local choices",
+            sources: ["site"],
+          });
+        }
         const fallback = choices.find((row) => row.kind === "navigate");
         const limit = 8;
         if (fallback && choices.indexOf(fallback) >= limit) {
@@ -2179,6 +2211,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         resolvePending = resolve;
         finishPending = resolve;
       });
+      if (input.value !== recoveredRoute?.input) recoveredRoute = undefined;
       const query = input.value.trim();
       const terms = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
       suggestions =
@@ -2216,6 +2249,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
               .slice(0, query ? 8 : 5)
               .map((tab) => ({ ...tab, kind: "tab", sources: ["tab"] }));
       domains = [];
+      learnedProvider = undefined;
       choices = [];
       selected = 0;
       selectionMoved = false;
@@ -2346,6 +2380,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           if (response.ok) {
             suggestions = response.suggestions;
             domains = response.domains || [];
+            learnedProvider = response.learnedProvider;
             error.textContent = (response.warnings || []).join(" · ");
             render(preferredId);
           } else if (!response.ok)
@@ -2395,6 +2430,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             throw new Error(response?.error || "Suggestions unavailable");
           suggestions = response.suggestions;
           domains = Array.isArray(response.domains) ? response.domains : [];
+          learnedProvider = response.learnedProvider;
           error.textContent = (response.warnings || []).join(" · ");
           render(preferredId);
         } catch (failure) {
@@ -2482,6 +2518,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (busy) event.preventDefault();
     });
     input.addEventListener("input", () => {
+      recoveredRoute = undefined;
       notice = "";
       completedAddress = null;
       if (mode === "note-editor" && noteDraft) {
@@ -2765,7 +2802,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         ) {
           enterSite(
             sites.find((site) => site.key === choice.site),
-            choice.alias,
+            choice.alias ?? "",
             choice.query,
           );
           return;

@@ -1,3 +1,9 @@
+import {
+  learningEnabled,
+  preferredProvider,
+  rankCommands,
+  selectionSignal,
+} from "./ai-learning.js";
 import { loadDesignTokens } from "./design-tokens.js";
 import { rememberTabChoice } from "./search-preferences.js";
 import { launcherContext } from "./launcher-catalog.js";
@@ -122,6 +128,7 @@ function sourceContext(api, sender) {
     return {
       windowId: sender.tab.windowId,
       tabId: sender.tab.id,
+      incognito: sender.tab.incognito === true,
       ...(newTab ? { newTab: true } : {}),
     };
   }
@@ -324,7 +331,7 @@ async function executeAction(api, context, id) {
   if (id === "copy-url") return { copyText: tab.url || "" };
 }
 
-async function performAction(api, message, context, publish) {
+async function performAction(api, message, context, publish, onAiLaunch) {
   if (message.type === "palette:extra") {
     if (message.action === "route")
       return saveDomainRoute(
@@ -461,7 +468,11 @@ async function performAction(api, message, context, publish) {
       };
     if (message.mode === "drafts")
       return {
-        suggestions: await listPrompts(api, message.query),
+        suggestions: await listPrompts(
+          api,
+          message.query,
+          await learningEnabled(api, context),
+        ),
         domains: [],
         warnings: [],
       };
@@ -478,7 +489,12 @@ async function performAction(api, message, context, publish) {
       };
     if (message.mode === "commands")
       return {
-        suggestions: commandSuggestions(message.query),
+        suggestions: await rankCommands(
+          api,
+          context,
+          message.query,
+          commandSuggestions(message.query),
+        ),
         domains: [],
         warnings: [],
       };
@@ -507,7 +523,7 @@ async function performAction(api, message, context, publish) {
             context.newTab,
           ).catch(() => null)
         : null;
-    const [found, links, notes] = await Promise.all([
+    const [found, links, notes, provider] = await Promise.all([
       findSuggestions(
         api,
         context.windowId,
@@ -518,6 +534,7 @@ async function performAction(api, message, context, publish) {
       ),
       quicklinks(api, message.query).catch(() => []),
       noteSuggestions(api, message.query).catch(() => []),
+      learnedProvider(api, context, message.query).catch(() => undefined),
     ]);
     const calculation = calculate(message.query);
     const extra = calculation
@@ -583,6 +600,7 @@ async function performAction(api, message, context, publish) {
     return {
       ...found,
       domains: found.domains.filter(visible),
+      ...(provider ? { learnedProvider: provider.key } : {}),
       suggestions: [
         ...extra,
         ...rows,
@@ -723,7 +741,10 @@ async function performAction(api, message, context, publish) {
     if (!["new", "background", "current", undefined].includes(message.target))
       throw new Error("Invalid navigation target");
     const site = sites.find((site) => site.key === message.site);
-    if (site.ai) await savePrompt(api, site, message.query);
+    if (site.ai) {
+      await savePrompt(api, site, message.query);
+      onAiLaunch();
+    }
     return navigate(
       api,
       context,
@@ -732,12 +753,22 @@ async function performAction(api, message, context, publish) {
       message.scope === "window",
     );
   }
-  if (message.type === "palette:recover")
-    return recoverPrompt(
+  if (message.type === "palette:recover") {
+    const sites = await loadSites(api, context.windowId);
+    const draft = await recoverPrompt(api, message.draftId, sites);
+    const provider = await preferredProvider(
       api,
-      message.draftId,
-      await loadSites(api, context.windowId),
-    );
+      context,
+      draft.query,
+      async () => sites,
+    ).catch(() => undefined);
+    return {
+      ...draft,
+      ...(provider && (!draft.alias || !provider.aliases.includes(draft.alias))
+        ? { learnedProvider: provider.key }
+        : {}),
+    };
+  }
   if (message.type === "palette:remember-site")
     return rememberSite(api, context.windowId, message.site, message.alias);
   if (message.type === "palette:command")
@@ -748,6 +779,14 @@ async function performAction(api, message, context, publish) {
     return restore(api, message.sessionId);
   }
   throw new Error("Unknown search action");
+}
+
+async function learnedProvider(api, context, query) {
+  const trimmed = query.trim();
+  if (trimmed.length < 3 || destination(trimmed)?.type !== "search") return;
+  return preferredProvider(api, context, trimmed, () =>
+    loadSites(api, context.windowId),
+  );
 }
 
 function activityEvent(message, status) {
@@ -787,6 +826,22 @@ function activityEvent(message, status) {
 }
 export async function paletteAction(api, message, sender, publish) {
   const context = sourceContext(api, sender);
+  if (!sender.tab && api.windows?.get) {
+    const window = await api.windows.get(context.windowId).catch(() => null);
+    context.incognito = window?.incognito ?? true;
+  }
+  let aiLaunch = false;
+  const record = async (status) => {
+    const event = activityEvent(message, status);
+    if (!context.incognito && (message.type === "palette:command" || aiLaunch))
+      event.learning = await selectionSignal(
+        api,
+        context,
+        message,
+        status,
+      ).catch(() => undefined);
+    await recordActivity(api, event);
+  };
   const logged =
     !(message.type === "palette:note" && message.operation === "get") &&
     !["palette:suggest", "palette:icons", "palette:remember-site"].includes(
@@ -794,19 +849,16 @@ export async function paletteAction(api, message, sender, publish) {
     ) &&
     message.command !== "activity";
   try {
-    const result = await performAction(api, message, context, publish);
+    const result = await performAction(api, message, context, publish, () => {
+      aiLaunch = true;
+    });
     if (logged) {
-      const recording = recordActivity(api, activityEvent(message, "ok")).catch(
-        () => {},
-      );
+      const recording = record("ok").catch(() => {});
       if (message.type !== "palette:move") await recording;
     }
     return result;
   } catch (error) {
-    if (logged)
-      await Promise.resolve()
-        .then(() => recordActivity(api, activityEvent(message, "error")))
-        .catch(() => {});
+    if (logged) await record("error").catch(() => {});
     throw error;
   }
 }

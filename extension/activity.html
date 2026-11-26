@@ -32,6 +32,14 @@
           and temporary. Text already recorded stays until it expires or is
           cleared.
         </p>
+        <label class="check"><input type="checkbox" name="learn" /> Learn from my selections /
+          Учиться на моих выборах</label>
+        <p>
+          Learning is on by default when action recording is enabled. Spotlight keeps the selected command or AI provider,
+          command position, and topic vectors in this local history. The text setting controls
+          whether the original query is kept. Disabling learning pauses it. Clearing history
+          also resets learned preferences.
+        </p>
         <div class="limits">
           <label>Delete after / Удалять через (hours)<input name="retentionHours" type="number" min="0" max="8760"
               required /></label><label>Maximum entries / Лимит записей<input name="maxEntries" type="number" min="1"

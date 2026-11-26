@@ -4,6 +4,7 @@ const ALARM = "spotlight-history-cleanup";
 export const DEFAULT_ACTIVITY_SETTINGS = {
   enabled: true,
   includeText: false,
+  learn: true,
   retentionHours: 168,
   maxEntries: 500,
 };
@@ -12,6 +13,7 @@ function parseSettings(value) {
     !value ||
     typeof value.enabled !== "boolean" ||
     typeof value.includeText !== "boolean" ||
+    (value.learn !== undefined && typeof value.learn !== "boolean") ||
     !Number.isInteger(value.retentionHours) ||
     value.retentionHours < 0 ||
     value.retentionHours > 8760 ||
@@ -23,6 +25,7 @@ function parseSettings(value) {
   return {
     enabled: value.enabled,
     includeText: value.includeText,
+    learn: value.learn ?? DEFAULT_ACTIVITY_SETTINGS.learn,
     retentionHours: value.retentionHours,
     maxEntries: value.maxEntries,
   };
@@ -88,6 +91,7 @@ export async function recordActivity(api, event) {
     label: event.label.slice(0, 200),
     status: event.status,
   };
+  if (settings.learn && event.learning) row.learning = event.learning;
   if (settings.includeText && typeof event.text === "string")
     row.text = event.text.slice(0, 8192);
   await api.storage.local.set({ [PREFIX + crypto.randomUUID()]: row });

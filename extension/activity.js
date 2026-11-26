@@ -1,3 +1,4 @@
+import { embeddingTopics } from "./ai-learning/embeddings.js";
 import {
   activitySettings,
   saveActivitySettings,
@@ -28,6 +29,19 @@ async function refresh() {
           text.textContent = row.text;
           item.append(text);
         }
+        if (row.learning) {
+          const learning = document.createElement("p");
+          learning.textContent =
+            row.learning.index === undefined
+              ? "Learning: provider and prompt topics · Провайдер и темы запроса"
+              : `Learning: command picked at position ${row.learning.index + 1} · Позиция команды`;
+          const details = [
+            ...embeddingTopics(row.learning.vector),
+            row.learning.skipped ? `Skipped: ${row.learning.skipped}` : "",
+          ].filter(Boolean);
+          if (details.length) learning.append(` · ${details.join(", ")}`);
+          item.append(learning);
+        }
         return item;
       }),
     );
@@ -55,6 +69,7 @@ form.addEventListener("submit", async (event) => {
     await saveActivitySettings(chrome, {
       enabled: form.elements.enabled.checked,
       includeText: form.elements.includeText.checked,
+      learn: form.elements.learn.checked,
       retentionHours: Number(form.elements.retentionHours.value),
       maxEntries: Number(form.elements.maxEntries.value),
     });

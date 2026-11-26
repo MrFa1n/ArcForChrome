@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  activitySettings,
   recordActivity,
   listActivity,
   saveActivitySettings,
@@ -111,4 +112,25 @@ test("cleanup schedules an expiry alarm even while Spotlight is closed", async (
   registerActivityCleanup(api);
   await onAlarm({ name: "spotlight-history-cleanup" });
   assert.equal((await cleanupActivity(api)).length, 1);
+});
+
+test("learning defaults apply to new and legacy settings while an explicit opt-out persists", async () => {
+  const api = browser();
+  assert.equal((await activitySettings(api)).learn, true);
+  const { learn, ...legacy } = DEFAULT_ACTIVITY_SETTINGS;
+  await api.storage.local.set({ "activity:settings": legacy });
+  assert.equal((await activitySettings(api)).learn, true);
+
+  await saveActivitySettings(api, { ...legacy, learn: false });
+  assert.equal((await activitySettings(api)).learn, false);
+  await recordActivity(api, {
+    action: "command",
+    label: "Reload",
+    status: "ok",
+    text: "Private query",
+    learning: { choice: "reload", index: 1 },
+  });
+  const [row] = await listActivity(api);
+  assert.equal(row.learning, undefined);
+  assert.equal(row.text, undefined);
 });

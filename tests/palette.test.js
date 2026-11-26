@@ -1,5 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  clearActivity,
+  DEFAULT_ACTIVITY_SETTINGS,
+  listActivity,
+  saveActivitySettings,
+} from "../extension/activity-store.js";
 import { openPalette, paletteAction } from "../extension/palette-service.js";
 function browser() {
   const calls = [];
@@ -1039,4 +1045,141 @@ test("Instant Link only sends an explicit query to DuckDuckGo", async () => {
   const url = new URL(api.calls[0][1].url);
   assert.equal(url.hostname, "duckduckgo.com");
   assert.equal(url.searchParams.get("q"), "\\arc browser");
+});
+
+test("local learning connects provider selection, cross-language recovery and history reset", async () => {
+  const api = browser();
+  const storage = () => {
+    const data = {};
+    return {
+      get: async () => ({ ...data }),
+      set: async (value) => Object.assign(data, value),
+      remove: async (keys) => keys.forEach((key) => delete data[key]),
+    };
+  };
+  api.storage = { local: storage(), session: storage() };
+  const choose = (site, query, source = sender) =>
+    paletteAction(
+      api,
+      { type: "palette:site", site: `provider:${site}`, query },
+      source,
+    );
+  const suggest = (query, mode, source = sender) =>
+    paletteAction(api, { type: "palette:suggest", query, mode }, source);
+
+  const prompt = "explain closures project-secret";
+  await saveActivitySettings(api, {
+    ...DEFAULT_ACTIVITY_SETTINGS,
+    learn: false,
+  });
+  await choose("gemini", prompt);
+  assert.equal((await suggest("объясни замыкания")).learnedProvider, undefined);
+
+  await saveActivitySettings(api, {
+    ...DEFAULT_ACTIVITY_SETTINGS,
+    learn: true,
+  });
+  await choose("claude", prompt);
+  await choose("claude", prompt, {
+    ...sender,
+    tab: { ...sender.tab, incognito: true },
+  });
+  const entries = await listActivity(api);
+  assert.equal(entries.filter((entry) => entry.learning).length, 1);
+  assert.ok(!JSON.stringify(entries).includes("project-secret"));
+  assert.equal(
+    (await suggest("объясни замыкания")).learnedProvider,
+    "provider:claude",
+  );
+  assert.equal((await suggest("переведи письмо")).learnedProvider, undefined);
+  assert.equal(
+    (
+      await suggest("объясни замыкания", undefined, {
+        ...sender,
+        tab: { ...sender.tab, incognito: true },
+      })
+    ).learnedProvider,
+    undefined,
+  );
+
+  const drafts = await suggest("объясни замыкания", "drafts");
+  const original = drafts.suggestions.find((row) =>
+    row.title.startsWith("Google AI Mode:"),
+  );
+  const before = api.calls.length;
+  assert.deepEqual(
+    await paletteAction(
+      api,
+      { type: "palette:recover", draftId: original.draftId },
+      sender,
+    ),
+    { query: prompt, alias: "gem", learnedProvider: "provider:claude" },
+  );
+  assert.equal(api.calls.length, before);
+
+  const create = api.tabs.create;
+  api.tabs.create = async () => {
+    throw Error("Chrome could not create the tab");
+  };
+  await assert.rejects(() => choose("claude", prompt), /could not create/);
+  assert.equal((await suggest("объясни замыкания")).learnedProvider, undefined);
+  api.tabs.create = create;
+  await choose("claude", prompt);
+  await saveActivitySettings(api, {
+    ...DEFAULT_ACTIVITY_SETTINGS,
+    learn: false,
+  });
+  assert.equal((await suggest("объясни замыкания")).learnedProvider, undefined);
+  await saveActivitySettings(api, {
+    ...DEFAULT_ACTIVITY_SETTINGS,
+    learn: true,
+  });
+  assert.equal(
+    (await suggest("объясни замыкания")).learnedProvider,
+    "provider:claude",
+  );
+  await clearActivity(api);
+  assert.equal((await suggest("объясни замыкания")).learnedProvider, undefined);
+  assert.ok((await suggest("объясни замыкания", "drafts")).suggestions.length);
+});
+
+test("command learning boosts the selected result within existing matches", async () => {
+  const api = browser();
+  const data = {};
+  api.storage = {
+    local: {
+      get: async () => ({ ...data }),
+      set: async (value) => Object.assign(data, value),
+      remove: async (keys) => keys.forEach((key) => delete data[key]),
+    },
+  };
+  api.tabs.duplicate = async () => {};
+  const request = {
+    type: "palette:suggest",
+    mode: "commands",
+    query: "current",
+  };
+  const { suggestions: initial } = await paletteAction(api, request, sender);
+  const index = initial.findIndex((row) => row.command === "duplicate");
+  assert.ok(index > 0);
+  await paletteAction(
+    api,
+    {
+      type: "palette:command",
+      command: "duplicate",
+      selectionQuery: request.query,
+      selectionIndex: index,
+      suggestedCommand: initial[0].command,
+    },
+    sender,
+  );
+  const { suggestions: ranked } = await paletteAction(api, request, sender);
+  assert.equal(ranked[0].command, "duplicate");
+  assert.deepEqual(
+    new Set(ranked.map((row) => row.command)),
+    new Set(initial.map((row) => row.command)),
+  );
+  const [entry] = await listActivity(api);
+  assert.equal(entry.learning.index, index);
+  assert.equal(entry.learning.skipped, initial[0].command);
 });

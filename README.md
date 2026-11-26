@@ -42,9 +42,7 @@ _Actual extension interface with fictional browsing data. The loop shows Search 
 3. Click **Load unpacked** and select the repository’s **`extension`** folder.
 4. Click the extension’s toolbar icon or press **⌘T** on macOS / **Alt+Shift+K** on Windows and Linux to open Search over the current page. The extension also provides its Search page when Chrome opens a new tab.
 
-Chrome may preserve an older shortcut assignment after an update. If **⌘T** still opens a regular new tab, check `chrome://extensions/shortcuts` and assign **Open Search** to **⌘T**. Choosing an open tab closes a temporary Search tab.
-
-Chrome may keep an older key assignment or reject a conflicting binding. Open `chrome://extensions/shortcuts` to check or change it. Modes are available through prefixes and searchable commands; no mode dropdown is needed. The extension is not currently published to the Chrome Web Store.
+If the shortcut opens a regular tab or triggers another action, open `chrome://extensions/shortcuts`, find **Arc for Chrome**, and set the shortcut for **Open Search**. You can also click the extension’s toolbar icon. The extension is currently available as an unpacked install.
 
 **Updating:** download/pull the latest files, then click **Reload** on the extension card. If Chrome requests new permissions, review them and re-enable the extension. Reloading the extension uses the files inside `extension`; there is no compiled output to generate.
 
@@ -144,7 +142,7 @@ Type **`1250 * 0.18`** → **225** → Enter copies the result and keeps Spotlig
 
 ### Position the overlay
 
-Drag the bottom hint strip to move Spotlight within the browser viewport. **Ctrl+Alt+arrow keys** move it by 16 pixels; add **Shift** for 64-pixel steps. **Ctrl+Alt+0** resets its position. These keys act only while Spotlight is open; Option/Alt+Left/Right still rearranges tabs. Position remains visible as results or window size change and resets on the next open. On protected pages, positioning stays inside the extension popup; a legacy fallback window can be moved by its native title bar.
+Drag the bottom hint strip to move Spotlight within the browser viewport. **Ctrl+Alt+arrow keys** move it by 16 pixels; add **Shift** for 64-pixel steps. **Ctrl+Alt+0** resets its position. These keys act only while Spotlight is open; Option/Alt+Left/Right still rearranges tabs. Position remains visible as results or window size change and resets on the next open. On protected pages, drag the separate search window by its title bar.
 
 ### Resize the overlay
 
@@ -152,7 +150,7 @@ Drag Spotlight’s bottom-right corner. Bounds are **360×220 to 1000×800 pixel
 
 ### Keep your place
 
-The current page stays open beneath the overlay. Page and video shortcuts are isolated while you type, then focus returns when you dismiss it. On protected pages, Chrome 127+ first uses an extension toolbar popup in the same browser window, keeping the original tab context. Chrome forbids injecting the overlay into chrome:// pages. A separate native window remains a compatibility fallback if the popup API is unavailable or fails.
+The current page stays open beneath the overlay. Page and video shortcuts are isolated while you type, and focus returns when you dismiss it. On protected pages such as `chrome://settings`, the extension opens a separate compact search window tied to the source tab.
 
 ### Let sites find their shortcuts
 
@@ -160,7 +158,7 @@ Search on a website once, then reopen the command bar. If its search URL is reco
 
 For example, an observed YouTube search can offer **`yt` → Tab → `minimal interface design` → Enter**. Names and aliases depend on the observed data. When you confirm a typed shortcut, the extension saves that association locally and prioritizes it next time.
 
-Settings shows detected sites, lets you clear learned shortcuts and offers optional manual templates for unusual websites. Detection is conservative: it uses a bounded recent sample and recognized query formats; it does not invent endpoints or read Chrome’s internal Site Search settings.
+Open `> Search settings` to view detected sites or add manual URL templates. To remove manual templates, click **Clear overrides**, then **Save changes**. Detection is conservative: it uses a bounded recent sample and recognized query formats; it does not invent endpoints or read Chrome’s internal Site Search settings.
 
 ### Shortcut + query, including AI
 
@@ -193,6 +191,20 @@ Recovery keeps up to 20 prompts, available for 24 hours within the current exten
 Open **`> Spotlight activity history`** (or the link in Search settings) to review successful/failed actions, search the journal and change retention. Defaults: **7 days, at most 500 actions**, with query/prompt text excluded. You can disable recording, opt into text recording, choose another age/count limit or clear everything manually. Turning text recording off does not erase older text; clear the history to remove it.
 
 History stays on this device in extension-local storage. A Chrome alarm expires entries while the browser is running; age/count checks also run on activity and when the journal opens. The maximum configurable count is 5,000; zero hours disables age expiry but keeps the count cap. Status reflects Chrome accepting an operation, not whether a website loaded or an AI answered. Recovery prompts remain separate from the journal and its text-recording setting.
+
+### Local learning
+
+Learning is on by default while action recording is enabled.
+
+1. Click the extension’s toolbar icon to open Spotlight. Type `> Spotlight activity history`, select **Spotlight activity history**, and press Enter. Alternatively, run `> Search settings` and click **Open activity history**.
+2. Under **Automatic cleanup / Автоочистка**, find **Learn from my selections / Учиться на моих выборах** below **Include query and prompt text / Сохранять текст запросов**.
+3. Clear the checkbox and click **Save limits / Сохранить**. To resume learning, check it again and save. To reset learned preferences, click **Clear history / Очистить всё**. This deletes the entire activity journal.
+
+If the checkbox is missing, update the repository files, click **Reload** on the extension card at `chrome://extensions`, and reopen the journal. If Chrome is using an older unpacked copy, load the updated copy’s `extension` folder using the steps under “Get started”.
+
+Spotlight uses recent choices to reorder matching commands in Commands mode and suggest an AI provider for similar prompts. For example, after choosing Claude for `claude explain closures`, `объясни замыкания` can show an optional Claude result. Explicit shortcuts keep priority. Prompt recovery can find related drafts across English and Russian and offer an alternate provider. Selecting a draft restores it for editing.
+
+Learning uses a small built-in vocabulary of topics. Topic vectors, command selections and provider launches stay in the local journal and follow its retention limits. Query and prompt text in the journal is controlled by the separate text checkbox. Provider scoring uses whether Chrome opened the destination. Clearing the journal resets learned preferences. WebNN normalizes the topic vectors when available, with a JavaScript fallback.
 
 ### Find the page, or just its homepage
 
@@ -287,14 +299,15 @@ Suggestions are processed locally. There is **no telemetry, backend, online auto
 | `storage`                | Site templates/aliases, local action history, named quicklinks/notes and temporary AI prompt recovery |
 | `alarms`                 | Automatically expire action-history entries                                                           |
 | `tabGroups`              | Read and update source-window group names, colors and state                                           |
-| `clipboardWrite`         | Copy URLs or calculator results on request; never read the clipboard                                  |
+| `clipboardWrite`         | Write to the clipboard on request. **Paste and go** separately reads it when selected.                |
+| `sidePanel`              | Open the tab list through **Open sidebar**                                                            |
 | `favicon`                | Read site icons from Chrome’s cache; no external favicon service                                      |
 
 No permanent host access is requested. Automatically inferred site templates are not persisted; ordinary typed text is not saved while composing. Executed action metadata is stored locally with automatic limits; query/prompt text in that journal is opt-in. AI prompt recovery uses separate temporary session storage. [Security policy →](SECURITY.md)
 
 ## What to expect
 
-This is a focused command-bar extension, not a complete Arc replacement. It does not provide a sidebar, Spaces, numbered pins, global MRU cycling or a replacement for Chrome’s native tab strip. Arc ranking and every Arc shortcut are not claimed to match exactly.
+The extension works alongside Chrome’s native tab strip. **`> Open sidebar`** opens a side panel with a searchable tab list. **New space** creates a native Chrome tab group. Numbered pins and global cycling by recent use are outside the extension’s scope.
 
 Suggestions use bounded local samples, so a very old page or an unusual site search format may not be discovered. Restoring a session follows Chrome’s original session destination and may use another window. Full behavior and edge cases are documented in the [user guide](docs/USER_GUIDE.md).
 
