@@ -1,5 +1,91 @@
 // Self-contained: Chrome serializes this function for isolated-world injection.
 export function mountPalette(tabs, floating = false, context = {}) {
+  const {
+    language = "en",
+    messages = {},
+    patterns = [],
+  } = context.locale || {};
+  const t = (source, ...values) => {
+    const message = Object.hasOwn(messages, source) ? messages[source] : source;
+    return message.replace(
+      /\{(\d+)\}/g,
+      (token, index) => values[index] ?? token,
+    );
+  };
+  const matchers = patterns.map(([source, pattern, local]) => [
+    source,
+    new RegExp(pattern),
+    local,
+  ]);
+  const systemText = (value) => {
+    if (typeof value !== "string" || !value) return value;
+    if (Object.hasOwn(messages, value)) return messages[value];
+    for (const [source, matcher, local] of matchers) {
+      const match = matcher.exec(value);
+      if (match)
+        return t(
+          source,
+          ...match
+            .slice(1)
+            .map((item, index) =>
+              local.includes(index) ? t(item || "") : item,
+            ),
+        );
+    }
+    return value;
+  };
+  function resultTitle(row) {
+    if (!row?.title) return t("Untitled tab");
+    if (row.kind === "group-change" && row.color) return t(row.color);
+    if (
+      row.browserPage ||
+      [
+        "command",
+        "browser-page",
+        "domain",
+        "result-action",
+        "shortcut",
+        "group-create",
+        "group-action",
+        "group-change",
+        "group-rename",
+        "group-colors",
+        "move",
+        "activity",
+      ].includes(row.kind)
+    )
+      return systemText(row.title);
+    if (row.title === "Untitled group" && row.kind.startsWith("group-"))
+      return t(row.title);
+    return row.title;
+  }
+  function resultDetail(row) {
+    const detail = row.description || row.url || "";
+    if (row.kind === "activity" && row.time)
+      return t(
+        "View history · {0}",
+        new Date(row.time).toLocaleString(language),
+      );
+    if (
+      [
+        "shortcut",
+        "order-tab",
+        "bookmark-folder",
+        "group",
+        "group-add",
+        "group-manage",
+        "group-route",
+        "group-switch",
+        "group-create",
+        "group-colors",
+        "move",
+        "activity",
+        "ai-draft",
+      ].includes(row.kind)
+    )
+      return systemText(detail);
+    return detail;
+  }
   const newTab = context.newTab === true;
   const actionPopup = context.actionPopup === true;
   const existing = document.querySelector("[data-arc-command-palette]");
@@ -20,7 +106,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
   host.setAttribute("data-arc-command-palette", "");
   const root = host.attachShadow({ mode: "closed" });
   const shell = document.createElement("dialog");
-  shell.setAttribute("aria-label", "Arc command bar");
+  shell.setAttribute("aria-label", t("Arc command bar"));
   shell.style.cssText =
     "border:0;padding:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;overflow:hidden;";
   const liveGlass =
@@ -46,7 +132,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
   }
   root.append(backdropStyle);
   const frame = document.createElement("iframe");
-  frame.title = "Arc search";
+  frame.title = t("Arc search");
   frame.style.cssText =
     "display:block;border:0;width:100%;height:100%;background:transparent;";
   shell.append(frame);
@@ -81,7 +167,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     // Keep Chrome's default font preferences rather than inheriting the website's typography.
     document.documentElement.style.cssText =
       "color-scheme:light dark;font-size:medium;font-family:sans-serif";
-    document.documentElement.lang = navigator.language;
+    document.documentElement.lang = language;
     const host = document.createElement("div");
     host.setAttribute("data-arc-command-palette", "");
     const root = host.attachShadow({ mode: "closed" });
@@ -185,11 +271,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
       root.append(popupStyle);
     }
     const dialog = document.createElement("dialog");
-    dialog.setAttribute("aria-label", "Search tabs or the web");
+    dialog.setAttribute("aria-label", t("Search tabs or the web"));
     const input = document.createElement("input");
-    input.placeholder = "Search tabs or enter a URL…";
+    input.placeholder = t("Search tabs or enter a URL…");
     input.maxLength = 8192;
-    input.setAttribute("aria-label", "Search tabs or enter a URL");
+    input.setAttribute("aria-label", t("Search tabs or enter a URL"));
     input.setAttribute("role", "combobox");
     input.setAttribute("aria-autocomplete", "list");
     input.setAttribute("aria-controls", "results");
@@ -201,14 +287,15 @@ export function mountPalette(tabs, floating = false, context = {}) {
     noteBody.id = "note-body";
     noteBody.hidden = true;
     noteBody.maxLength = 20000;
-    noteBody.placeholder = "Write your note…";
-    noteBody.setAttribute("aria-label", "Note text");
+    noteBody.placeholder = t("Write your note…");
+    noteBody.setAttribute("aria-label", t("Note text"));
     const error = document.createElement("p");
     error.id = "error";
     error.setAttribute("role", "status");
     const footer = document.createElement("footer");
-    footer.textContent =
-      "↑ ↓ select · Tab complete address · Enter open · Esc return";
+    footer.textContent = t(
+      "↑ ↓ select · Tab complete address · Enter open · Esc return",
+    );
     // Draw bundled icons with currentColor so page fonts and network access are irrelevant.
     const iconPaths = {
       tab: "M4 5h16v14H4z M4 9h16 M7 7h2",
@@ -259,12 +346,14 @@ export function mountPalette(tabs, floating = false, context = {}) {
     const resizeHandle = document.createElement("button");
     resizeHandle.id = "resize";
     resizeHandle.type = "button";
-    resizeHandle.setAttribute("aria-label", "Resize Spotlight");
-    resizeHandle.title =
-      "Drag corner to resize · Arrow keys when focused · Enter reset size";
+    resizeHandle.setAttribute("aria-label", t("Resize Spotlight"));
+    resizeHandle.title = t(
+      "Drag corner to resize · Arrow keys when focused · Enter reset size",
+    );
     const sites = Array.isArray(context.sites) ? context.sites : [];
-    footer.title =
-      "Drag to move · Ctrl+Alt+arrows move · Shift for larger steps · Ctrl+Alt+0 reset";
+    footer.title = t(
+      "Drag to move · Ctrl+Alt+arrows move · Shift for larger steps · Ctrl+Alt+0 reset",
+    );
     footer.id = "hints";
     input.setAttribute("aria-describedby", "hints");
     dialog.append(input, noteBody, results, error, footer);
@@ -451,7 +540,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let routeUrl = "";
     function toggleScope() {
       if (!(context.activeGroupId >= 0))
-        throw new Error("Open a tab in a group first");
+        throw new Error(t("Open a tab in a group first"));
       scope = scope === "group" ? "window" : "group";
       setMode(
         "search",
@@ -461,7 +550,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
             ? input.value
             : "",
       );
-      notice = scope === "group" ? "Tabs in this group" : "Tabs in this window";
+      notice =
+        scope === "group" ? t("Tabs in this group") : t("Tabs in this window");
       render();
     }
     let mode = ["edit", "commands"].includes(context.mode)
@@ -525,7 +615,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         inline && siteMatches(inline[1], true).length ? inline[2] : query
       ).trim();
       if (!providerQuery) {
-        error.textContent = "Type a query first";
+        error.textContent = t("Type a query first");
         return;
       }
       providerReturn =
@@ -547,7 +637,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             : undefined;
       const url = target?.url || context.sourceUrl;
       if (!webUrl(url)) {
-        error.textContent = "Choose a web page to save as a quicklink";
+        error.textContent = t("Choose a web page to save as a quicklink");
         return;
       }
       quicklinkReturn =
@@ -561,7 +651,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       };
       setMode(
         "quicklink-name",
-        (target?.linkName || target?.title || "Quicklink").slice(0, 80),
+        (target?.linkName || target?.title || t("Quicklink")).slice(0, 80),
       );
       input.select();
     }
@@ -683,12 +773,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
           url: actionTarget.url,
           groupId: null,
         });
-        if (!reply?.ok) throw new Error(reply?.error || "Action failed");
+        if (!reply?.ok) throw new Error(reply?.error || t("Action failed"));
         if (dismissed || closing || revision !== queryRevision) return;
         if (id === "preview") close();
         else {
           leaveActions();
-          notice = "Domain route cleared";
+          notice = t("Domain route cleared");
           render();
         }
         return;
@@ -716,12 +806,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
           url: id === "hide" ? actionTarget.url : clipboardUrl,
           query: id === "instant" ? actionReturn.value : undefined,
         });
-        if (!reply?.ok) throw new Error(reply?.error || "Action failed");
+        if (!reply?.ok) throw new Error(reply?.error || t("Action failed"));
         if (dismissed || closing || revision !== queryRevision) return;
         if (reply.copyText) {
           await copyText(reply.copyText);
           leaveActions();
-          notice = "Links copied";
+          notice = t("Links copied");
           render();
         } else if (id === "hide") {
           returnKey = null;
@@ -763,12 +853,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
           operation: "get",
           id: actionTarget.noteId,
         });
-        if (!reply?.ok) throw Error(reply?.error || "Could not read note");
+        if (!reply?.ok) throw Error(reply?.error || t("Could not read note"));
         if (dismissed || closing || revision !== queryRevision) return;
         await copyText(reply.note.body || reply.note.title);
         if (dismissed || closing || revision !== queryRevision) return;
         leaveActions();
-        notice = "Note copied";
+        notice = t("Note copied");
         render();
         return;
       }
@@ -779,10 +869,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
           id: actionTarget.noteId,
           revision: actionTarget.revision,
         });
-        if (!reply?.ok) throw Error(reply?.error || "Could not delete note");
+        if (!reply?.ok) throw Error(reply?.error || t("Could not delete note"));
         if (dismissed || closing || revision !== queryRevision) return;
         setMode("notes");
-        notice = "Note deleted";
+        notice = t("Note deleted");
         render();
         return;
       }
@@ -818,7 +908,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         await copyText(actionTarget.copyText ?? actionTarget.url);
         if (dismissed || closing || revision !== queryRevision) return;
         leaveActions();
-        notice = "Copied";
+        notice = t("Copied");
         render();
         return;
       }
@@ -838,10 +928,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
             : null;
       if (message) {
         const reply = await chrome.runtime.sendMessage(message);
-        if (!reply?.ok) throw Error(reply?.error || "Action failed");
+        if (!reply?.ok) throw Error(reply?.error || t("Action failed"));
         if (dismissed || closing || revision !== queryRevision) return;
         setMode(id === "remove-link" ? "quicklinks" : "search");
-        notice = id === "remove-link" ? "Quicklink removed" : "Tab duplicated";
+        notice =
+          id === "remove-link" ? t("Quicklink removed") : t("Tab duplicated");
         render();
       }
     }
@@ -859,7 +950,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         operation: "get",
         id,
       });
-      if (!reply?.ok) throw Error(reply?.error || "Could not read note");
+      if (!reply?.ok) throw Error(reply?.error || t("Could not read note"));
       if (dismissed || closing || revision !== queryRevision) return;
       noteDraft = { ...reply.note };
       noteDirty = false;
@@ -867,19 +958,19 @@ export function mountPalette(tabs, floating = false, context = {}) {
       setMode("note-editor", noteDraft.title);
     }
     async function saveNote() {
-      if (!noteDraft) throw Error("Choose a note first");
+      if (!noteDraft) throw Error(t("Choose a note first"));
       const revision = queryRevision;
       const reply = await chrome.runtime.sendMessage({
         type: "palette:note",
         operation: "save",
         ...noteDraft,
       });
-      if (!reply?.ok) throw Error(reply?.error || "Could not save note");
+      if (!reply?.ok) throw Error(reply?.error || t("Could not save note"));
       if (dismissed || closing || revision !== queryRevision) return;
       noteDirty = false;
       setMode("notes");
       noteDraft = null;
-      notice = "Note saved";
+      notice = t("Note saved");
       render();
     }
     function submitNote() {
@@ -888,7 +979,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       error.textContent = "";
       saveNote()
         .catch((failure) => {
-          error.textContent = failure.message;
+          error.textContent = systemText(failure.message);
         })
         .finally(() => {
           busy = false;
@@ -901,7 +992,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           (row) =>
             !omit.has(row.id) &&
             terms.every((term) =>
-              `${row.title} ${row.description} ${row.aliases || ""} ${row.shortcut}`
+              `${row.title} ${t(row.title)} ${row.description} ${t(row.description)} ${row.aliases || ""} ${row.shortcut}`
                 .toLocaleLowerCase()
                 .includes(term),
             ),
@@ -913,9 +1004,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
           url: "",
           description: row.description,
           shortcut: row.shortcut,
-          copyText: `${row.title}\n${shortcutLabel(row.shortcut)}\n${row.description}`,
+          copyText: `${systemText(row.title)}\n${shortcutLabel(row.shortcut)}\n${systemText(row.description)}`,
           sources: ["shortcut"],
-          section: "Keyboard shortcuts",
+          section: t("Keyboard shortcuts"),
         }));
     }
     let managedGroupId;
@@ -993,27 +1084,27 @@ export function mountPalette(tabs, floating = false, context = {}) {
     let learnedProvider;
     let recoveredRoute;
     const labels = {
-      tab: "Open tab",
-      bookmark: "Bookmark",
-      history: "History",
-      domain: "Homepage · New tab",
-      command: "Command",
-      closed: "Restore session",
-      site: "Site search",
-      "browser-page": "Chrome page",
-      navigate: "Open / Search",
-      move: "Tab placement",
-      "ai-draft": "Saved AI prompt",
-      "bookmark-folder": "Bookmark folder",
-      group: "Tab group",
-      quicklink: "Quicklink",
-      calculator: "Calculator",
-      "result-action": "Action",
-      "quicklink-save": "Quicklink",
-      activity: "Recent action",
-      note: "Note",
-      "note-save": "Note",
-      shortcut: "Shortcut",
+      tab: t("Open tab"),
+      bookmark: t("Bookmark"),
+      history: t("History"),
+      domain: t("Homepage · New tab"),
+      command: t("Command"),
+      closed: t("Restore session"),
+      site: t("Site search"),
+      "browser-page": t("Chrome page"),
+      navigate: t("Open / Search"),
+      move: t("Tab placement"),
+      "ai-draft": t("Saved AI prompt"),
+      "bookmark-folder": t("Bookmark folder"),
+      group: t("Tab group"),
+      quicklink: t("Quicklink"),
+      calculator: t("Calculator"),
+      "result-action": t("Action"),
+      "quicklink-save": t("Quicklink"),
+      activity: t("Recent action"),
+      note: t("Note"),
+      "note-save": t("Note"),
+      shortcut: t("Shortcut"),
     };
     const heldKeys = new Set();
     let closing = false;
@@ -1103,7 +1194,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
               ? context.actionTabId
               : context.sourceTabId;
       if (!Number.isInteger(id))
-        throw new Error("Choose an open tab or mark tabs with Shift+Space");
+        throw new Error(t("Choose an open tab or mark tabs with Shift+Space"));
       return [id];
     }
     function markTab(id) {
@@ -1112,7 +1203,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       if (markedTabs.has(id)) markedTabs.delete(id);
       else if (markedTabs.size < 100) markedTabs.add(id);
       else {
-        error.textContent = "Select at most 100 tabs";
+        error.textContent = t("Select at most 100 tabs");
         return;
       }
       render();
@@ -1135,13 +1226,19 @@ export function mountPalette(tabs, floating = false, context = {}) {
         folderId,
       });
       if (!response?.ok)
-        throw new Error(response?.error || "Could not change bookmarks");
+        throw new Error(response?.error || t("Could not change bookmarks"));
       if (dismissed || closing || revision !== queryRevision) return;
-      const action = bookmarkOperation === "add" ? "Saved" : "Removed";
+      const action = bookmarkOperation === "add" ? t("Saved") : t("Removed");
       markedTabs.clear();
       bookmarkTargetIds = [];
       setMode("search");
-      notice = `${action} ${response.changed ?? 0}${response.skipped ? ` · ${response.skipped} already saved` : ""} · ${response.folderPath || "Selected folder"}`;
+      notice = t(
+        "{0} {1}{2} · {3}",
+        action,
+        response.changed ?? 0,
+        response.skipped ? ` · ${response.skipped} already saved` : "",
+        response.folderPath || t("Selected folder"),
+      );
       render();
     }
     function startGrouping(value = "", useCurrentTab = false) {
@@ -1155,7 +1252,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         ...message,
       });
       if (!response?.ok)
-        throw new Error(response?.error || "Could not change group");
+        throw new Error(response?.error || t("Could not change group"));
       if (dismissed || closing || revision !== queryRevision) return;
       markedTabs.clear();
       groupTargetIds = [];
@@ -1190,55 +1287,69 @@ export function mountPalette(tabs, floating = false, context = {}) {
       input.value = value;
       input.placeholder =
         mode === "paste-url"
-          ? "Paste an address, then press Enter…"
+          ? t("Paste an address, then press Enter…")
           : mode === "note-editor"
-            ? "Note title…"
+            ? t("Note title…")
             : mode === "notes"
-              ? "Search note titles and text…"
+              ? t("Search note titles and text…")
               : mode === "shortcuts"
-                ? "Find any shortcut or prefix…"
+                ? t("Find any shortcut or prefix…")
                 : mode === "actions"
-                  ? `Actions · ${actionTarget?.title || (actionReturn?.mode === "note-editor" ? "Note editor" : "Spotlight")}`
+                  ? t(
+                      "Actions · {0}",
+                      (actionTarget?.title && resultTitle(actionTarget)) ||
+                        (actionReturn?.mode === "note-editor"
+                          ? t("Note editor")
+                          : "Spotlight"),
+                    )
                   : mode === "providers"
-                    ? `Search with… · ${providerQuery.slice(0, 80)}`
+                    ? t("Search with… · {0}", providerQuery.slice(0, 80))
                     : mode === "quicklink-name"
-                      ? "Name this quicklink…"
+                      ? t("Name this quicklink…")
                       : mode === "quicklinks"
-                        ? "Find a quicklink…"
+                        ? t("Find a quicklink…")
                         : mode === "bookmark-folders"
                           ? bookmarkOperation === "add"
-                            ? "Choose a folder to save bookmarks…"
-                            : "Choose a folder to remove matching bookmarks…"
+                            ? t("Choose a folder to save bookmarks…")
+                            : t("Choose a folder to remove matching bookmarks…")
                           : mode === "groups"
-                            ? "Type a new group name, or choose an existing group…"
+                            ? t(
+                                "Type a new group name, or choose an existing group…",
+                              )
                             : [
                                   "group-manage",
                                   "group-switch",
                                   "group-route",
                                 ].includes(mode)
-                              ? "Find a tab group…"
+                              ? t("Find a tab group…")
                               : mode === "group-actions"
-                                ? "Choose a group action…"
+                                ? t("Choose a group action…")
                                 : mode === "group-rename"
-                                  ? "New group name…"
+                                  ? t("New group name…")
                                   : mode === "group-colors"
-                                    ? "Choose a group color…"
+                                    ? t("Choose a group color…")
                                     : mode === "order"
                                       ? orderTabId === undefined
-                                        ? "Choose a tab to move…"
-                                        : "Choose a position or a destination tab…"
+                                        ? t("Choose a tab to move…")
+                                        : t(
+                                            "Choose a position or a destination tab…",
+                                          )
                                       : mode === "drafts"
-                                        ? "Recover a recent AI prompt…"
+                                        ? t("Recover a recent AI prompt…")
                                         : mode === "commands"
-                                          ? "Find a browser command…"
+                                          ? t("Find a browser command…")
                                           : mode === "closed"
-                                            ? "Find a recently closed tab…"
+                                            ? t("Find a recently closed tab…")
                                             : mode.startsWith("site:")
-                                              ? "Enter a site search query…"
+                                              ? t("Enter a site search query…")
                                               : mode === "search" &&
                                                   scope === "group"
-                                                ? "Search tabs in this group or enter a URL…"
-                                                : "Search tabs or enter a URL…";
+                                                ? t(
+                                                    "Search tabs in this group or enter a URL…",
+                                                  )
+                                                : t(
+                                                    "Search tabs or enter a URL…",
+                                                  );
       input.setAttribute("aria-label", input.placeholder);
       noteBody.hidden = mode !== "note-editor";
       results.hidden = mode === "note-editor";
@@ -1262,7 +1373,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       area.select();
       const copied = document.execCommand("copy");
       area.remove();
-      if (!copied) throw new Error("Clipboard access is unavailable");
+      if (!copied) throw new Error(t("Clipboard access is unavailable"));
     }
     async function activate(event = {}) {
       if (busy) return;
@@ -1310,7 +1421,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             url: input.value.trim(),
           });
           if (!reply?.ok)
-            throw new Error(reply?.error || "Could not open address");
+            throw new Error(reply?.error || t("Could not open address"));
           if (!dismissed && !closing && actionRevision === queryRevision)
             close();
           return;
@@ -1326,7 +1437,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if (choice.kind === "shortcut") {
           await copyText(choice.copyText);
           if (dismissed || closing || actionRevision !== queryRevision) return;
-          notice = "Shortcut copied";
+          notice = t("Shortcut copied");
           render();
           return;
         }
@@ -1346,7 +1457,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           await copyText(choice.copyText);
           if (dismissed || closing || actionRevision !== queryRevision) return;
           if (fromActions) setMode(actionReturn.mode, actionReturn.value);
-          notice = `Copied ${choice.copyText}`;
+          notice = t("Copied {0}", choice.copyText);
           render();
           return;
         }
@@ -1358,10 +1469,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
             name: input.value,
           });
           if (!response?.ok)
-            throw Error(response?.error || "Could not save quicklink");
+            throw Error(response?.error || t("Could not save quicklink"));
           if (dismissed || closing || actionRevision !== queryRevision) return;
           setMode("search");
-          notice = "Quicklink saved";
+          notice = t("Quicklink saved");
           render();
           return;
         }
@@ -1371,7 +1482,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             command: "activity",
           });
           if (!response?.ok)
-            throw Error(response?.error || "Could not open history");
+            throw Error(response?.error || t("Could not open history"));
           close();
           return;
         }
@@ -1383,7 +1494,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           startQuicklink({
             title:
               tabs.find((tab) => tab.id === context.sourceTabId)?.title ||
-              "Quicklink",
+              t("Quicklink"),
             url: context.sourceUrl,
             kind: "tab",
             id: context.sourceTabId,
@@ -1423,10 +1534,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
             groupId: choice.groupId,
           });
           if (!reply?.ok)
-            throw new Error(reply?.error || "Could not save route");
+            throw new Error(reply?.error || t("Could not save route"));
           if (dismissed || closing || actionRevision !== queryRevision) return;
           setMode("search");
-          notice = "Domain route saved";
+          notice = t("Domain route saved");
           render();
           return;
         }
@@ -1518,7 +1629,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             draftId: choice.draftId,
           });
           if (!response?.ok)
-            throw new Error(response?.error || "Could not recover prompt");
+            throw new Error(response?.error || t("Could not recover prompt"));
           if (dismissed || closing || actionRevision !== queryRevision) return;
           const value = response.alias
             ? `${response.alias} ${response.query}`
@@ -1622,7 +1733,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           };
         const response = await chrome.runtime.sendMessage(message);
         if (!response?.ok)
-          throw new Error(response?.error || "Could not open result");
+          throw new Error(response?.error || t("Could not open result"));
         if (choice.kind === "site-query" && choice.alias)
           chrome.runtime
             .sendMessage({
@@ -1634,7 +1745,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         if (response.copyText !== undefined) await copyText(response.copyText);
         close();
       } catch (failure) {
-        error.textContent = failure.message;
+        error.textContent = systemText(failure.message);
       } finally {
         busy = false;
       }
@@ -1643,33 +1754,33 @@ export function mountPalette(tabs, floating = false, context = {}) {
       mode === "edit" ? close() : setMode("edit", value);
     function primaryLabel(choice) {
       const titles = {
-        tab: "Switch tab",
-        command: "Run",
-        calculator: "Copy result",
-        closed: "Restore",
-        "site-query": "Search",
-        site: "Choose site",
-        "result-action": "Choose action",
-        "quicklink-save": "Save",
-        quicklink: "Open link",
-        "bookmark-folder": "Choose folder",
-        "ai-draft": "Recover prompt",
-        "order-tab": "Choose position",
-        move: "Move tab",
-        "group-create": "Create group",
-        "group-add": "Add to group",
-        "group-manage": "Manage group",
-        "group-switch": "Switch to group",
-        "group-route": "Save route",
-        "group-rename": "Rename",
-        "group-colors": "Choose color",
-        "group-change": "Apply",
-        activity: "View history",
-        note: "Edit note",
-        "note-save": "Save note",
-        shortcut: "Copy shortcut",
+        tab: t("Switch tab"),
+        command: t("Run"),
+        calculator: t("Copy result"),
+        closed: t("Restore"),
+        "site-query": t("Search"),
+        site: t("Choose site"),
+        "result-action": t("Choose action"),
+        "quicklink-save": t("Save"),
+        quicklink: t("Open link"),
+        "bookmark-folder": t("Choose folder"),
+        "ai-draft": t("Recover prompt"),
+        "order-tab": t("Choose position"),
+        move: t("Move tab"),
+        "group-create": t("Create group"),
+        "group-add": t("Add to group"),
+        "group-manage": t("Manage group"),
+        "group-switch": t("Switch to group"),
+        "group-route": t("Save route"),
+        "group-rename": t("Rename"),
+        "group-colors": t("Choose color"),
+        "group-change": t("Apply"),
+        activity: t("View history"),
+        note: t("Edit note"),
+        "note-save": t("Save note"),
+        shortcut: t("Copy shortcut"),
       };
-      return titles[choice?.kind] || "Open";
+      return titles[choice?.kind] || t("Open");
     }
     function paintFooter() {
       const choice = choices[selected];
@@ -1681,22 +1792,22 @@ export function mountPalette(tabs, floating = false, context = {}) {
         notice ||
         (mode === "note-editor"
           ? noteDirty
-            ? "Unsaved note"
-            : "Note editor"
+            ? t("Unsaved note")
+            : t("Note editor")
           : mode === "shortcuts"
-            ? "All shortcuts"
+            ? t("All shortcuts")
             : mode === "notes"
-              ? "Notes"
+              ? t("Notes")
               : mode === "order"
-                ? "Arrange tabs"
+                ? t("Arrange tabs")
                 : mode === "actions"
-                  ? "Actions"
+                  ? t("Actions")
                   : markedTabs.size
-                    ? `${markedTabs.size} marked`
+                    ? t("{0} marked", markedTabs.size)
                     : mode === "providers"
-                      ? "Search with"
+                      ? t("Search with")
                       : mode === "quicklinks"
-                        ? "Quicklinks"
+                        ? t("Quicklinks")
                         : "");
       const key = document.createElement("kbd");
       key.textContent = mode === "note-editor" ? `${modifierLabel} ↵` : "↵";
@@ -1721,10 +1832,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       action.setAttribute(
         "aria-label",
         mode === "actions"
-          ? "Return to results"
-          : "Actions for selected result",
+          ? t("Return to results")
+          : t("Actions for selected result"),
       );
-      action.textContent = mode === "actions" ? "Back" : "Actions";
+      action.textContent = mode === "actions" ? t("Back") : t("Actions");
       const shortcut = document.createElement("kbd");
       shortcut.textContent = `${modifierLabel} K`;
       action.append(shortcut);
@@ -1736,7 +1847,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       footer.replaceChildren(main, action);
       footer.title =
         footerDescription +
-        " · Drag to move · Ctrl+Alt+arrows move · Ctrl+Alt+0 reset";
+        t(" · Drag to move · Ctrl+Alt+arrows move · Ctrl+Alt+0 reset");
     }
     function highlight() {
       [...results.children].forEach((row, index) =>
@@ -1795,8 +1906,13 @@ export function mountPalette(tabs, floating = false, context = {}) {
           ? [
               {
                 kind: "navigate",
-                title: `Search ${sites.find((site) => site.key === mode.slice(5))?.name || "site"}: ${query}`,
-                url: "Site search",
+                title: t(
+                  "Search {0}: {1}",
+                  sites.find((site) => site.key === mode.slice(5))?.name ||
+                    "site",
+                  query,
+                ),
+                url: t("Site search"),
               },
             ]
           : [];
@@ -1807,8 +1923,13 @@ export function mountPalette(tabs, floating = false, context = {}) {
           );
         const navigation = {
           kind: "navigate",
-          title: address ? `Go to ${query}` : `Search the web for “${query}”`,
-          url: newTab || mode === "edit" ? "Use this tab" : "Open in a new tab",
+          title: address
+            ? t("Go to {0}", query)
+            : t("Search the web for “{0}”", query),
+          url:
+            newTab || mode === "edit"
+              ? t("Use this tab")
+              : t("Open in a new tab"),
         };
         const existingAddress = choices.find((row) => {
           if (row.kind !== "tab" || !address || !row.url) return false;
@@ -1840,6 +1961,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
             const matchingCommands = (context.commands || []).filter(
               (row) =>
                 row.title.toLocaleLowerCase().startsWith(normalized) ||
+                systemText(row.title)
+                  .toLocaleLowerCase()
+                  .startsWith(normalized) ||
                 row.command === normalized ||
                 row.aliases
                   .toLocaleLowerCase()
@@ -1852,7 +1976,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
                 kind: "command",
                 command,
                 title,
-                url: "Browser action",
+                url: t("Browser action"),
                 sources: ["command"],
               }));
             // Keep ordinary search as the default Enter action when there are
@@ -1863,10 +1987,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
           const siteRows = siteMatches(query).map(({ site }) => ({
             kind: "site",
             site: site.key,
-            title: `Search ${site.name}`,
+            title: t("Search {0}", site.name),
             url: site.detected
-              ? "Detected from your browsing · Tab to search"
-              : "Site search · Tab to search",
+              ? t("Detected from your browsing · Tab to search")
+              : t("Site search · Tab to search"),
           }));
           choices.splice(choices[0] ? 1 : 0, 0, ...siteRows);
         }
@@ -1886,7 +2010,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           site: site.key,
           query: inline[2],
           alias: inline[1].toLocaleLowerCase(),
-          title: `Search ${site.name}: ${inline[2]}`,
+          title: t("Search {0}: {1}", site.name, inline[2]),
           url: new URL(site.template.replace("%s", "query")).origin,
           sources: ["site"],
         }));
@@ -1925,8 +2049,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
             kind: "site-query",
             site: provider.key,
             query: prompt,
-            title: `Ask ${provider.name}: ${prompt}`,
-            url: "Suggested from your local choices",
+            title: t("Ask {0}: {1}", provider.name, prompt),
+            url: t("Suggested from your local choices"),
             sources: ["site"],
           });
         }
@@ -1940,39 +2064,65 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       footer.textContent =
         mode === "drafts"
-          ? "Saved AI prompts · Enter recover · Edit shortcut to redirect · Esc back"
+          ? t(
+              "Saved AI prompts · Enter recover · Edit shortcut to redirect · Esc back",
+            )
           : mode === "order"
             ? orderTabId === undefined
-              ? "Arrange tabs · Alt+←/→ or ↑/↓ move · +Shift first/last · Enter place"
-              : "Choose a destination · Enter move · Esc back"
+              ? t(
+                  "Arrange tabs · Alt+←/→ or ↑/↓ move · +Shift first/last · Enter place",
+                )
+              : t("Choose a destination · Enter move · Esc back")
             : mode === "commands"
-              ? "Commands · ↑ ↓ select · Enter run · Esc back"
+              ? t("Commands · ↑ ↓ select · Enter run · Esc back")
               : mode === "closed"
-                ? "Recently closed · Enter restore · Esc back"
+                ? t("Recently closed · Enter restore · Esc back")
                 : mode === "edit"
-                  ? "Edit URL · Enter replace · Cmd/Ctrl+Enter new tab · Esc back"
+                  ? t(
+                      "Edit URL · Enter replace · Cmd/Ctrl+Enter new tab · Esc back",
+                    )
                   : mode.startsWith("site:")
-                    ? `Search ${sites.find((site) => site.key === mode.slice(5))?.name || "site"} · Enter search · Esc back`
-                    : "↑ ↓ select · Alt+arrows move tab · > commands · @ arrange · ? prompts";
+                    ? t(
+                        "Search {0} · Enter search · Esc back",
+                        sites.find((site) => site.key === mode.slice(5))
+                          ?.name || t("site"),
+                      )
+                    : t(
+                        "↑ ↓ select · Alt+arrows move tab · > commands · @ arrange · ? prompts",
+                      );
       if (mode.startsWith("group"))
         footer.textContent =
           mode === "groups"
-            ? `Grouping ${groupTargetIds.length} tabs · Enter create/add · Esc back`
+            ? t(
+                "Grouping {0} tabs · Enter create/add · Esc back",
+                groupTargetIds.length,
+              )
             : mode === "group-rename"
-              ? "Enter rename · Esc back"
-              : "Manage groups · Enter choose · Esc back";
+              ? t("Enter rename · Esc back")
+              : t("Manage groups · Enter choose · Esc back");
       else if (markedTabs.size)
-        footer.textContent = `${markedTabs.size} marked · Shift+Space select · Cmd/Ctrl+G group · Cmd/Ctrl+Shift+G remove`;
+        footer.textContent = t(
+          "{0} marked · Shift+Space select · Cmd/Ctrl+G group · Cmd/Ctrl+Shift+G remove",
+          markedTabs.size,
+        );
       else if (mode === "search")
-        footer.textContent =
-          "↑ ↓ select · Shift+Space mark · Cmd/Ctrl+G group · > commands";
+        footer.textContent = t(
+          "↑ ↓ select · Shift+Space mark · Cmd/Ctrl+G group · > commands",
+        );
       if (mode === "bookmark-folders")
-        footer.textContent = `${bookmarkOperation === "add" ? "Save" : "Remove"} bookmarks for ${bookmarkTargetIds.length} tab(s) · Enter choose folder · Esc back`;
+        footer.textContent = t(
+          "{0} bookmarks for {1} tab(s) · Enter choose folder · Esc back",
+          bookmarkOperation === "add" ? t("Save") : t("Remove"),
+          bookmarkTargetIds.length,
+        );
       if (mode === "search" && notice) footer.textContent = notice;
       if (inlineSites.length)
         footer.textContent = uniqueInline
-          ? `Search ${inlineSites[0].site.name} · Enter send query · Tab enter scope · ↓ other results`
-          : "Shared shortcut · ↓ choose site · Enter default search";
+          ? t(
+              "Search {0} · Enter send query · Tab enter scope · ↓ other results",
+              inlineSites[0].site.name,
+            )
+          : t("Shared shortcut · ↓ choose site · Enter default search");
       footerDescription = footer.textContent;
       const retained = choices.findIndex(
         (choice) => choiceKey(choice) === (returnKey || previousKey),
@@ -2027,7 +2177,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           if (tabId !== undefined) {
             const marked = markedTabs.has(tabId);
             icon.dataset.marked = String(marked);
-            icon.title = "Select tab · Shift+Space";
+            icon.title = t("Select tab · Shift+Space");
             const indicator = document.createElement("span");
             indicator.className = "tab-mark";
             indicator.append(drawIcon(marked ? "checked" : "mark"));
@@ -2042,10 +2192,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
           text.className = "text";
           const title = document.createElement("span");
           title.className = "title";
-          title.textContent = choice.title || "Untitled tab";
+          title.textContent = resultTitle(choice);
           const url = document.createElement("span");
           url.className = "url";
-          const detail = choice.description || choice.url || "";
+          const detail = resultDetail(choice);
           url.textContent =
             choice.kind === "command" && !choice.description
               ? ""
@@ -2058,8 +2208,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
           if (choice.match)
             url.title +=
               choice.match === "layout"
-                ? " · Keyboard layout match"
-                : " · Similar spelling";
+                ? t(" · Keyboard layout match")
+                : t(" · Similar spelling");
           text.append(title);
           const metadata = document.createElement("span");
           metadata.className = "metadata";
@@ -2067,8 +2217,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
             const badge = document.createElement("span");
             badge.className = "group-badge";
             badge.textContent =
-              choice.groupTitle + (choice.groupCollapsed ? " · Collapsed" : "");
-            badge.title = `Tab group: ${choice.groupTitle}`;
+              choice.groupTitle +
+              (choice.groupCollapsed ? t(" · Collapsed") : "");
+            badge.title = t("Tab group: {0}", choice.groupTitle);
             metadata.append(badge);
           }
           const sources = Array.from(
@@ -2124,7 +2275,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             row.dataset.section = section;
             const label = document.createElement("span");
             label.className = "section-label";
-            label.textContent = section;
+            label.textContent = t(section);
             label.setAttribute("aria-hidden", "true");
             row.append(label);
           }
@@ -2174,7 +2325,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         suggestionsPending = false;
         const url = input.value.trim();
         suggestions = webUrl(url)
-          ? [{ kind: "paste-address", title: "Open pasted address", url }]
+          ? [{ kind: "paste-address", title: t("Open pasted address"), url }]
           : [];
         domains = [];
         render();
@@ -2198,7 +2349,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             else if (kind === "group") startGrouping(target, true);
             else startBookmarks("add", target, true);
           } catch (failure) {
-            error.textContent = failure.message;
+            error.textContent = systemText(failure.message);
           }
           return;
         }
@@ -2215,7 +2366,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         try {
           startBookmarks("add", input.value.slice(1).trimStart());
         } catch (failure) {
-          error.textContent = failure.message;
+          error.textContent = systemText(failure.message);
         }
         return;
       }
@@ -2223,7 +2374,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         try {
           startGrouping(input.value.slice(1).trimStart());
         } catch (failure) {
-          error.textContent = failure.message;
+          error.textContent = systemText(failure.message);
         }
         return;
       }
@@ -2292,7 +2443,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           ...actions
             .filter((action) =>
               terms.every((term) =>
-                `${action.title} ${action.aliases || ""}`
+                `${action.title} ${t(action.title)} ${action.aliases || ""}`
                   .toLocaleLowerCase()
                   .includes(term),
               ),
@@ -2317,7 +2468,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         return;
       }
       if (mode === "note-editor") {
-        suggestions = [{ kind: "note-save", title: "Save note", url: "" }];
+        suggestions = [{ kind: "note-save", title: t("Save note"), url: "" }];
         render();
         resolvePending();
         return;
@@ -2337,7 +2488,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             site: site.key,
             query: providerQuery,
             alias: "",
-            title: `Search ${site.name}`,
+            title: t("Search {0}", site.name),
             url: providerQuery,
             sources: ["site"],
           }));
@@ -2351,7 +2502,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             ? [
                 {
                   kind: "quicklink-save",
-                  title: `Save “${query}”`,
+                  title: t("Save “{0}”", query),
                   url: quicklinkTarget.url,
                 },
               ]
@@ -2368,8 +2519,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
                   kind: "group-change",
                   action: "rename",
                   name: query,
-                  title: `Rename group to “${query}”`,
-                  url: "Enter apply name",
+                  title: t("Rename group to “{0}”", query),
+                  url: t("Enter apply name"),
                 },
               ]
             : [];
@@ -2379,13 +2530,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       if (mode === "group-colors") {
         suggestions = (context.groupColors || [])
-          .filter((color) => color.includes(query.toLocaleLowerCase()))
+          .filter((color) =>
+            (color + " " + t(color))
+              .toLocaleLowerCase()
+              .includes(query.toLocaleLowerCase()),
+          )
           .map((color) => ({
             kind: "group-change",
             action: "color",
             color,
             title: color,
-            url: "Apply group color",
+            url: t("Apply group color"),
           }));
         render();
         resolvePending();
@@ -2411,10 +2566,13 @@ export function mountPalette(tabs, floating = false, context = {}) {
             suggestions = response.suggestions;
             domains = response.domains || [];
             learnedProvider = response.learnedProvider;
-            error.textContent = (response.warnings || []).join(" · ");
+            error.textContent = (response.warnings || [])
+              .map(systemText)
+              .join(" · ");
             render(preferredId);
           } else if (!response.ok)
-            error.textContent = response.error || "Suggestions unavailable";
+            error.textContent =
+              systemText(response.error) || t("Suggestions unavailable");
           if (!response.partial) {
             finish();
             port.disconnect();
@@ -2457,15 +2615,17 @@ export function mountPalette(tabs, floating = false, context = {}) {
           });
           if (revision !== queryRevision || dismissed || closing) return;
           if (!response?.ok || !Array.isArray(response.suggestions))
-            throw new Error(response?.error || "Suggestions unavailable");
+            throw new Error(response?.error || t("Suggestions unavailable"));
           suggestions = response.suggestions;
           domains = Array.isArray(response.domains) ? response.domains : [];
           learnedProvider = response.learnedProvider;
-          error.textContent = (response.warnings || []).join(" · ");
+          error.textContent = (response.warnings || [])
+            .map(systemText)
+            .join(" · ");
           render(preferredId);
         } catch (failure) {
           if (revision === queryRevision && !dismissed && !closing)
-            error.textContent = failure.message;
+            error.textContent = systemText(failure.message);
         } finally {
           if (revision === queryRevision) suggestionsPending = false;
           resolvePending();
@@ -2505,7 +2665,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             ...next,
           });
           if (!response?.ok)
-            throw new Error(response?.error || "Could not move tab");
+            throw new Error(response?.error || t("Could not move tab"));
           if (dismissed || closing || revision !== queryRevision) break;
           const snapshot = Array.isArray(response.suggestions)
             ? response
@@ -2516,7 +2676,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
               });
           if (dismissed || closing || revision !== queryRevision) break;
           if (!snapshot?.ok && snapshot !== response)
-            throw new Error(snapshot?.error || "Could not refresh tab order");
+            throw new Error(
+              snapshot?.error || t("Could not refresh tab order"),
+            );
           setMode("order", filter, undefined, next.tabId, true);
           const terms = filter.toLocaleLowerCase().split(/\s+/).filter(Boolean);
           suggestions = snapshot.suggestions.filter((row) =>
@@ -2529,7 +2691,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         }
       } catch (failure) {
         if (!dismissed && !closing && revision === queryRevision)
-          error.textContent = failure.message;
+          error.textContent = systemText(failure.message);
       } finally {
         moveQueue.length = 0;
         moving = false;
@@ -2686,7 +2848,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             busy = true;
             runAction(action.id)
               .catch((failure) => {
-                error.textContent = failure.message;
+                error.textContent = systemText(failure.message);
               })
               .finally(() => {
                 busy = false;

@@ -59,6 +59,12 @@ If the shortcut opens a regular tab or triggers another action, open `chrome://e
 
 **Updating:** download/pull the latest files, then click **Reload** on the extension card. If Chrome requests new permissions, review them and re-enable the extension. Reloading the extension uses the files inside `extension`; there is no compiled output to generate.
 
+### Interface language
+
+Spotlight follows Chrome’s language by default, with English as the fallback. To change the extension interface, run `> Search settings`, choose **English**, **Русский**, or **Use Chrome language** under **Interface language**, and click **Save language**. Reopen Spotlight and refresh any open extension pages. Labels in Chrome’s own extension and shortcut screens follow Chrome’s language.
+
+To add a translation, copy `extension/_locales/en/messages.json` to `extension/_locales/<code>/messages.json` using a [locale supported by Chrome](https://developer.chrome.com/docs/extensions/reference/api/i18n#locales). Translate the `message` values, including `language_name`, and keep the keys and numbered placeholders such as `{0}` intact. Reload the extension and reopen settings. The new language appears in the selector, and missing messages fall back to English.
+
 ## Make it muscle memory
 
 | Action                           | macOS           | Windows / Linux     |
@@ -210,8 +216,8 @@ History stays on this device in extension-local storage. A Chrome alarm expires 
 Learning is on by default while action recording is enabled.
 
 1. Click the extension’s toolbar icon to open Spotlight. Type `> Spotlight activity history`, select **Spotlight activity history**, and press Enter. Alternatively, run `> Search settings` and click **Open activity history**.
-2. Under **Automatic cleanup / Автоочистка**, find **Learn from my selections / Учиться на моих выборах** below **Include query and prompt text / Сохранять текст запросов**.
-3. Clear the checkbox and click **Save limits / Сохранить**. To resume learning, check it again and save. To reset learned preferences, click **Clear history / Очистить всё**. This deletes the entire activity journal.
+2. Under **Automatic cleanup**, find **Learn from my selections** below **Include query and prompt text**.
+3. Clear the checkbox and click **Save limits**. To resume learning, check it again and save. To reset learned preferences, click **Clear history**. This deletes the entire activity journal.
 
 If the checkbox is missing, update the repository files, click **Reload** on the extension card at `chrome://extensions`, and reopen the journal. If Chrome is using an older unpacked copy, load the updated copy’s `extension` folder using the steps under “Get started”.
 

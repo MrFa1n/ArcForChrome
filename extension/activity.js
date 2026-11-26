@@ -1,3 +1,8 @@
+import {
+  interfaceLocale,
+  pageTranslator,
+  systemTranslator,
+} from "./localization.js";
 import { embeddingTopics } from "./ai-learning/embeddings.js";
 import {
   activitySettings,
@@ -5,6 +10,9 @@ import {
   listActivity,
   clearActivity,
 } from "./activity-store.js";
+const locale = await interfaceLocale(chrome);
+const t = pageTranslator(document, locale);
+const systemText = systemTranslator(locale);
 const form = document.querySelector("#limits");
 const status = document.querySelector("#status");
 const filter = document.querySelector("#filter");
@@ -12,16 +20,25 @@ let revision = 0;
 async function refresh() {
   const current = ++revision;
   try {
-    const rows = await listActivity(chrome, filter.value);
+    const terms = filter.value
+      .toLocaleLowerCase(locale.language)
+      .trim()
+      .split(/\s+/);
+    const rows = (await listActivity(chrome)).filter((row) => {
+      const search = `${row.label} ${systemText(row.label)} ${row.action} ${row.status} ${row.text || ""}`;
+      return terms.every((term) =>
+        search.toLocaleLowerCase(locale.language).includes(term),
+      );
+    });
     if (current !== revision) return;
     document.querySelector("#entries").replaceChildren(
       ...rows.map((row) => {
         const item = document.createElement("li");
         const time = document.createElement("time");
         time.dateTime = new Date(row.time).toISOString();
-        time.textContent = new Date(row.time).toLocaleString();
+        time.textContent = new Date(row.time).toLocaleString(locale.language);
         const title = document.createElement("strong");
-        title.textContent = `${row.status === "error" ? "Failed / Ошибка" : "Done / Выполнено"} · ${row.label}`;
+        title.textContent = `${row.status === "error" ? t("Failed") : t("Done")} · ${systemText(row.label)}`;
         if (row.status === "error") title.className = "failed";
         item.append(time, title);
         if (row.text) {
@@ -33,11 +50,16 @@ async function refresh() {
           const learning = document.createElement("p");
           learning.textContent =
             row.learning.index === undefined
-              ? "Learning: provider and prompt topics · Провайдер и темы запроса"
-              : `Learning: command picked at position ${row.learning.index + 1} · Позиция команды`;
+              ? t("Learning: provider and prompt topics")
+              : t(
+                  "Learning: command picked at position {0}",
+                  row.learning.index + 1,
+                );
           const details = [
-            ...embeddingTopics(row.learning.vector),
-            row.learning.skipped ? `Skipped: ${row.learning.skipped}` : "",
+            ...embeddingTopics(row.learning.vector).map(t),
+            row.learning.skipped
+              ? t("Skipped: {0}", t(row.learning.skipped))
+              : "",
           ].filter(Boolean);
           if (details.length) learning.append(` · ${details.join(", ")}`);
           item.append(learning);
@@ -46,10 +68,10 @@ async function refresh() {
       }),
     );
     document.querySelector("#count").textContent = rows.length
-      ? `${rows.length} actions / действий`
-      : "No actions / Действий пока нет";
+      ? t("Actions: {0}", rows.length)
+      : t("No actions yet");
   } catch (error) {
-    status.textContent = error.message;
+    status.textContent = systemText(error.message);
   }
 }
 activitySettings(chrome)
@@ -61,7 +83,7 @@ activitySettings(chrome)
     }
   })
   .catch((error) => {
-    status.textContent = error.message;
+    status.textContent = systemText(error.message);
   });
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -73,19 +95,19 @@ form.addEventListener("submit", async (event) => {
       retentionHours: Number(form.elements.retentionHours.value),
       maxEntries: Number(form.elements.maxEntries.value),
     });
-    status.textContent = "Saved / Сохранено";
+    status.textContent = t("Saved");
     await refresh();
   } catch (error) {
-    status.textContent = error.message;
+    status.textContent = systemText(error.message);
   }
 });
 document.querySelector("#clear").addEventListener("click", async () => {
   try {
     await clearActivity(chrome);
-    status.textContent = "History cleared / История очищена";
+    status.textContent = t("History cleared");
     await refresh();
   } catch (error) {
-    status.textContent = error.message;
+    status.textContent = systemText(error.message);
   }
 });
 filter.addEventListener("input", refresh);

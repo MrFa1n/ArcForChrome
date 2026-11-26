@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Spotlight activity history</title>
+  <title data-message="Spotlight activity history">Spotlight activity history</title>
   <link rel="icon" href="icons/icon-32.png" />
   <link rel="stylesheet" href="design-tokens.css" />
   <link rel="stylesheet" href="page.css" />
@@ -16,56 +16,35 @@
     <header>
       <img src="icons/icon-48.png" width="48" height="48" alt="" />
       <div>
-        <h1>Spotlight activity history</h1>
-        <p>Local history · История действий</p>
+        <h1 data-message="Spotlight activity history">Spotlight activity history</h1>
+        <p data-message="Local history">Local history</p>
       </div>
     </header>
     <section>
-      <h2>Automatic cleanup / Автоочистка</h2>
+      <h2 data-message="Automatic cleanup">Automatic cleanup</h2>
       <form id="limits">
-        <label class="check"><input type="checkbox" name="enabled" /> Record actions /
-          Записывать действия</label>
-        <label class="check"><input type="checkbox" name="includeText" /> Include query and
-          prompt text / Сохранять текст запросов</label>
-        <p>
-          Text recording is off by default. AI recovery copies are separate
-          and temporary. Text already recorded stays until it expires or is
-          cleared.
-        </p>
-        <label class="check"><input type="checkbox" name="learn" /> Learn from my selections /
-          Учиться на моих выборах</label>
-        <p>
-          Learning is on by default when action recording is enabled. Spotlight keeps the selected command or AI provider,
-          command position, and topic vectors in this local history. The text setting controls
-          whether the original query is kept. Disabling learning pauses it. Clearing history
-          also resets learned preferences.
-        </p>
+        <label class="check"><input type="checkbox" name="enabled" /> <span data-message="Record actions">Record actions</span></label>
+        <label class="check"><input type="checkbox" name="includeText" /> <span data-message="Include query and prompt text">Include query and prompt text</span></label>
+        <p data-message="Text recording is off by default. AI recovery copies are separate and temporary. Text already recorded stays until it expires or is cleared.">Text recording is off by default. AI recovery copies are separate and temporary. Text already recorded stays until it expires or is cleared.</p>
+        <label class="check"><input type="checkbox" name="learn" /> <span data-message="Learn from my selections">Learn from my selections</span></label>
+        <p data-message="Learning is on by default when action recording is enabled. Spotlight keeps the selected command or AI provider, command position, and topic vectors in this local history. The text setting controls whether the original query is kept. Disabling learning pauses it. Clearing history also resets learned preferences.">Learning is on by default when action recording is enabled. Spotlight keeps the selected command or AI provider, command position, and topic vectors in this local history. The text setting controls whether the original query is kept. Disabling learning pauses it. Clearing history also resets learned preferences.</p>
         <div class="limits">
-          <label>Delete after / Удалять через (hours)<input name="retentionHours" type="number" min="0" max="8760"
-              required /></label><label>Maximum entries / Лимит записей<input name="maxEntries" type="number" min="1"
+          <label><span data-message="Delete after (hours)">Delete after (hours)</span><input name="retentionHours" type="number" min="0" max="8760"
+              required /></label><label><span data-message="Maximum entries">Maximum entries</span><input name="maxEntries" type="number" min="1"
               max="5000" required /></label>
         </div>
-        <p>
-          168 hours = 7 days. Use 0 for no age limit; the entry limit still
-          applies. Cleanup runs automatically while Chrome is running.
-        </p>
+        <p data-message="168 hours = 7 days. Use 0 for no age limit; the entry limit still applies. Cleanup runs automatically while Chrome is running.">168 hours = 7 days. Use 0 for no age limit; the entry limit still applies. Cleanup runs automatically while Chrome is running.</p>
         <div class="actions">
-          <button type="submit" class="primary">
-            Save limits / Сохранить</button><button type="button" id="clear">
-            Clear history / Очистить всё
-          </button>
+          <button type="submit" class="primary" data-message="Save limits">Save limits</button><button type="button" id="clear" data-message="Clear history">Clear history</button>
         </div>
         <p id="status" role="status" aria-live="polite"></p>
       </form>
     </section>
     <section>
-      <h2>Actions / Действия</h2>
-      <p>
-        Status describes the Chrome operation, not whether the destination
-        loaded or an AI answered.
-      </p>
-      <label>Search history / Поиск по истории<input id="filter" type="search"
-          placeholder="Service, action or saved text…" /></label>
+      <h2 data-message="Actions">Actions</h2>
+      <p data-message="Status describes the Chrome operation, not whether the destination loaded or an AI answered.">Status describes the Chrome operation, not whether the destination loaded or an AI answered.</p>
+      <label><span data-message="Search history">Search history</span><input id="filter" type="search"
+          placeholder="Service, action or saved text…" data-message-placeholder="Service, action or saved text…" /></label>
       <p id="count" role="status"></p>
       <ol id="entries"></ol>
     </section>

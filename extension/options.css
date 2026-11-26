@@ -25,3 +25,25 @@
     justify-self: start;
   }
 }
+
+#language {
+  font: inherit;
+  color: inherit;
+  background: var(--arc-field);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-control);
+  padding: var(--arc-space-2);
+}
+#language:focus-visible {
+  outline: 2px solid var(--arc-focus);
+  outline-offset: 2px;
+}
+#language-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--arc-space-3);
+}
+#language-status:empty {
+  display: none;
+}

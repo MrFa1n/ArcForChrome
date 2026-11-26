@@ -1,5 +1,7 @@
+import { interfaceLocale, pageTranslator } from "./localization.js";
 import { matchPage } from "./search-match.js";
 
+const t = pageTranslator(document, await interfaceLocale(chrome));
 const filter = document.querySelector("#filter");
 const list = document.querySelector("#tabs");
 const status = document.querySelector("#status");
@@ -22,23 +24,23 @@ function render() {
     const section = document.createElement("section");
     const heading = document.createElement("h2");
     heading.textContent =
-      groupId < 0 ? "Ungrouped" : groupNames.get(groupId) || "Tab group";
+      groupId < 0 ? t("Ungrouped") : groupNames.get(groupId) || t("Tab group");
     const items = document.createElement("div");
     items.className = "tab-list";
     for (const tab of tabs) {
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = tab.title || tab.url || "Untitled tab";
+      button.textContent = tab.title || tab.url || t("Untitled tab");
       button.title = tab.url || button.textContent;
       if (tab.active) button.setAttribute("aria-current", "true");
       button.addEventListener("click", async () => {
         try {
           const live = await chrome.tabs.get(tab.id);
           if (live.windowId !== windowId)
-            throw new Error("Tab moved to another window");
+            throw new Error(t("Tab moved to another window"));
           await chrome.tabs.update(tab.id, { active: true });
         } catch {
-          status.textContent = "Could not switch to this tab.";
+          status.textContent = t("Could not switch to this tab.");
         }
       });
       items.append(button);
@@ -47,7 +49,7 @@ function render() {
     sections.push(section);
   }
   list.replaceChildren(...sections);
-  status.textContent = sections.length ? "" : "No matching tabs.";
+  status.textContent = sections.length ? "" : t("No matching tabs.");
 }
 
 async function refresh() {
@@ -62,7 +64,7 @@ async function refresh() {
     groupNames = new Map(groups.map((group) => [group.id, group.title]));
     render();
   } catch {
-    if (current === revision) status.textContent = "Could not load tabs.";
+    if (current === revision) status.textContent = t("Could not load tabs.");
   }
 }
 

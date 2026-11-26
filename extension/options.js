@@ -1,3 +1,13 @@
+import {
+  availableLanguages,
+  interfaceLocale,
+  LANGUAGE_SETTING,
+  pageTranslator,
+  systemTranslator,
+} from "./localization.js";
+const locale = await interfaceLocale(chrome);
+const t = pageTranslator(document, locale);
+const systemText = systemTranslator(locale);
 import { loadCustomSites, loadSites, parseSites } from "./site-search.js";
 const container = document.querySelector("#sites");
 const status = document.querySelector("#status");
@@ -5,9 +15,9 @@ function addRow(site = { name: "", key: "", template: "" }) {
   const row = document.createElement("div");
   row.className = "site";
   for (const [field, label] of [
-    ["name", "Name"],
-    ["key", "Keyword"],
-    ["template", "Search URL"],
+    ["name", t("Name")],
+    ["key", t("Keyword")],
+    ["template", t("Search URL")],
   ]) {
     const wrapper = document.createElement("label");
     wrapper.textContent = label;
@@ -22,8 +32,8 @@ function addRow(site = { name: "", key: "", template: "" }) {
   }
   const remove = document.createElement("button");
   remove.type = "button";
-  remove.textContent = "Remove";
-  remove.setAttribute("aria-label", `Remove ${site.name || "site"}`);
+  remove.textContent = t("Remove");
+  remove.setAttribute("aria-label", t("Remove {0}", site.name || t("site")));
   remove.addEventListener("click", () => row.remove());
   row.insertBefore(remove, row.lastElementChild);
   container.append(row);
@@ -34,12 +44,13 @@ function render(sites) {
 }
 document.querySelector("#add").addEventListener("click", () => {
   if (container.children.length < 20) addRow();
-  else status.textContent = "Use at most 20 sites.";
+  else status.textContent = t("Use at most 20 sites.");
 });
 document.querySelector("#reset").addEventListener("click", () => {
   render([]);
-  status.textContent =
-    "Manual overrides cleared in this form. Save to use built-in and detected shortcuts.";
+  status.textContent = t(
+    "Manual overrides cleared in this form. Save to use built-in and detected shortcuts.",
+  );
 });
 document
   .querySelector("#sites-form")
@@ -60,9 +71,9 @@ document
         ),
       );
       await chrome.storage.local.set({ sites });
-      status.textContent = "Saved. Reopen search to use these sites.";
+      status.textContent = t("Saved. Reopen search to use these sites.");
     } catch (error) {
-      status.textContent = error.message;
+      status.textContent = systemText(error.message);
     } finally {
       submit.disabled = false;
     }
@@ -73,26 +84,27 @@ for (const [id, url] of [
 ]) {
   document.querySelector(`#${id}`).addEventListener("click", () =>
     chrome.tabs.create({ url }).catch((error) => {
-      status.textContent = error.message;
+      status.textContent = systemText(error.message);
     }),
   );
 }
 loadCustomSites(chrome)
   .then(render)
   .catch((error) => {
-    status.textContent = error.message;
+    status.textContent = systemText(error.message);
   });
 loadSites(chrome)
   .then((sites) => {
     const list = document.querySelector("#detected");
     for (const site of sites.filter((site) => site.detected || site.builtin)) {
       const item = document.createElement("li");
-      item.textContent = `${site.name} · ${site.aliases.join(", ")} · ${site.builtin ? "Built-in" : "Detected"}`;
+      item.textContent = `${site.name} · ${site.aliases.join(", ")} · ${site.builtin ? t("Built-in") : t("Detected")}`;
       list.append(item);
     }
     if (!list.children.length)
-      list.textContent =
-        "No search URLs detected yet. Search on a website in Chrome once, then reopen the palette.";
+      list.textContent = t(
+        "No search URLs detected yet. Search on a website in Chrome once, then reopen the palette.",
+      );
   })
   .catch(() => {});
 document.querySelector("#forget").addEventListener("click", async () => {
@@ -101,9 +113,11 @@ document.querySelector("#forget").addEventListener("click", async () => {
     await chrome.storage.local.remove(
       Object.keys(saved).filter((key) => key.startsWith("siteAlias:")),
     );
-    status.textContent = "Learned shortcuts cleared. Reopen search to refresh.";
+    status.textContent = t(
+      "Learned shortcuts cleared. Reopen search to refresh.",
+    );
   } catch (error) {
-    status.textContent = error.message;
+    status.textContent = systemText(error.message);
   }
 });
 
@@ -111,6 +125,41 @@ document.querySelector("#activity").addEventListener("click", () =>
   chrome.tabs
     .create({ url: chrome.runtime.getURL("activity.html") })
     .catch((error) => {
-      status.textContent = error.message;
+      status.textContent = systemText(error.message);
     }),
 );
+
+const languageForm = document.querySelector("#language-form");
+const languageSelect = languageForm.elements.language;
+const languageSave = languageForm.querySelector("button");
+const [languages, settings] = await Promise.all([
+  availableLanguages(chrome),
+  chrome.storage.local.get(LANGUAGE_SETTING).catch(() => ({})),
+]);
+languageSelect.add(new Option(t("Use Chrome language"), ""));
+for (const [code, name] of languages)
+  languageSelect.add(new Option(name, code));
+languageSelect.value = languages.some(
+  ([code]) => code === settings[LANGUAGE_SETTING],
+)
+  ? settings[LANGUAGE_SETTING]
+  : "";
+languageSelect.disabled = false;
+languageSave.disabled = false;
+languageForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  languageSave.disabled = true;
+  try {
+    if (languageSelect.value)
+      await chrome.storage.local.set({
+        [LANGUAGE_SETTING]: languageSelect.value,
+      });
+    else await chrome.storage.local.remove(LANGUAGE_SETTING);
+    location.reload();
+  } catch {
+    document.querySelector("#language-status").textContent = t(
+      "Cannot save the interface language.",
+    );
+    languageSave.disabled = false;
+  }
+});

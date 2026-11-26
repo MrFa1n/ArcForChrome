@@ -1,3 +1,4 @@
+import { interfaceLocale, systemTranslator } from "./localization.js";
 import {
   learningEnabled,
   preferredProvider,
@@ -52,14 +53,16 @@ import {
 export async function openPalette(api, mount, mode = "search") {
   const [tab] = await api.tabs.query({ active: true, currentWindow: true });
   if (!tab) return;
-  const [tabs, sites, launcher, designTokens] = await Promise.all([
+  const [tabs, sites, launcher, designTokens, locale] = await Promise.all([
     api.tabs.query({ windowId: tab.windowId }),
     loadSites(api, tab.windowId),
     launcherContext(api),
     loadDesignTokens(),
+    interfaceLocale(api),
   ]);
   const context = {
     ...launcher,
+    locale,
     designTokens,
     mode,
     sourceUrl: tab.url || "",
@@ -422,6 +425,7 @@ async function performAction(api, message, context, publish, onAiLaunch) {
           api,
           context.windowId,
           message.query,
+          (await interfaceLocale(api)).messages["New group"],
         ),
         domains: [],
         warnings: [],
@@ -493,7 +497,10 @@ async function performAction(api, message, context, publish, onAiLaunch) {
           api,
           context,
           message.query,
-          commandSuggestions(message.query),
+          commandSuggestions(
+            message.query,
+            systemTranslator(await interfaceLocale(api)),
+          ),
         ),
         domains: [],
         warnings: [],
@@ -555,6 +562,7 @@ async function performAction(api, message, context, publish, onAiLaunch) {
       recentActions = history.slice(0, 3).map((row) => ({
         kind: "activity",
         activityId: row.id,
+        time: row.time,
         title: row.label,
         url: `View history · ${new Date(row.time).toLocaleString()}`,
         sources: ["activity"],

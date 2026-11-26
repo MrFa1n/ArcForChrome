@@ -1,0 +1,1772 @@
+{
+  "language_name": {
+    "message": "English"
+  },
+  "collapsed": {
+    "message": " · Collapsed"
+  },
+  "drag_to_move_ctrl_alt_arrows_move_ctrl_alt_0_reset": {
+    "message": " · Drag to move · Ctrl+Alt+arrows move · Ctrl+Alt+0 reset"
+  },
+  "grouped": {
+    "message": " · Grouped"
+  },
+  "keyboard_layout_match": {
+    "message": " · Keyboard layout match"
+  },
+  "pinned": {
+    "message": " · Pinned"
+  },
+  "similar_spelling": {
+    "message": " · Similar spelling"
+  },
+  "0_already_saved": {
+    "message": " · {0} already saved"
+  },
+  "168_hours_7_days_use_0_for_no_age_limit_the_entry_limit_still_applies__3b2e709c": {
+    "message": "168 hours = 7 days. Use 0 for no age limit; the entry limit still applies. Cleanup runs automatically while Chrome is running."
+  },
+  "a_matching_bookmark_is_managed_and_cannot_be_removed": {
+    "message": "A matching bookmark is managed and cannot be removed"
+  },
+  "a_selected_tab_is_no_longer_in_this_window": {
+    "message": "A selected tab is no longer in this window"
+  },
+  "a_tab_moved_to_another_window": {
+    "message": "A tab moved to another window"
+  },
+  "about_chrome": {
+    "message": "About Chrome"
+  },
+  "accessibility": {
+    "message": "Accessibility"
+  },
+  "account": {
+    "message": "Account"
+  },
+  "action": {
+    "message": "Action"
+  },
+  "action_failed": {
+    "message": "Action failed"
+  },
+  "actions": {
+    "message": "Actions"
+  },
+  "actions_for_selected_result": {
+    "message": "Actions for selected result"
+  },
+  "actions_0": {
+    "message": "Actions · {0}"
+  },
+  "actions_0_2": {
+    "message": "Actions: {0}"
+  },
+  "activate_tab_0": {
+    "message": "Activate tab {0}"
+  },
+  "activity_history": {
+    "message": "Activity history"
+  },
+  "add_selected_tabs_0": {
+    "message": "Add selected tabs · {0}"
+  },
+  "add_site": {
+    "message": "Add site"
+  },
+  "add_to_a_tab_group": {
+    "message": "Add to a tab group…"
+  },
+  "add_to_group": {
+    "message": "Add to group"
+  },
+  "all_browser_commands": {
+    "message": "All browser commands"
+  },
+  "all_keyboard_shortcuts": {
+    "message": "All keyboard shortcuts"
+  },
+  "all_shortcuts": {
+    "message": "All shortcuts"
+  },
+  "appearance": {
+    "message": "Appearance"
+  },
+  "apply": {
+    "message": "Apply"
+  },
+  "apply_group_color": {
+    "message": "Apply group color"
+  },
+  "arc_command_bar": {
+    "message": "Arc Command Bar"
+  },
+  "arc_search": {
+    "message": "Arc Search"
+  },
+  "arc_search_settings": {
+    "message": "Arc Search settings"
+  },
+  "arc_search_sidebar": {
+    "message": "Arc Search sidebar"
+  },
+  "arc_command_bar_2": {
+    "message": "Arc command bar"
+  },
+  "arc_search_2": {
+    "message": "Arc search"
+  },
+  "arrange_tabs": {
+    "message": "Arrange tabs"
+  },
+  "arrange_tabs_alt_or_move_shift_first_last_enter_place": {
+    "message": "Arrange tabs · Alt+←/→ or ↑/↓ move · +Shift first/last · Enter place"
+  },
+  "ask_0_1": {
+    "message": "Ask {0}: {1}"
+  },
+  "at_the_start_of_search_enter_restores_the_selected_native_browser_session": {
+    "message": "At the start of Search. Enter restores the selected native browser session."
+  },
+  "at_the_start_of_search_includes_settings_chrome_sections_notes_and_browser_actions": {
+    "message": "At the start of Search. Includes settings, Chrome sections, notes and browser actions."
+  },
+  "at_the_start_of_search_recover_a_session_copy_then_retry_or_change_its_provider": {
+    "message": "At the start of Search. Recover a session copy, then retry or change its provider."
+  },
+  "at_the_start_of_search_save_marked_highlighted_source_tabs_in_a_chosen_folder": {
+    "message": "At the start of Search. Save marked/highlighted/source tabs in a chosen folder."
+  },
+  "at_the_start_of_search_search_note_titles_and_text_enter_edits_a_note__bd1beccc": {
+    "message": "At the start of Search. Search note titles and text; Enter edits a note, Cmd/Ctrl+K offers note actions."
+  },
+  "at_the_start_of_search_search_open_or_manage_your_local_named_links": {
+    "message": "At the start of Search. Search, open or manage your local named links."
+  },
+  "at_the_start_of_search_shows_actual_tab_strip_order_and_optional_name_url_filter": {
+    "message": "At the start of Search. Shows actual tab-strip order and optional name/URL filter."
+  },
+  "at_the_start_of_search_type_a_new_or_existing_group_name_uses_marked_h_6226104a": {
+    "message": "At the start of Search. Type a new or existing group name; uses marked/highlighted/source tabs."
+  },
+  "autofill_and_passwords": {
+    "message": "Autofill and passwords"
+  },
+  "automatic_cleanup": {
+    "message": "Automatic cleanup"
+  },
+  "back": {
+    "message": "Back"
+  },
+  "back_clear_marks_close_spotlight": {
+    "message": "Back / clear marks / close Spotlight"
+  },
+  "blue": {
+    "message": "Blue"
+  },
+  "bookmark": {
+    "message": "Bookmark"
+  },
+  "bookmark_folder": {
+    "message": "Bookmark folder"
+  },
+  "bookmark_selected_tabs_in_a_folder": {
+    "message": "Bookmark selected tabs in a folder"
+  },
+  "bookmarks": {
+    "message": "Bookmarks"
+  },
+  "bookmarks_unavailable": {
+    "message": "Bookmarks unavailable"
+  },
+  "bookmarks_0_1_tabs": {
+    "message": "Bookmarks · {0} · {1} tabs"
+  },
+  "browse_all_browser_commands": {
+    "message": "Browse all browser commands"
+  },
+  "browser_action": {
+    "message": "Browser action"
+  },
+  "browser_command": {
+    "message": "Browser command"
+  },
+  "built_in": {
+    "message": "Built-in"
+  },
+  "calculator": {
+    "message": "Calculator"
+  },
+  "cannot_cross_a_pinned_group_boundary_with_a_one_position_move": {
+    "message": "Cannot cross a pinned/group boundary with a one-position move"
+  },
+  "cannot_save_the_interface_language": {
+    "message": "Cannot save the interface language."
+  },
+  "change_group_color": {
+    "message": "Change group color"
+  },
+  "check_chrome_shortcuts": {
+    "message": "Check Chrome shortcuts"
+  },
+  "choose_a_bookmark_folder": {
+    "message": "Choose a bookmark folder"
+  },
+  "choose_a_destination_enter_move_esc_back": {
+    "message": "Choose a destination · Enter move · Esc back"
+  },
+  "choose_a_folder_to_remove_matching_bookmarks": {
+    "message": "Choose a folder to remove matching bookmarks…"
+  },
+  "choose_a_folder_to_save_bookmarks": {
+    "message": "Choose a folder to save bookmarks…"
+  },
+  "choose_a_group": {
+    "message": "Choose a group"
+  },
+  "choose_a_group_action": {
+    "message": "Choose a group action…"
+  },
+  "choose_a_group_color": {
+    "message": "Choose a group color…"
+  },
+  "choose_a_language_reopen_spotlight_or_refresh_open_extension_pages_to__c68f8ecc": {
+    "message": "Choose a language. Reopen Spotlight or refresh open extension pages to use it everywhere."
+  },
+  "choose_a_named_group_in_this_window": {
+    "message": "Choose a named group in this window"
+  },
+  "choose_a_note": {
+    "message": "Choose a note"
+  },
+  "choose_a_note_first": {
+    "message": "Choose a note first"
+  },
+  "choose_a_position_or_a_destination_tab": {
+    "message": "Choose a position or a destination tab…"
+  },
+  "choose_a_quicklink": {
+    "message": "Choose a quicklink"
+  },
+  "choose_a_tab_to_move": {
+    "message": "Choose a tab to move…"
+  },
+  "choose_a_web_address_to_route": {
+    "message": "Choose a web address to route"
+  },
+  "choose_a_web_link_to_preview": {
+    "message": "Choose a web link to preview"
+  },
+  "choose_a_web_page_to_save_as_a_quicklink": {
+    "message": "Choose a web page to save as a quicklink"
+  },
+  "choose_a_web_suggestion": {
+    "message": "Choose a web suggestion"
+  },
+  "choose_action": {
+    "message": "Choose action"
+  },
+  "choose_adjacent_tabs_in_the_same_group_with_the_same_pin_state": {
+    "message": "Choose adjacent tabs in the same group with the same pin state"
+  },
+  "choose_an_open_tab_or_mark_tabs_with_shift_space": {
+    "message": "Choose an open tab or mark tabs with Shift+Space"
+  },
+  "choose_another_tab": {
+    "message": "Choose another tab"
+  },
+  "choose_at_least_one_open_tab": {
+    "message": "Choose at least one open tab"
+  },
+  "choose_color": {
+    "message": "Choose color"
+  },
+  "choose_folder": {
+    "message": "Choose folder"
+  },
+  "choose_one_tab_or_mark_two_adjacent_tabs_to_pair_them": {
+    "message": "Choose one tab, or mark two adjacent tabs to pair them"
+  },
+  "choose_position": {
+    "message": "Choose position"
+  },
+  "choose_previous_next_result": {
+    "message": "Choose previous / next result"
+  },
+  "choose_site": {
+    "message": "Choose site"
+  },
+  "choose_this_mode_in_the_command_bar": {
+    "message": "Choose this mode in the command bar"
+  },
+  "chrome_internal_pages": {
+    "message": "Chrome internal pages"
+  },
+  "chrome_page": {
+    "message": "Chrome page"
+  },
+  "chrome_version": {
+    "message": "Chrome version"
+  },
+  "clear_history": {
+    "message": "Clear history"
+  },
+  "clear_learned_shortcuts": {
+    "message": "Clear learned shortcuts"
+  },
+  "clear_overrides": {
+    "message": "Clear overrides"
+  },
+  "clear_route_for_this_domain": {
+    "message": "Clear route for this domain"
+  },
+  "clear_saved_ai_prompts": {
+    "message": "Clear saved AI prompts"
+  },
+  "clipboard_access_is_unavailable": {
+    "message": "Clipboard access is unavailable"
+  },
+  "close_split_view": {
+    "message": "Close Split View"
+  },
+  "close_sidebar": {
+    "message": "Close sidebar"
+  },
+  "closed_tab": {
+    "message": "Closed tab"
+  },
+  "closed_tab_is_no_longer_available": {
+    "message": "Closed tab is no longer available"
+  },
+  "collapse_group": {
+    "message": "Collapse group"
+  },
+  "collapsed_2": {
+    "message": "Collapsed"
+  },
+  "command": {
+    "message": "Command"
+  },
+  "commands": {
+    "message": "Commands"
+  },
+  "commands_select_enter_run_esc_back": {
+    "message": "Commands · ↑ ↓ select · Enter run · Esc back"
+  },
+  "complete_a_url_enter_site_search_open_commands": {
+    "message": "Complete a URL / enter site search / open Commands"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "copied_0": {
+    "message": "Copied {0}"
+  },
+  "copy_url_result": {
+    "message": "Copy URL / Result"
+  },
+  "copy_current_url": {
+    "message": "Copy current URL"
+  },
+  "copy_links_as_markdown": {
+    "message": "Copy links as Markdown"
+  },
+  "copy_links_from_selected_tabs": {
+    "message": "Copy links from selected tabs"
+  },
+  "copy_note_text": {
+    "message": "Copy note text"
+  },
+  "copy_result": {
+    "message": "Copy result"
+  },
+  "copy_shortcut": {
+    "message": "Copy shortcut"
+  },
+  "could_not_change_bookmarks": {
+    "message": "Could not change bookmarks"
+  },
+  "could_not_change_group": {
+    "message": "Could not change group"
+  },
+  "could_not_delete_note": {
+    "message": "Could not delete note"
+  },
+  "could_not_load_tabs": {
+    "message": "Could not load tabs."
+  },
+  "could_not_move_tab": {
+    "message": "Could not move tab"
+  },
+  "could_not_open_address": {
+    "message": "Could not open address"
+  },
+  "could_not_open_history": {
+    "message": "Could not open history"
+  },
+  "could_not_open_result": {
+    "message": "Could not open result"
+  },
+  "could_not_read_note": {
+    "message": "Could not read note"
+  },
+  "could_not_recover_prompt": {
+    "message": "Could not recover prompt"
+  },
+  "could_not_refresh_tab_order": {
+    "message": "Could not refresh tab order"
+  },
+  "could_not_save_note": {
+    "message": "Could not save note"
+  },
+  "could_not_save_quicklink": {
+    "message": "Could not save quicklink"
+  },
+  "could_not_save_route": {
+    "message": "Could not save route"
+  },
+  "could_not_switch_to_this_tab": {
+    "message": "Could not switch to this tab."
+  },
+  "create_choose_a_tab_group": {
+    "message": "Create / choose a tab group"
+  },
+  "create_group": {
+    "message": "Create group"
+  },
+  "create_group_0": {
+    "message": "Create group “{0}”"
+  },
+  "customize_shortcuts": {
+    "message": "Customize shortcuts"
+  },
+  "cyan": {
+    "message": "Cyan"
+  },
+  "cycles_query_actions_and_resize_controls_when_tab_is_not_completing_a__ba63e18d": {
+    "message": "Cycles query, Actions and resize controls when Tab is not completing a URL/site. Shift+Tab from the query reaches resize."
+  },
+  "default_browser": {
+    "message": "Default browser"
+  },
+  "default_search_engine": {
+    "message": "Default search engine"
+  },
+  "delete_after_hours": {
+    "message": "Delete after (hours)"
+  },
+  "delete_note": {
+    "message": "Delete note"
+  },
+  "detected": {
+    "message": "Detected"
+  },
+  "detected_from_your_browsing_tab_to_search": {
+    "message": "Detected from your browsing · Tab to search"
+  },
+  "domain_route_cleared": {
+    "message": "Domain route cleared"
+  },
+  "domain_route_saved": {
+    "message": "Domain route saved"
+  },
+  "done": {
+    "message": "Done"
+  },
+  "downloads": {
+    "message": "Downloads"
+  },
+  "drag_corner_to_resize_arrow_keys_when_focused_enter_reset_size": {
+    "message": "Drag corner to resize · Arrow keys when focused · Enter reset size"
+  },
+  "drag_to_move_ctrl_alt_arrows_move_shift_for_larger_steps_ctrl_alt_0_reset": {
+    "message": "Drag to move · Ctrl+Alt+arrows move · Shift for larger steps · Ctrl+Alt+0 reset"
+  },
+  "duplicate_current_tab": {
+    "message": "Duplicate current tab"
+  },
+  "duplicate_selected_tab": {
+    "message": "Duplicate selected tab"
+  },
+  "edit_url_enter_replace_cmd_ctrl_enter_new_tab_esc_back": {
+    "message": "Edit URL · Enter replace · Cmd/Ctrl+Enter new tab · Esc back"
+  },
+  "edit_current_url": {
+    "message": "Edit current URL"
+  },
+  "edit_note": {
+    "message": "Edit note"
+  },
+  "edit_the_current_url_in_the_command_bar": {
+    "message": "Edit the current URL in the command bar"
+  },
+  "enter_a_search_query": {
+    "message": "Enter a search query"
+  },
+  "enter_a_site_search_query": {
+    "message": "Enter a site search query"
+  },
+  "enter_a_site_search_query_2": {
+    "message": "Enter a site search query…"
+  },
+  "enter_apply_name": {
+    "message": "Enter apply name"
+  },
+  "enter_rename_esc_back": {
+    "message": "Enter rename · Esc back"
+  },
+  "expand_group": {
+    "message": "Expand group"
+  },
+  "expanded": {
+    "message": "Expanded"
+  },
+  "extension_keyboard_shortcuts": {
+    "message": "Extension keyboard shortcuts"
+  },
+  "extensions": {
+    "message": "Extensions"
+  },
+  "failed": {
+    "message": "Failed"
+  },
+  "find_a_browser_command": {
+    "message": "Find a browser command…"
+  },
+  "find_a_quicklink": {
+    "message": "Find a quicklink…"
+  },
+  "find_a_recently_closed_tab": {
+    "message": "Find a recently closed tab…"
+  },
+  "find_a_tab_group": {
+    "message": "Find a tab group…"
+  },
+  "find_an_open_tab": {
+    "message": "Find an open tab"
+  },
+  "find_any_shortcut_or_prefix": {
+    "message": "Find any shortcut or prefix…"
+  },
+  "find_named_quicklinks": {
+    "message": "Find named quicklinks"
+  },
+  "focus_actions_resize_handle": {
+    "message": "Focus Actions / resize handle"
+  },
+  "folder_is_unavailable_or_read_only": {
+    "message": "Folder is unavailable or read-only"
+  },
+  "frequent_commands": {
+    "message": "Frequent commands"
+  },
+  "global_in_chrome_check_or_change_the_assigned_shortcut_in_chrome_extensions_shortcuts": {
+    "message": "Global in Chrome. Check or change the assigned shortcut in chrome://extensions/shortcuts."
+  },
+  "global_in_chrome_enter_replaces_the_source_page_unchanged_url_reloads_it": {
+    "message": "Global in Chrome. Enter replaces the source page; unchanged URL reloads it."
+  },
+  "go_to_0": {
+    "message": "Go to {0}"
+  },
+  "google_yandex_chatgpt_google_ai_mode_gem_gemini_claude_grok_and_perple_19d52435": {
+    "message": "Google, Yandex, ChatGPT, Google AI Mode (gem/gemini), Claude, Grok and Perplexity are ready to use. Type a shortcut followed by your query (for example, gem explain closures) and press Enter. Other sites are detected locally from search URLs in tabs, bookmarks and history. Shortcut + Tab also works."
+  },
+  "green": {
+    "message": "Green"
+  },
+  "grey": {
+    "message": "Grey"
+  },
+  "group_is_no_longer_in_this_window": {
+    "message": "Group is no longer in this window"
+  },
+  "group_selected_tabs": {
+    "message": "Group selected tabs"
+  },
+  "group_selected_tabs_enter_create": {
+    "message": "Group selected tabs · Enter create"
+  },
+  "grouped_2": {
+    "message": "Grouped"
+  },
+  "grouping_0_tabs_enter_create_add_esc_back": {
+    "message": "Grouping {0} tabs · Enter create/add · Esc back"
+  },
+  "hide_this_suggestion": {
+    "message": "Hide this suggestion"
+  },
+  "history": {
+    "message": "History"
+  },
+  "history_cleared": {
+    "message": "History cleared"
+  },
+  "history_unavailable": {
+    "message": "History unavailable"
+  },
+  "homepage_new_tab": {
+    "message": "Homepage · New tab"
+  },
+  "include_query_and_prompt_text": {
+    "message": "Include query and prompt text"
+  },
+  "inside_spotlight_applies_to_the_selected_result_navigation_modifiers_a_83a3d0fd": {
+    "message": "Inside Spotlight. Applies to the selected result; navigation modifiers affect URL/search results."
+  },
+  "inside_spotlight_moves_by_16_pixels_independently_of_tab_ordering": {
+    "message": "Inside Spotlight. Moves by 16 pixels, independently of tab ordering."
+  },
+  "inside_spotlight_moves_by_64_pixels_within_the_viewport": {
+    "message": "Inside Spotlight. Moves by 64 pixels within the viewport."
+  },
+  "inside_spotlight_resets_both_position_and_custom_size": {
+    "message": "Inside Spotlight. Resets both position and custom size."
+  },
+  "inside_spotlight_toggle_the_contextual_actions_esc_returns_to_the_same_10393bca": {
+    "message": "Inside Spotlight. Toggle the contextual actions; Esc returns to the same query and result."
+  },
+  "inside_spotlight_uses_marked_tabs_otherwise_the_highlighted_source_tab": {
+    "message": "Inside Spotlight. Uses marked tabs; otherwise the highlighted/source tab."
+  },
+  "inside_search_empty_tab_opens_commands_a_site_keyword_tab_enters_site__28b76540": {
+    "message": "Inside search: empty Tab opens Commands; a site keyword + Tab enters Site Search; Tab on a URL completes it. Enter opens, Shift+Enter opens in background, Alt+Enter replaces the current page. In Edit mode, Enter replaces the current page; ⌘/Ctrl+Enter opens a new tab."
+  },
+  "interface_language": {
+    "message": "Interface language"
+  },
+  "invalid_closed_tab": {
+    "message": "Invalid closed tab"
+  },
+  "invalid_group": {
+    "message": "Invalid group"
+  },
+  "invalid_group_color": {
+    "message": "Invalid group color"
+  },
+  "invalid_history_limits": {
+    "message": "Invalid history limits"
+  },
+  "invalid_icon_request": {
+    "message": "Invalid icon request"
+  },
+  "invalid_move": {
+    "message": "Invalid move"
+  },
+  "invalid_navigation_target": {
+    "message": "Invalid navigation target"
+  },
+  "invalid_query": {
+    "message": "Invalid query"
+  },
+  "invalid_saved_prompt": {
+    "message": "Invalid saved prompt"
+  },
+  "invalid_tab": {
+    "message": "Invalid tab"
+  },
+  "invalid_tab_action": {
+    "message": "Invalid tab action"
+  },
+  "invalid_tab_selection": {
+    "message": "Invalid tab selection"
+  },
+  "invalid_window": {
+    "message": "Invalid window"
+  },
+  "keep_at_most_100_quicklinks_remove_one_first": {
+    "message": "Keep at most 100 quicklinks; remove one first"
+  },
+  "keep_at_most_200_notes_remove_one_first": {
+    "message": "Keep at most 200 notes; remove one first"
+  },
+  "keep_preview_as_tab": {
+    "message": "Keep preview as tab"
+  },
+  "keep_preview_in_split_view": {
+    "message": "Keep preview in Split View"
+  },
+  "keyboard": {
+    "message": "Keyboard"
+  },
+  "keyboard_shortcuts": {
+    "message": "Keyboard shortcuts"
+  },
+  "keyword": {
+    "message": "Keyword"
+  },
+  "languages": {
+    "message": "Languages"
+  },
+  "learn_from_my_selections": {
+    "message": "Learn from my selections"
+  },
+  "learned_shortcuts_cleared_reopen_search_to_refresh": {
+    "message": "Learned shortcuts cleared. Reopen search to refresh."
+  },
+  "learning_is_on_by_default_when_action_recording_is_enabled_spotlight_k_daa8c666": {
+    "message": "Learning is on by default when action recording is enabled. Spotlight keeps the selected command or AI provider, command position, and topic vectors in this local history. The text setting controls whether the original query is kept. Disabling learning pauses it. Clearing history also resets learned preferences."
+  },
+  "learning_command_picked_at_position_0": {
+    "message": "Learning: command picked at position {0}"
+  },
+  "learning_provider_and_prompt_topics": {
+    "message": "Learning: provider and prompt topics"
+  },
+  "leave_an_empty_search_scope": {
+    "message": "Leave an empty search scope"
+  },
+  "leaves_the_current_scope_in_search_clears_marks_before_closing_in_the__e2e9d06f": {
+    "message": "Leaves the current scope; in Search clears marks before closing. In the note editor cancels unsaved edits."
+  },
+  "links_copied": {
+    "message": "Links copied"
+  },
+  "local_history": {
+    "message": "Local history"
+  },
+  "manage_extensions": {
+    "message": "Manage extensions"
+  },
+  "manage_group": {
+    "message": "Manage group"
+  },
+  "manage_groups_enter_choose_esc_back": {
+    "message": "Manage groups · Enter choose · Esc back"
+  },
+  "manage_quicklinks": {
+    "message": "Manage quicklinks"
+  },
+  "manage_tab_groups": {
+    "message": "Manage tab groups"
+  },
+  "manage_tab_groups_2": {
+    "message": "Manage tab groups…"
+  },
+  "manual_overrides_cleared_in_this_form_save_to_use_built_in_and_detected_shortcuts": {
+    "message": "Manual overrides cleared in this form. Save to use built-in and detected shortcuts."
+  },
+  "mark_unmark_an_open_tab": {
+    "message": "Mark / unmark an open tab"
+  },
+  "maximum_entries": {
+    "message": "Maximum entries"
+  },
+  "move_spotlight_in_larger_steps": {
+    "message": "Move Spotlight in larger steps"
+  },
+  "move_spotlight_on_the_page": {
+    "message": "Move Spotlight on the page"
+  },
+  "move_a_tab_one_position": {
+    "message": "Move a tab one position"
+  },
+  "move_a_tab_to_the_start_end": {
+    "message": "Move a tab to the start / end"
+  },
+  "move_a_tab_to_the_start_end_home_end": {
+    "message": "Move a tab to the start / end (Home / End)"
+  },
+  "move_before_0": {
+    "message": "Move before {0}"
+  },
+  "move_one_position_left_up": {
+    "message": "Move one position left / up"
+  },
+  "move_one_position_right_down": {
+    "message": "Move one position right / down"
+  },
+  "move_only_within_the_same_pinned_group_section": {
+    "message": "Move only within the same pinned/group section"
+  },
+  "move_selected_tab": {
+    "message": "Move selected tab…"
+  },
+  "move_tab": {
+    "message": "Move tab"
+  },
+  "move_tab_0_1": {
+    "message": "Move tab {0} · {1}"
+  },
+  "move_to_end": {
+    "message": "Move to end"
+  },
+  "move_to_start": {
+    "message": "Move to start"
+  },
+  "mute_tab": {
+    "message": "Mute tab"
+  },
+  "name": {
+    "message": "Name"
+  },
+  "name_this_quicklink": {
+    "message": "Name this quicklink…"
+  },
+  "new_split_view": {
+    "message": "New Split View"
+  },
+  "new_tab": {
+    "message": "New Tab"
+  },
+  "new_browser_window": {
+    "message": "New browser window"
+  },
+  "new_group": {
+    "message": "New group"
+  },
+  "new_group_name": {
+    "message": "New group name…"
+  },
+  "new_note": {
+    "message": "New note"
+  },
+  "new_space": {
+    "message": "New space"
+  },
+  "no_actions_yet": {
+    "message": "No actions yet"
+  },
+  "no_matching_bookmarks_in_writable_folders": {
+    "message": "No matching bookmarks in writable folders"
+  },
+  "no_matching_tabs": {
+    "message": "No matching tabs."
+  },
+  "no_matching_writable_folders": {
+    "message": "No matching writable folders"
+  },
+  "no_previous_tab_in_this_window": {
+    "message": "No previous tab in this window"
+  },
+  "no_search_urls_detected_yet_search_on_a_website_in_chrome_once_then_re_015c5ff0": {
+    "message": "No search URLs detected yet. Search on a website in Chrome once, then reopen the palette."
+  },
+  "no_web_links_in_this_selection": {
+    "message": "No web links in this selection"
+  },
+  "not_assigned": {
+    "message": "Not assigned"
+  },
+  "note": {
+    "message": "Note"
+  },
+  "note_copied": {
+    "message": "Note copied"
+  },
+  "note_deleted": {
+    "message": "Note deleted"
+  },
+  "note_editor": {
+    "message": "Note editor"
+  },
+  "note_editor_only_saves_the_title_and_multiline_body_locally_plain_ente_5d824937": {
+    "message": "Note editor only. Saves the title and multiline body locally. Plain Enter in the body inserts a new line."
+  },
+  "note_no_longer_exists": {
+    "message": "Note no longer exists"
+  },
+  "note_saved": {
+    "message": "Note saved"
+  },
+  "note_text": {
+    "message": "Note text"
+  },
+  "note_title": {
+    "message": "Note title…"
+  },
+  "note_0": {
+    "message": "Note · {0}"
+  },
+  "notes": {
+    "message": "Notes"
+  },
+  "on_device": {
+    "message": "On device"
+  },
+  "on_startup": {
+    "message": "On startup"
+  },
+  "only_web_pages_and_supported_chrome_sections_can_be_bookmarked": {
+    "message": "Only web pages and supported Chrome sections can be bookmarked"
+  },
+  "open": {
+    "message": "Open"
+  },
+  "open_run": {
+    "message": "Open / Run"
+  },
+  "open_search": {
+    "message": "Open / Search"
+  },
+  "open_close_spotlight": {
+    "message": "Open / close Spotlight"
+  },
+  "open_arc_search": {
+    "message": "Open Arc Search"
+  },
+  "open_chrome_search_settings": {
+    "message": "Open Chrome search settings"
+  },
+  "open_chrome_settings": {
+    "message": "Open Chrome settings"
+  },
+  "open_spotlight_style_search": {
+    "message": "Open Spotlight-style search"
+  },
+  "open_a_link_with_temporary_preview_first": {
+    "message": "Open a link with Temporary preview first"
+  },
+  "open_a_tab_in_a_group_first": {
+    "message": "Open a tab in a group first"
+  },
+  "open_activity_history": {
+    "message": "Open activity history"
+  },
+  "open_browser_commands": {
+    "message": "Open browser commands"
+  },
+  "open_browser_history": {
+    "message": "Open browser history"
+  },
+  "open_downloads": {
+    "message": "Open downloads"
+  },
+  "open_first_web_result_via_duckduckgo": {
+    "message": "Open first web result via DuckDuckGo"
+  },
+  "open_in_a_new_tab": {
+    "message": "Open in a new tab"
+  },
+  "open_in_background": {
+    "message": "Open in background"
+  },
+  "open_in_the_source_tab": {
+    "message": "Open in the source tab"
+  },
+  "open_link": {
+    "message": "Open link"
+  },
+  "open_pasted_address": {
+    "message": "Open pasted address"
+  },
+  "open_sidebar": {
+    "message": "Open sidebar"
+  },
+  "open_tab": {
+    "message": "Open tab"
+  },
+  "open_tabs": {
+    "message": "Open tabs"
+  },
+  "open_tabs_unavailable": {
+    "message": "Open tabs unavailable"
+  },
+  "open_temporary_preview": {
+    "message": "Open temporary preview"
+  },
+  "open_the_command_catalog_slash_followed_by_space_also_opens_it_from_search": {
+    "message": "Open the command catalog. Slash followed by space also opens it from Search."
+  },
+  "open_0": {
+    "message": "Open {0}"
+  },
+  "optional_manual_overrides": {
+    "message": "Optional manual overrides"
+  },
+  "orange": {
+    "message": "Orange"
+  },
+  "password_manager": {
+    "message": "Password Manager"
+  },
+  "paste_an_address_then_press_enter": {
+    "message": "Paste an address, then press Enter…"
+  },
+  "paste_and_go": {
+    "message": "Paste and go"
+  },
+  "performance": {
+    "message": "Performance"
+  },
+  "pin_tab": {
+    "message": "Pin tab"
+  },
+  "pink": {
+    "message": "Pink"
+  },
+  "position_0_1_2_3": {
+    "message": "Position {0}{1}{2} · {3}"
+  },
+  "previous_tab": {
+    "message": "Previous tab"
+  },
+  "privacy_and_security": {
+    "message": "Privacy and security"
+  },
+  "prompt_recovery_storage_is_unavailable": {
+    "message": "Prompt recovery storage is unavailable"
+  },
+  "purple": {
+    "message": "Purple"
+  },
+  "query_field_selected_url_completes_the_address_site_keyword_enters_sit_d74e96a7": {
+    "message": "Query field: selected URL completes the address; site keyword enters site search; empty Search opens Commands. Otherwise cycles controls."
+  },
+  "quicklink": {
+    "message": "Quicklink"
+  },
+  "quicklink_no_longer_exists": {
+    "message": "Quicklink no longer exists"
+  },
+  "quicklink_removed": {
+    "message": "Quicklink removed"
+  },
+  "quicklink_saved": {
+    "message": "Quicklink saved"
+  },
+  "quicklink_0": {
+    "message": "Quicklink · {0}"
+  },
+  "quicklinks": {
+    "message": "Quicklinks"
+  },
+  "recent_action": {
+    "message": "Recent action"
+  },
+  "recent_actions": {
+    "message": "Recent actions"
+  },
+  "recently_closed_tabs": {
+    "message": "Recently closed tabs"
+  },
+  "recently_closed_enter_restore_esc_back": {
+    "message": "Recently closed · Enter restore · Esc back"
+  },
+  "record_actions": {
+    "message": "Record actions"
+  },
+  "recover_ai_prompt": {
+    "message": "Recover AI prompt"
+  },
+  "recover_ai_prompts": {
+    "message": "Recover AI prompts"
+  },
+  "recover_a_recent_ai_prompt": {
+    "message": "Recover a recent AI prompt…"
+  },
+  "recover_an_ai_prompt": {
+    "message": "Recover an AI prompt"
+  },
+  "recover_prompt": {
+    "message": "Recover prompt"
+  },
+  "recover_prompt_this_browser_session": {
+    "message": "Recover prompt · This browser session"
+  },
+  "red": {
+    "message": "Red"
+  },
+  "reload_current_page": {
+    "message": "Reload current page"
+  },
+  "remove": {
+    "message": "Remove"
+  },
+  "remove_from_a_bookmark_folder": {
+    "message": "Remove from a bookmark folder…"
+  },
+  "remove_from_tab_groups": {
+    "message": "Remove from tab groups"
+  },
+  "remove_quicklink": {
+    "message": "Remove quicklink"
+  },
+  "remove_selected_bookmarks_from_a_folder": {
+    "message": "Remove selected bookmarks from a folder"
+  },
+  "remove_selected_tabs_from_groups": {
+    "message": "Remove selected tabs from groups"
+  },
+  "remove_0": {
+    "message": "Remove {0}"
+  },
+  "remove_0_matching_bookmark_s_here_other_folders_stay_unchanged": {
+    "message": "Remove {0} matching bookmark(s) here · Other folders stay unchanged"
+  },
+  "removed": {
+    "message": "Removed"
+  },
+  "rename": {
+    "message": "Rename"
+  },
+  "rename_group": {
+    "message": "Rename group"
+  },
+  "rename_group_to_0": {
+    "message": "Rename group to “{0}”"
+  },
+  "rename_quicklink": {
+    "message": "Rename quicklink…"
+  },
+  "reopen_last_closed_tab": {
+    "message": "Reopen last closed tab"
+  },
+  "reset_spotlight_position_and_size": {
+    "message": "Reset Spotlight position and size"
+  },
+  "reset_spotlight_size": {
+    "message": "Reset Spotlight size"
+  },
+  "resize_spotlight": {
+    "message": "Resize Spotlight"
+  },
+  "resize_handle_focused_restores_the_automatic_size_without_resetting_a__db588bcd": {
+    "message": "Resize handle focused. Restores the automatic size without resetting a manually chosen position."
+  },
+  "resize_handle_focused_arrows_change_size_by_16_pixels_shift_gives_64_p_28ec6451": {
+    "message": "Resize handle focused: arrows change size by 16 pixels; Shift gives 64-pixel steps. Enter resets size."
+  },
+  "restore": {
+    "message": "Restore"
+  },
+  "restore_closed_tab": {
+    "message": "Restore closed tab"
+  },
+  "restore_hidden_suggestions": {
+    "message": "Restore hidden suggestions"
+  },
+  "restore_session": {
+    "message": "Restore session"
+  },
+  "return_to_results": {
+    "message": "Return to results"
+  },
+  "return_to_the_last_used_tab_in_this_window": {
+    "message": "Return to the last used tab in this window."
+  },
+  "review_spotlight_actions_set_retention_count_limits_disable_recording__01e9165c": {
+    "message": "Review Spotlight actions, set retention/count limits, disable recording or clear history. Query text is excluded by default."
+  },
+  "route_domain_to_group": {
+    "message": "Route domain to group"
+  },
+  "route_this_domain_to_a_group": {
+    "message": "Route this domain to a group"
+  },
+  "run": {
+    "message": "Run"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "save_as_quicklink": {
+    "message": "Save as quicklink…"
+  },
+  "save_changes": {
+    "message": "Save changes"
+  },
+  "save_in_a_bookmark_folder": {
+    "message": "Save in a bookmark folder…"
+  },
+  "save_language": {
+    "message": "Save language"
+  },
+  "save_limits": {
+    "message": "Save limits"
+  },
+  "save_note": {
+    "message": "Save note"
+  },
+  "save_route": {
+    "message": "Save route"
+  },
+  "save_selected_page_as_quicklink": {
+    "message": "Save selected page as quicklink"
+  },
+  "save_0_page_s_here_1_already_saved": {
+    "message": "Save {0} page(s) here · {1} already saved"
+  },
+  "save_0": {
+    "message": "Save “{0}”"
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "saved_ai_prompt": {
+    "message": "Saved AI prompt"
+  },
+  "saved_ai_prompts_enter_recover_edit_shortcut_to_redirect_esc_back": {
+    "message": "Saved AI prompts · Enter recover · Edit shortcut to redirect · Esc back"
+  },
+  "saved_prompt_is_no_longer_available": {
+    "message": "Saved prompt is no longer available"
+  },
+  "saved_reopen_search_to_use_these_sites": {
+    "message": "Saved. Reopen search to use these sites."
+  },
+  "search": {
+    "message": "Search"
+  },
+  "search_manage_notes": {
+    "message": "Search / manage notes"
+  },
+  "search_url": {
+    "message": "Search URL"
+  },
+  "search_url_needs_exactly_one_s_placeholder": {
+    "message": "Search URL needs exactly one %s placeholder"
+  },
+  "search_could_not_open_0": {
+    "message": "Search could not open: {0}"
+  },
+  "search_current_query_with": {
+    "message": "Search current query with…"
+  },
+  "search_engines": {
+    "message": "Search engines"
+  },
+  "search_history": {
+    "message": "Search history"
+  },
+  "search_local_notes": {
+    "message": "Search local notes"
+  },
+  "search_note_titles_and_text": {
+    "message": "Search note titles and text…"
+  },
+  "search_or_arrange_with_an_open_tab_selected_horizontal_and_vertical_ke_c2bc1d3b": {
+    "message": "Search or Arrange with an open tab selected. Horizontal and vertical keys both work; pin/group boundaries are preserved."
+  },
+  "search_or_arrange_with_an_open_tab_selected_same_pin_group_boundaries": {
+    "message": "Search or Arrange with an open tab selected; same pin/group boundaries."
+  },
+  "search_or_arrange_collect_tabs_across_queries_for_group_and_bookmark_a_32013236": {
+    "message": "Search or Arrange. Collect tabs across queries for group and bookmark actions; at most 100."
+  },
+  "search_or_arrange_moves_within_the_same_pin_group_section_alt_home_alt_end_also_work": {
+    "message": "Search or Arrange. Moves within the same pin/group section. Alt+Home / Alt+End also work."
+  },
+  "search_settings": {
+    "message": "Search settings"
+  },
+  "search_shortcuts": {
+    "message": "Search shortcuts"
+  },
+  "search_site_is_no_longer_available": {
+    "message": "Search site is no longer available"
+  },
+  "search_tabs_in_this_group_or_enter_a_url": {
+    "message": "Search tabs in this group or enter a URL…"
+  },
+  "search_tabs_or_enter_a_url": {
+    "message": "Search tabs or enter a URL"
+  },
+  "search_tabs_or_enter_a_url_2": {
+    "message": "Search tabs or enter a URL…"
+  },
+  "search_tabs_or_the_web": {
+    "message": "Search tabs or the web"
+  },
+  "search_the_web_for_0": {
+    "message": "Search the web for “{0}”"
+  },
+  "search_this_query_with": {
+    "message": "Search this query with…"
+  },
+  "search_with": {
+    "message": "Search with"
+  },
+  "search_with_0": {
+    "message": "Search with… · {0}"
+  },
+  "search_0": {
+    "message": "Search {0}"
+  },
+  "search_0_enter_search_esc_back": {
+    "message": "Search {0} · Enter search · Esc back"
+  },
+  "search_0_enter_send_query_tab_enter_scope_other_results": {
+    "message": "Search {0} · Enter send query · Tab enter scope · ↓ other results"
+  },
+  "search_0_1": {
+    "message": "Search {0}: {1}"
+  },
+  "select_1_100_distinct_open_tabs": {
+    "message": "Select 1–100 distinct open tabs"
+  },
+  "select_at_most_100_tabs": {
+    "message": "Select at most 100 tabs"
+  },
+  "select_tab_shift_space": {
+    "message": "Select tab · Shift+Space"
+  },
+  "selected_folder": {
+    "message": "Selected folder"
+  },
+  "selected_tab": {
+    "message": "Selected tab"
+  },
+  "service_action_or_saved_text": {
+    "message": "Service, action or saved text…"
+  },
+  "set_a_keyword_and_type_keyword_query_or_press_tab_after_the_keyword_us_adb28432": {
+    "message": "Set a keyword and type keyword + query, or press Tab after the keyword. Use %s once in each search URL for the query."
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "shared_shortcut_choose_site_enter_default_search": {
+    "message": "Shared shortcut · ↓ choose site · Enter default search"
+  },
+  "shortcut": {
+    "message": "Shortcut"
+  },
+  "shortcut_copied": {
+    "message": "Shortcut copied"
+  },
+  "site_keywords_must_be_unique_letters_digits_or_hyphens": {
+    "message": "Site keywords must be unique: letters, digits or hyphens"
+  },
+  "site_names_must_be_1_40_characters": {
+    "message": "Site names must be 1–40 characters"
+  },
+  "site_search": {
+    "message": "Site search"
+  },
+  "site_search_tab_to_search": {
+    "message": "Site search · Tab to search"
+  },
+  "site_settings": {
+    "message": "Site settings"
+  },
+  "skipped_0": {
+    "message": "Skipped: {0}"
+  },
+  "source_tab_is_unavailable": {
+    "message": "Source tab is unavailable"
+  },
+  "source_tab_moved_to_another_window": {
+    "message": "Source tab moved to another window"
+  },
+  "source_unavailable": {
+    "message": "Source unavailable"
+  },
+  "split_view_commands_require_chrome_155_or_later": {
+    "message": "Split View commands require Chrome 155 or later"
+  },
+  "split_view_requires_chrome_155_or_later": {
+    "message": "Split View requires Chrome 155 or later"
+  },
+  "split_requires_an_unpinned_ungrouped_source_tab": {
+    "message": "Split requires an unpinned, ungrouped source tab"
+  },
+  "spotlight_activity_history": {
+    "message": "Spotlight activity history"
+  },
+  "spotlight_style_search_for_open_tabs_bookmarks_history_and_the_web": {
+    "message": "Spotlight-style search for open tabs, bookmarks, history and the web."
+  },
+  "status_describes_the_chrome_operation_not_whether_the_destination_load_6526f091": {
+    "message": "Status describes the Chrome operation, not whether the destination loaded or an AI answered."
+  },
+  "suggested_from_your_local_choices": {
+    "message": "Suggested from your local choices"
+  },
+  "suggestions_unavailable": {
+    "message": "Suggestions unavailable"
+  },
+  "switch_group_window_search": {
+    "message": "Switch group / window search"
+  },
+  "switch_tab": {
+    "message": "Switch tab"
+  },
+  "switch_to_a_space": {
+    "message": "Switch to a space"
+  },
+  "switch_to_group": {
+    "message": "Switch to group"
+  },
+  "switch_to_previous_tab": {
+    "message": "Switch to previous tab"
+  },
+  "tab_duplicated": {
+    "message": "Tab duplicated"
+  },
+  "tab_group": {
+    "message": "Tab group"
+  },
+  "tab_group_0": {
+    "message": "Tab group · {0}"
+  },
+  "tab_group_0_1_tabs": {
+    "message": "Tab group · {0} · {1} tabs"
+  },
+  "tab_group_0_2": {
+    "message": "Tab group: {0}"
+  },
+  "tab_is_no_longer_in_this_window": {
+    "message": "Tab is no longer in this window"
+  },
+  "tab_is_outside_this_window": {
+    "message": "Tab is outside this window"
+  },
+  "tab_moved_to_another_window": {
+    "message": "Tab moved to another window"
+  },
+  "tab_placement": {
+    "message": "Tab placement"
+  },
+  "tab_0": {
+    "message": "Tab · {0}"
+  },
+  "tabs": {
+    "message": "Tabs"
+  },
+  "tabs_in_this_group": {
+    "message": "Tabs in this group"
+  },
+  "tabs_in_this_window": {
+    "message": "Tabs in this window"
+  },
+  "tabs_were_grouped_but_the_name_could_not_be_applied_use_manage_tab_groups_to_rename": {
+    "message": "Tabs were grouped, but the name could not be applied. Use Manage tab groups to rename."
+  },
+  "text_recording_is_off_by_default_ai_recovery_copies_are_separate_and_t_fbbe2b6f": {
+    "message": "Text recording is off by default. AI recovery copies are separate and temporary. Text already recorded stays until it expires or is cleared."
+  },
+  "the_clipboard_does_not_contain_an_http_s_address": {
+    "message": "The clipboard does not contain an HTTP(S) address"
+  },
+  "this_group_has_no_open_tabs": {
+    "message": "This group has no open tabs"
+  },
+  "this_note_changed_in_another_editor_reopen_it_before_saving_your_text_is_still_here": {
+    "message": "This note changed in another editor. Reopen it before saving; your text is still here."
+  },
+  "this_tab_is_already_in_split_view": {
+    "message": "This tab is already in Split View"
+  },
+  "this_tab_is_not_in_split_view": {
+    "message": "This tab is not in Split View"
+  },
+  "this_version_of_chrome_cannot_perform_that_sidebar_action": {
+    "message": "This version of Chrome cannot perform that sidebar action"
+  },
+  "type_a_new_group_name_or_choose_an_existing_group": {
+    "message": "Type a new group name, or choose an existing group…"
+  },
+  "type_a_query_first": {
+    "message": "Type a query first"
+  },
+  "url_search_result_replaces_the_source_page_instead_of_creating_another_tab": {
+    "message": "URL/search result. Replaces the source page instead of creating another tab."
+  },
+  "ungroup_keep_all_tabs_open": {
+    "message": "Ungroup · Keep all tabs open"
+  },
+  "ungrouped": {
+    "message": "Ungrouped"
+  },
+  "unknown_bookmark_action": {
+    "message": "Unknown bookmark action"
+  },
+  "unknown_command": {
+    "message": "Unknown command"
+  },
+  "unknown_group_action": {
+    "message": "Unknown group action"
+  },
+  "unknown_note_operation": {
+    "message": "Unknown note operation"
+  },
+  "unknown_search_action": {
+    "message": "Unknown search action"
+  },
+  "unknown_search_page": {
+    "message": "Unknown search page"
+  },
+  "unknown_search_site": {
+    "message": "Unknown search site"
+  },
+  "unknown_sender": {
+    "message": "Unknown sender"
+  },
+  "unmute_tab": {
+    "message": "Unmute tab"
+  },
+  "unnamed_folder": {
+    "message": "Unnamed folder"
+  },
+  "unpin_selected_tabs_in_chrome_before_grouping": {
+    "message": "Unpin selected tabs in Chrome before grouping"
+  },
+  "unpin_tab": {
+    "message": "Unpin tab"
+  },
+  "unsaved_note": {
+    "message": "Unsaved note"
+  },
+  "untitled_group": {
+    "message": "Untitled group"
+  },
+  "untitled_tab": {
+    "message": "Untitled tab"
+  },
+  "use_chrome_language": {
+    "message": "Use Chrome language"
+  },
+  "use_a_group_name_of_1_80_characters": {
+    "message": "Use a group name of 1–80 characters"
+  },
+  "use_a_quicklink_name_of_1_80_characters": {
+    "message": "Use a quicklink name of 1–80 characters"
+  },
+  "use_a_title_up_to_80_characters_and_text_up_to_20_000_characters": {
+    "message": "Use a title up to 80 characters and text up to 20,000 characters"
+  },
+  "use_a_unique_group_name_for_domain_routing": {
+    "message": "Use a unique group name for domain routing"
+  },
+  "use_a_web_url_without_credentials": {
+    "message": "Use a web URL without credentials"
+  },
+  "use_an_http_s_search_url_without_credentials": {
+    "message": "Use an HTTP(S) search URL without credentials"
+  },
+  "use_at_most_20_search_sites": {
+    "message": "Use at most 20 search sites"
+  },
+  "use_at_most_20_sites": {
+    "message": "Use at most 20 sites."
+  },
+  "use_this_tab": {
+    "message": "Use this tab"
+  },
+  "view_history": {
+    "message": "View history"
+  },
+  "view_history_0": {
+    "message": "View history · {0}"
+  },
+  "web_queries_use_the_search_engine_selected_in_chrome": {
+    "message": "Web queries use the search engine selected in Chrome."
+  },
+  "web_search": {
+    "message": "Web search"
+  },
+  "with_an_empty_scoped_query_returns_to_search_or_the_previous_provider_action_scope": {
+    "message": "With an empty scoped query. Returns to Search or the previous provider/action scope."
+  },
+  "with_the_query_field_focused_changes_the_highlighted_result_without_navigating": {
+    "message": "With the query field focused. Changes the highlighted result without navigating."
+  },
+  "write_your_note": {
+    "message": "Write your note…"
+  },
+  "yellow": {
+    "message": "Yellow"
+  },
+  "add": {
+    "message": "add"
+  },
+  "before": {
+    "message": "before"
+  },
+  "blue_2": {
+    "message": "blue"
+  },
+  "bookmark_2": {
+    "message": "bookmark"
+  },
+  "close_split": {
+    "message": "close-split"
+  },
+  "closure": {
+    "message": "closure"
+  },
+  "code": {
+    "message": "code"
+  },
+  "color": {
+    "message": "color"
+  },
+  "compare": {
+    "message": "compare"
+  },
+  "copy": {
+    "message": "copy"
+  },
+  "cyan_2": {
+    "message": "cyan"
+  },
+  "debug": {
+    "message": "debug"
+  },
+  "dissolve": {
+    "message": "dissolve"
+  },
+  "downloads_2": {
+    "message": "downloads"
+  },
+  "duplicate": {
+    "message": "duplicate"
+  },
+  "email": {
+    "message": "email"
+  },
+  "end": {
+    "message": "end"
+  },
+  "explain": {
+    "message": "explain"
+  },
+  "green_2": {
+    "message": "green"
+  },
+  "grey_2": {
+    "message": "grey"
+  },
+  "history_2": {
+    "message": "history"
+  },
+  "image": {
+    "message": "image"
+  },
+  "math": {
+    "message": "math"
+  },
+  "mute_tab_2": {
+    "message": "mute-tab"
+  },
+  "new_split": {
+    "message": "new-split"
+  },
+  "next": {
+    "message": "next"
+  },
+  "orange_2": {
+    "message": "orange"
+  },
+  "pin_tab_2": {
+    "message": "pin-tab"
+  },
+  "pink_2": {
+    "message": "pink"
+  },
+  "previous": {
+    "message": "previous"
+  },
+  "prompt": {
+    "message": "prompt"
+  },
+  "purple_2": {
+    "message": "purple"
+  },
+  "recipe": {
+    "message": "recipe"
+  },
+  "red_2": {
+    "message": "red"
+  },
+  "reload": {
+    "message": "reload"
+  },
+  "remove_2": {
+    "message": "remove"
+  },
+  "rename_2": {
+    "message": "rename"
+  },
+  "research": {
+    "message": "research"
+  },
+  "save_2": {
+    "message": "save"
+  },
+  "search_2": {
+    "message": "search"
+  },
+  "settings_2": {
+    "message": "settings"
+  },
+  "site": {
+    "message": "site"
+  },
+  "start": {
+    "message": "start"
+  },
+  "summarize": {
+    "message": "summarize"
+  },
+  "switch": {
+    "message": "switch"
+  },
+  "tab": {
+    "message": "tab"
+  },
+  "toggle_collapse": {
+    "message": "toggle-collapse"
+  },
+  "translate": {
+    "message": "translate"
+  },
+  "travel": {
+    "message": "travel"
+  },
+  "unmute_tab_2": {
+    "message": "unmute-tab"
+  },
+  "unpin_tab_2": {
+    "message": "unpin-tab"
+  },
+  "window": {
+    "message": "window"
+  },
+  "write": {
+    "message": "write"
+  },
+  "yellow_2": {
+    "message": "yellow"
+  },
+  "0_bookmarks_for_1_tab_s_enter_choose_folder_esc_back": {
+    "message": "{0} bookmarks for {1} tab(s) · Enter choose folder · Esc back"
+  },
+  "0_marked": {
+    "message": "{0} marked"
+  },
+  "0_marked_shift_space_mark_cmd_ctrl_g_group_esc_clear": {
+    "message": "{0} marked · Shift+Space mark · Cmd/Ctrl+G group · Esc clear"
+  },
+  "0_marked_shift_space_select_cmd_ctrl_g_group_cmd_ctrl_shift_g_remove": {
+    "message": "{0} marked · Shift+Space select · Cmd/Ctrl+G group · Cmd/Ctrl+Shift+G remove"
+  },
+  "0_marked_shift_space_select_cmd_ctrl_g_group_esc_clear": {
+    "message": "{0} marked · Shift+Space select · Cmd/Ctrl+G group · Esc clear"
+  },
+  "0_1_of_2_bookmarks_before_chrome_failed_refresh_the_folder_list_and_re_720c0db0": {
+    "message": "{0} {1} of {2} bookmarks before Chrome failed. Refresh the folder list and retry; completed changes remain."
+  },
+  "0_1_2_3": {
+    "message": "{0} {1}{2} · {3}"
+  },
+  "0_collapsed": {
+    "message": "{0} · Collapsed"
+  },
+  "0_expanded": {
+    "message": "{0} · Expanded"
+  },
+  "select_alt_arrows_move_tab_commands_arrange_prompts": {
+    "message": "↑ ↓ select · Alt+arrows move tab · > commands · @ arrange · ? prompts"
+  },
+  "select_shift_space_mark_cmd_ctrl_g_group_commands": {
+    "message": "↑ ↓ select · Shift+Space mark · Cmd/Ctrl+G group · > commands"
+  },
+  "select_tab_complete_address_enter_open_esc_return": {
+    "message": "↑ ↓ select · Tab complete address · Enter open · Esc return"
+  },
+  "t_opens_search_l_opens_the_current_url_for_editing_existing_chrome_ass_3cd075aa": {
+    "message": "⌘T opens search. ⌘L opens the current URL for editing. Existing Chrome assignments may be preserved after updates."
+  }
+}

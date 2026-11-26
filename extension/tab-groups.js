@@ -51,7 +51,12 @@ async function selection(api, windowId, ids, allowPinned = false) {
     throw new Error("Unpin selected tabs in Chrome before grouping");
   return tabs;
 }
-export async function groupSuggestions(api, windowId, query) {
+export async function groupSuggestions(
+  api,
+  windowId,
+  query,
+  defaultName = "New group",
+) {
   const existing = (await groups(api, windowId))
     .map((item) => ({
       kind: "group-add",
@@ -61,7 +66,7 @@ export async function groupSuggestions(api, windowId, query) {
       url: `Add selected tabs · ${item.color}`,
     }))
     .filter((row) => match(row, query));
-  const name = query.trim() || "New group";
+  const name = query.trim() || defaultName;
   const create =
     name.length <= 80
       ? [

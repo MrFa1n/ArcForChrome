@@ -1,0 +1,1772 @@
+{
+  "language_name": {
+    "message": "Русский"
+  },
+  "collapsed": {
+    "message": " · Свёрнута"
+  },
+  "drag_to_move_ctrl_alt_arrows_move_ctrl_alt_0_reset": {
+    "message": " · Перетащите панель или нажмите Ctrl+Alt+стрелки · Ctrl+Alt+0 сбрасывает"
+  },
+  "grouped": {
+    "message": " · В группе"
+  },
+  "keyboard_layout_match": {
+    "message": " · Совпадение по раскладке"
+  },
+  "pinned": {
+    "message": " · Закреплена"
+  },
+  "similar_spelling": {
+    "message": " · Похожее написание"
+  },
+  "0_already_saved": {
+    "message": " · уже сохранено: {0}"
+  },
+  "168_hours_7_days_use_0_for_no_age_limit_the_entry_limit_still_applies__3b2e709c": {
+    "message": "168 часов — 7 дней. Укажите 0, чтобы отключить ограничение по сроку. Лимит записей продолжит действовать. Chrome запускает очистку автоматически, пока браузер открыт."
+  },
+  "a_matching_bookmark_is_managed_and_cannot_be_removed": {
+    "message": "Совпадающая закладка управляется администратором и недоступна для удаления"
+  },
+  "a_selected_tab_is_no_longer_in_this_window": {
+    "message": "Одной из выбранных вкладок больше нет в этом окне"
+  },
+  "a_tab_moved_to_another_window": {
+    "message": "Вкладка перемещена в другое окно"
+  },
+  "about_chrome": {
+    "message": "О браузере Chrome"
+  },
+  "accessibility": {
+    "message": "Специальные возможности"
+  },
+  "account": {
+    "message": "Аккаунт"
+  },
+  "action": {
+    "message": "Действие"
+  },
+  "action_failed": {
+    "message": "Не удалось выполнить действие"
+  },
+  "actions": {
+    "message": "Действия"
+  },
+  "actions_for_selected_result": {
+    "message": "Действия для выбранного результата"
+  },
+  "actions_0": {
+    "message": "Действия · {0}"
+  },
+  "actions_0_2": {
+    "message": "Действий: {0}"
+  },
+  "activate_tab_0": {
+    "message": "Активировать вкладку {0}"
+  },
+  "activity_history": {
+    "message": "История действий"
+  },
+  "add_selected_tabs_0": {
+    "message": "Добавить выбранные вкладки · {0}"
+  },
+  "add_site": {
+    "message": "Добавить сайт"
+  },
+  "add_to_a_tab_group": {
+    "message": "Добавить в группу вкладок…"
+  },
+  "add_to_group": {
+    "message": "Добавить в группу"
+  },
+  "all_browser_commands": {
+    "message": "Все команды браузера"
+  },
+  "all_keyboard_shortcuts": {
+    "message": "Все сочетания клавиш"
+  },
+  "all_shortcuts": {
+    "message": "Все сочетания клавиш"
+  },
+  "appearance": {
+    "message": "Оформление"
+  },
+  "apply": {
+    "message": "Применить"
+  },
+  "apply_group_color": {
+    "message": "Применить цвет группы"
+  },
+  "arc_command_bar": {
+    "message": "Командная панель Arc"
+  },
+  "arc_search": {
+    "message": "Поиск Arc"
+  },
+  "arc_search_settings": {
+    "message": "Настройки поиска Arc"
+  },
+  "arc_search_sidebar": {
+    "message": "Боковая панель поиска Arc"
+  },
+  "arc_command_bar_2": {
+    "message": "Командная панель Arc"
+  },
+  "arc_search_2": {
+    "message": "Поиск Arc"
+  },
+  "arrange_tabs": {
+    "message": "Упорядочить вкладки"
+  },
+  "arrange_tabs_alt_or_move_shift_first_last_enter_place": {
+    "message": "Порядок вкладок · Alt+стрелки переместить · +Shift в начало или конец · Enter выбрать позицию"
+  },
+  "ask_0_1": {
+    "message": "Спросить {0}: {1}"
+  },
+  "at_the_start_of_search_enter_restores_the_selected_native_browser_session": {
+    "message": "В начале строки поиска. Enter восстанавливает выбранный сеанс Chrome."
+  },
+  "at_the_start_of_search_includes_settings_chrome_sections_notes_and_browser_actions": {
+    "message": "В начале строки поиска открывает настройки, разделы Chrome, заметки и действия браузера."
+  },
+  "at_the_start_of_search_recover_a_session_copy_then_retry_or_change_its_provider": {
+    "message": "В начале строки поиска восстанавливает копию запроса, чтобы повторить его или сменить сервис."
+  },
+  "at_the_start_of_search_save_marked_highlighted_source_tabs_in_a_chosen_folder": {
+    "message": "В начале строки поиска сохраняет отмеченные, выделенную или исходную вкладку в выбранную папку."
+  },
+  "at_the_start_of_search_search_note_titles_and_text_enter_edits_a_note__bd1beccc": {
+    "message": "В начале строки поиска ищет по заголовкам и тексту. Enter открывает редактор, Cmd/Ctrl+K — действия."
+  },
+  "at_the_start_of_search_search_open_or_manage_your_local_named_links": {
+    "message": "В начале строки поиска открывает список локальных быстрых ссылок."
+  },
+  "at_the_start_of_search_shows_actual_tab_strip_order_and_optional_name_url_filter": {
+    "message": "В начале строки поиска показывает текущий порядок вкладок и фильтр по имени или адресу."
+  },
+  "at_the_start_of_search_type_a_new_or_existing_group_name_uses_marked_h_6226104a": {
+    "message": "В начале строки поиска введите имя группы для отмеченной, выделенной или исходной вкладки."
+  },
+  "autofill_and_passwords": {
+    "message": "Автозаполнение и пароли"
+  },
+  "automatic_cleanup": {
+    "message": "Автоочистка"
+  },
+  "back": {
+    "message": "Назад"
+  },
+  "back_clear_marks_close_spotlight": {
+    "message": "Назад, снять отметки или закрыть Spotlight"
+  },
+  "blue": {
+    "message": "Синий"
+  },
+  "bookmark": {
+    "message": "Закладка"
+  },
+  "bookmark_folder": {
+    "message": "Папка закладок"
+  },
+  "bookmark_selected_tabs_in_a_folder": {
+    "message": "Сохранить выбранные вкладки в папку закладок"
+  },
+  "bookmarks": {
+    "message": "Закладки"
+  },
+  "bookmarks_unavailable": {
+    "message": "Закладки недоступны"
+  },
+  "bookmarks_0_1_tabs": {
+    "message": "Закладки · {0} · вкладок: {1}"
+  },
+  "browse_all_browser_commands": {
+    "message": "Просмотреть все команды браузера"
+  },
+  "browser_action": {
+    "message": "Действие браузера"
+  },
+  "browser_command": {
+    "message": "Команда браузера"
+  },
+  "built_in": {
+    "message": "Встроенный"
+  },
+  "calculator": {
+    "message": "Калькулятор"
+  },
+  "cannot_cross_a_pinned_group_boundary_with_a_one_position_move": {
+    "message": "Сдвиг на одну позицию не может пересечь границу группы или области закрепления"
+  },
+  "cannot_save_the_interface_language": {
+    "message": "Не удалось сохранить язык интерфейса."
+  },
+  "change_group_color": {
+    "message": "Изменить цвет группы"
+  },
+  "check_chrome_shortcuts": {
+    "message": "Проверьте сочетания клавиш Chrome"
+  },
+  "choose_a_bookmark_folder": {
+    "message": "Выбрать папку закладок"
+  },
+  "choose_a_destination_enter_move_esc_back": {
+    "message": "Выберите позицию · Enter переместить · Esc назад"
+  },
+  "choose_a_folder_to_remove_matching_bookmarks": {
+    "message": "Выберите папку для удаления совпадающих закладок…"
+  },
+  "choose_a_folder_to_save_bookmarks": {
+    "message": "Выберите папку для сохранения закладок…"
+  },
+  "choose_a_group": {
+    "message": "Выберите группу"
+  },
+  "choose_a_group_action": {
+    "message": "Выберите действие с группой…"
+  },
+  "choose_a_group_color": {
+    "message": "Выберите цвет группы…"
+  },
+  "choose_a_language_reopen_spotlight_or_refresh_open_extension_pages_to__c68f8ecc": {
+    "message": "Выберите язык. Откройте Spotlight заново или обновите открытые страницы расширения, чтобы применить изменение."
+  },
+  "choose_a_named_group_in_this_window": {
+    "message": "Выберите именованную группу в этом окне"
+  },
+  "choose_a_note": {
+    "message": "Выберите заметку"
+  },
+  "choose_a_note_first": {
+    "message": "Сначала выберите заметку"
+  },
+  "choose_a_position_or_a_destination_tab": {
+    "message": "Выберите позицию или вкладку назначения…"
+  },
+  "choose_a_quicklink": {
+    "message": "Выберите быструю ссылку"
+  },
+  "choose_a_tab_to_move": {
+    "message": "Выберите вкладку для перемещения…"
+  },
+  "choose_a_web_address_to_route": {
+    "message": "Выберите веб-адрес для маршрута"
+  },
+  "choose_a_web_link_to_preview": {
+    "message": "Выберите веб-ссылку для предпросмотра"
+  },
+  "choose_a_web_page_to_save_as_a_quicklink": {
+    "message": "Выберите страницу для быстрой ссылки"
+  },
+  "choose_a_web_suggestion": {
+    "message": "Выберите веб-результат"
+  },
+  "choose_action": {
+    "message": "Выбрать действие"
+  },
+  "choose_adjacent_tabs_in_the_same_group_with_the_same_pin_state": {
+    "message": "Выберите соседние вкладки в одной группе с одинаковым состоянием закрепления"
+  },
+  "choose_an_open_tab_or_mark_tabs_with_shift_space": {
+    "message": "Выберите открытую вкладку или отметьте вкладки через Shift+Space"
+  },
+  "choose_another_tab": {
+    "message": "Выберите другую вкладку"
+  },
+  "choose_at_least_one_open_tab": {
+    "message": "Выберите хотя бы одну открытую вкладку"
+  },
+  "choose_color": {
+    "message": "Выбрать цвет"
+  },
+  "choose_folder": {
+    "message": "Выбрать папку"
+  },
+  "choose_one_tab_or_mark_two_adjacent_tabs_to_pair_them": {
+    "message": "Выберите одну вкладку или отметьте две соседние для разделённого экрана"
+  },
+  "choose_position": {
+    "message": "Выбрать позицию"
+  },
+  "choose_previous_next_result": {
+    "message": "Выбрать предыдущий или следующий результат"
+  },
+  "choose_site": {
+    "message": "Выбрать сайт"
+  },
+  "choose_this_mode_in_the_command_bar": {
+    "message": "Выберите этот режим в командной панели"
+  },
+  "chrome_internal_pages": {
+    "message": "Внутренние страницы Chrome"
+  },
+  "chrome_page": {
+    "message": "Страница Chrome"
+  },
+  "chrome_version": {
+    "message": "Версия Chrome"
+  },
+  "clear_history": {
+    "message": "Очистить историю"
+  },
+  "clear_learned_shortcuts": {
+    "message": "Очистить запомненные сокращения"
+  },
+  "clear_overrides": {
+    "message": "Очистить ручные настройки"
+  },
+  "clear_route_for_this_domain": {
+    "message": "Удалить маршрут для этого домена"
+  },
+  "clear_saved_ai_prompts": {
+    "message": "Очистить сохранённые ИИ-запросы"
+  },
+  "clipboard_access_is_unavailable": {
+    "message": "Буфер обмена недоступен"
+  },
+  "close_split_view": {
+    "message": "Закрыть разделённый экран"
+  },
+  "close_sidebar": {
+    "message": "Закрыть боковую панель"
+  },
+  "closed_tab": {
+    "message": "Закрытая вкладка"
+  },
+  "closed_tab_is_no_longer_available": {
+    "message": "Закрытая вкладка больше недоступна"
+  },
+  "collapse_group": {
+    "message": "Свернуть группу"
+  },
+  "collapsed_2": {
+    "message": "Свёрнута"
+  },
+  "command": {
+    "message": "Команда"
+  },
+  "commands": {
+    "message": "Команды"
+  },
+  "commands_select_enter_run_esc_back": {
+    "message": "Команды · ↑ ↓ выбрать · Enter выполнить · Esc назад"
+  },
+  "complete_a_url_enter_site_search_open_commands": {
+    "message": "Дополнить адрес, перейти к поиску по сайту или открыть команды"
+  },
+  "copied": {
+    "message": "Скопировано"
+  },
+  "copied_0": {
+    "message": "Скопировано: {0}"
+  },
+  "copy_url_result": {
+    "message": "Скопировать адрес или результат"
+  },
+  "copy_current_url": {
+    "message": "Скопировать текущий адрес"
+  },
+  "copy_links_as_markdown": {
+    "message": "Скопировать ссылки в Markdown"
+  },
+  "copy_links_from_selected_tabs": {
+    "message": "Скопировать ссылки выбранных вкладок"
+  },
+  "copy_note_text": {
+    "message": "Скопировать текст заметки"
+  },
+  "copy_result": {
+    "message": "Скопировать результат"
+  },
+  "copy_shortcut": {
+    "message": "Копировать сочетание клавиш"
+  },
+  "could_not_change_bookmarks": {
+    "message": "Не удалось изменить закладки"
+  },
+  "could_not_change_group": {
+    "message": "Не удалось изменить группу"
+  },
+  "could_not_delete_note": {
+    "message": "Не удалось удалить заметку"
+  },
+  "could_not_load_tabs": {
+    "message": "Не удалось загрузить вкладки."
+  },
+  "could_not_move_tab": {
+    "message": "Не удалось переместить вкладку"
+  },
+  "could_not_open_address": {
+    "message": "Не удалось открыть адрес"
+  },
+  "could_not_open_history": {
+    "message": "Не удалось открыть историю"
+  },
+  "could_not_open_result": {
+    "message": "Не удалось открыть результат"
+  },
+  "could_not_read_note": {
+    "message": "Не удалось прочитать заметку"
+  },
+  "could_not_recover_prompt": {
+    "message": "Не удалось восстановить запрос"
+  },
+  "could_not_refresh_tab_order": {
+    "message": "Не удалось обновить порядок вкладок"
+  },
+  "could_not_save_note": {
+    "message": "Не удалось сохранить заметку"
+  },
+  "could_not_save_quicklink": {
+    "message": "Не удалось сохранить быструю ссылку"
+  },
+  "could_not_save_route": {
+    "message": "Не удалось сохранить маршрут"
+  },
+  "could_not_switch_to_this_tab": {
+    "message": "Не удалось переключиться на эту вкладку."
+  },
+  "create_choose_a_tab_group": {
+    "message": "Создать или выбрать группу вкладок"
+  },
+  "create_group": {
+    "message": "Создать группу"
+  },
+  "create_group_0": {
+    "message": "Создать группу «{0}»"
+  },
+  "customize_shortcuts": {
+    "message": "Настроить сочетания клавиш"
+  },
+  "cyan": {
+    "message": "Бирюзовый"
+  },
+  "cycles_query_actions_and_resize_controls_when_tab_is_not_completing_a__ba63e18d": {
+    "message": "Перемещает фокус между полем, действиями и уголком изменения размера. Shift+Tab из поля переводит фокус к уголку."
+  },
+  "default_browser": {
+    "message": "Браузер по умолчанию"
+  },
+  "default_search_engine": {
+    "message": "Поисковая система по умолчанию"
+  },
+  "delete_after_hours": {
+    "message": "Удалять через (часов)"
+  },
+  "delete_note": {
+    "message": "Удалить заметку"
+  },
+  "detected": {
+    "message": "Обнаружен"
+  },
+  "detected_from_your_browsing_tab_to_search": {
+    "message": "Найдено в браузере · Tab для поиска"
+  },
+  "domain_route_cleared": {
+    "message": "Маршрут домена удалён"
+  },
+  "domain_route_saved": {
+    "message": "Маршрут домена сохранён"
+  },
+  "done": {
+    "message": "Выполнено"
+  },
+  "downloads": {
+    "message": "Загрузки"
+  },
+  "drag_corner_to_resize_arrow_keys_when_focused_enter_reset_size": {
+    "message": "Потяните за угол или используйте стрелки · Enter сбрасывает размер"
+  },
+  "drag_to_move_ctrl_alt_arrows_move_shift_for_larger_steps_ctrl_alt_0_reset": {
+    "message": "Перетащите панель или нажмите Ctrl+Alt+стрелки · Shift увеличивает шаг · Ctrl+Alt+0 сбрасывает"
+  },
+  "duplicate_current_tab": {
+    "message": "Дублировать текущую вкладку"
+  },
+  "duplicate_selected_tab": {
+    "message": "Дублировать выбранную вкладку"
+  },
+  "edit_url_enter_replace_cmd_ctrl_enter_new_tab_esc_back": {
+    "message": "Изменение адреса · Enter заменить · Cmd/Ctrl+Enter открыть новую вкладку · Esc назад"
+  },
+  "edit_current_url": {
+    "message": "Изменить текущий адрес"
+  },
+  "edit_note": {
+    "message": "Редактировать заметку"
+  },
+  "edit_the_current_url_in_the_command_bar": {
+    "message": "Изменить текущий адрес в командной панели"
+  },
+  "enter_a_search_query": {
+    "message": "Введите поисковый запрос"
+  },
+  "enter_a_site_search_query": {
+    "message": "Введите запрос для поиска по сайту"
+  },
+  "enter_a_site_search_query_2": {
+    "message": "Введите запрос для поиска по сайту…"
+  },
+  "enter_apply_name": {
+    "message": "Enter применить имя"
+  },
+  "enter_rename_esc_back": {
+    "message": "Enter переименовать · Esc назад"
+  },
+  "expand_group": {
+    "message": "Развернуть группу"
+  },
+  "expanded": {
+    "message": "Развёрнута"
+  },
+  "extension_keyboard_shortcuts": {
+    "message": "Сочетания клавиш расширений"
+  },
+  "extensions": {
+    "message": "Расширения"
+  },
+  "failed": {
+    "message": "Ошибка"
+  },
+  "find_a_browser_command": {
+    "message": "Найдите команду браузера…"
+  },
+  "find_a_quicklink": {
+    "message": "Найдите быструю ссылку…"
+  },
+  "find_a_recently_closed_tab": {
+    "message": "Найдите недавно закрытую вкладку…"
+  },
+  "find_a_tab_group": {
+    "message": "Найдите группу вкладок…"
+  },
+  "find_an_open_tab": {
+    "message": "Найдите открытую вкладку"
+  },
+  "find_any_shortcut_or_prefix": {
+    "message": "Найдите сочетание клавиш или префикс…"
+  },
+  "find_named_quicklinks": {
+    "message": "Найти именованную быструю ссылку"
+  },
+  "focus_actions_resize_handle": {
+    "message": "Перейти к действиям или изменению размера"
+  },
+  "folder_is_unavailable_or_read_only": {
+    "message": "Папка недоступна или доступна только для чтения"
+  },
+  "frequent_commands": {
+    "message": "Частые команды"
+  },
+  "global_in_chrome_check_or_change_the_assigned_shortcut_in_chrome_extensions_shortcuts": {
+    "message": "Работает во всём Chrome. Проверьте или измените сочетание в chrome://extensions/shortcuts."
+  },
+  "global_in_chrome_enter_replaces_the_source_page_unchanged_url_reloads_it": {
+    "message": "Работает во всём Chrome. Enter открывает адрес в исходной вкладке или перезагружает страницу, если адрес не менялся."
+  },
+  "go_to_0": {
+    "message": "Перейти по адресу {0}"
+  },
+  "google_yandex_chatgpt_google_ai_mode_gem_gemini_claude_grok_and_perple_19d52435": {
+    "message": "Google, Яндекс, ChatGPT, Google AI Mode (gem/gemini), Claude, Grok и Perplexity готовы к работе. Введите сокращение и запрос, например gem explain closures, и нажмите Enter. Другие сайты определяются на устройстве по поисковым адресам во вкладках, закладках и истории. Можно также нажать Tab после сокращения."
+  },
+  "green": {
+    "message": "Зелёный"
+  },
+  "grey": {
+    "message": "Серый"
+  },
+  "group_is_no_longer_in_this_window": {
+    "message": "Группы больше нет в этом окне"
+  },
+  "group_selected_tabs": {
+    "message": "Сгруппировать выбранные вкладки"
+  },
+  "group_selected_tabs_enter_create": {
+    "message": "Сгруппировать выбранные вкладки · Enter создать"
+  },
+  "grouped_2": {
+    "message": "В группе"
+  },
+  "grouping_0_tabs_enter_create_add_esc_back": {
+    "message": "Вкладки для группировки: {0} · Enter создать или добавить · Esc назад"
+  },
+  "hide_this_suggestion": {
+    "message": "Скрыть подсказку"
+  },
+  "history": {
+    "message": "История"
+  },
+  "history_cleared": {
+    "message": "История очищена"
+  },
+  "history_unavailable": {
+    "message": "История недоступна"
+  },
+  "homepage_new_tab": {
+    "message": "Главная страница · Новая вкладка"
+  },
+  "include_query_and_prompt_text": {
+    "message": "Сохранять текст запросов"
+  },
+  "inside_spotlight_applies_to_the_selected_result_navigation_modifiers_a_83a3d0fd": {
+    "message": "В Spotlight применяется к выбранному результату. Клавиши-модификаторы меняют переход по адресу или запросу."
+  },
+  "inside_spotlight_moves_by_16_pixels_independently_of_tab_ordering": {
+    "message": "Перемещает панель на 16 пикселей без изменения порядка вкладок."
+  },
+  "inside_spotlight_moves_by_64_pixels_within_the_viewport": {
+    "message": "Перемещает панель на 64 пикселя в пределах окна."
+  },
+  "inside_spotlight_resets_both_position_and_custom_size": {
+    "message": "Возвращает исходное положение и размер панели."
+  },
+  "inside_spotlight_toggle_the_contextual_actions_esc_returns_to_the_same_10393bca": {
+    "message": "В Spotlight открывает или закрывает действия. Esc возвращает к исходному запросу и результату."
+  },
+  "inside_spotlight_uses_marked_tabs_otherwise_the_highlighted_source_tab": {
+    "message": "В Spotlight использует отмеченные вкладки, либо выделенную или исходную вкладку."
+  },
+  "inside_search_empty_tab_opens_commands_a_site_keyword_tab_enters_site__28b76540": {
+    "message": "В поиске Tab при пустом поле открывает команды. Tab после сокращения открывает поиск по сайту, а на выбранном адресе дополняет его. Enter открывает результат, Shift+Enter открывает в фоне, Alt+Enter заменяет текущую страницу. В режиме изменения адреса Enter заменяет текущую страницу, а ⌘/Ctrl+Enter открывает новую вкладку."
+  },
+  "interface_language": {
+    "message": "Язык интерфейса"
+  },
+  "invalid_closed_tab": {
+    "message": "Недопустимая закрытая вкладка"
+  },
+  "invalid_group": {
+    "message": "Недопустимая группа"
+  },
+  "invalid_group_color": {
+    "message": "Недопустимый цвет группы"
+  },
+  "invalid_history_limits": {
+    "message": "Недопустимые ограничения истории"
+  },
+  "invalid_icon_request": {
+    "message": "Недопустимый запрос значка"
+  },
+  "invalid_move": {
+    "message": "Недопустимое перемещение"
+  },
+  "invalid_navigation_target": {
+    "message": "Недопустимый режим открытия"
+  },
+  "invalid_query": {
+    "message": "Недопустимый запрос"
+  },
+  "invalid_saved_prompt": {
+    "message": "Недопустимый сохранённый запрос"
+  },
+  "invalid_tab": {
+    "message": "Недопустимая вкладка"
+  },
+  "invalid_tab_action": {
+    "message": "Недопустимое действие с вкладкой"
+  },
+  "invalid_tab_selection": {
+    "message": "Недопустимый выбор вкладок"
+  },
+  "invalid_window": {
+    "message": "Недопустимое окно"
+  },
+  "keep_at_most_100_quicklinks_remove_one_first": {
+    "message": "Достигнут лимит в 100 быстрых ссылок. Сначала удалите одну."
+  },
+  "keep_at_most_200_notes_remove_one_first": {
+    "message": "Достигнут лимит в 200 заметок. Сначала удалите одну."
+  },
+  "keep_preview_as_tab": {
+    "message": "Сохранить предпросмотр во вкладке"
+  },
+  "keep_preview_in_split_view": {
+    "message": "Сохранить предпросмотр на разделённом экране"
+  },
+  "keyboard": {
+    "message": "Клавиатура"
+  },
+  "keyboard_shortcuts": {
+    "message": "Сочетания клавиш"
+  },
+  "keyword": {
+    "message": "Ключевое слово"
+  },
+  "languages": {
+    "message": "Языки"
+  },
+  "learn_from_my_selections": {
+    "message": "Учиться на моих выборах"
+  },
+  "learned_shortcuts_cleared_reopen_search_to_refresh": {
+    "message": "Запомненные сокращения удалены. Откройте поиск заново."
+  },
+  "learning_is_on_by_default_when_action_recording_is_enabled_spotlight_k_daa8c666": {
+    "message": "При включённой записи действий обучение по умолчанию активно. Spotlight хранит в локальном журнале выбранную команду или ИИ-сервис, позицию команды и векторы тем. Запись исходного запроса управляется отдельной настройкой. Отключение приостанавливает обучение, а очистка истории сбрасывает предпочтения."
+  },
+  "learning_command_picked_at_position_0": {
+    "message": "Обучение: выбрана команда на позиции {0}"
+  },
+  "learning_provider_and_prompt_topics": {
+    "message": "Обучение: провайдер и темы запроса"
+  },
+  "leave_an_empty_search_scope": {
+    "message": "Выйти из режима с пустым полем"
+  },
+  "leaves_the_current_scope_in_search_clears_marks_before_closing_in_the__e2e9d06f": {
+    "message": "Выходит из режима. В поиске сначала снимает отметки, а в редакторе отменяет несохранённые изменения."
+  },
+  "links_copied": {
+    "message": "Ссылки скопированы"
+  },
+  "local_history": {
+    "message": "Локальная история"
+  },
+  "manage_extensions": {
+    "message": "Управление расширениями"
+  },
+  "manage_group": {
+    "message": "Управлять группой"
+  },
+  "manage_groups_enter_choose_esc_back": {
+    "message": "Управление группами · Enter выбрать · Esc назад"
+  },
+  "manage_quicklinks": {
+    "message": "Управление быстрыми ссылками"
+  },
+  "manage_tab_groups": {
+    "message": "Управление группами вкладок"
+  },
+  "manage_tab_groups_2": {
+    "message": "Управление группами вкладок…"
+  },
+  "manual_overrides_cleared_in_this_form_save_to_use_built_in_and_detected_shortcuts": {
+    "message": "Ручные настройки очищены в форме. Сохраните изменения, чтобы использовать встроенные и обнаруженные сокращения."
+  },
+  "mark_unmark_an_open_tab": {
+    "message": "Отметить вкладку или снять отметку"
+  },
+  "maximum_entries": {
+    "message": "Максимум записей"
+  },
+  "move_spotlight_in_larger_steps": {
+    "message": "Переместить Spotlight крупным шагом"
+  },
+  "move_spotlight_on_the_page": {
+    "message": "Переместить Spotlight по странице"
+  },
+  "move_a_tab_one_position": {
+    "message": "Сдвинуть вкладку на одну позицию"
+  },
+  "move_a_tab_to_the_start_end": {
+    "message": "Переместить вкладку в начало или конец"
+  },
+  "move_a_tab_to_the_start_end_home_end": {
+    "message": "Переместить вкладку в начало или конец (Home / End)"
+  },
+  "move_before_0": {
+    "message": "Переместить перед «{0}»"
+  },
+  "move_one_position_left_up": {
+    "message": "Сдвинуть на одну позицию влево или вверх"
+  },
+  "move_one_position_right_down": {
+    "message": "Сдвинуть на одну позицию вправо или вниз"
+  },
+  "move_only_within_the_same_pinned_group_section": {
+    "message": "Перемещение доступно в пределах группы и области закрепления"
+  },
+  "move_selected_tab": {
+    "message": "Переместить выбранную вкладку…"
+  },
+  "move_tab": {
+    "message": "Переместить вкладку"
+  },
+  "move_tab_0_1": {
+    "message": "Переместить вкладку {0} · {1}"
+  },
+  "move_to_end": {
+    "message": "Переместить в конец"
+  },
+  "move_to_start": {
+    "message": "Переместить в начало"
+  },
+  "mute_tab": {
+    "message": "Выключить звук вкладки"
+  },
+  "name": {
+    "message": "Название"
+  },
+  "name_this_quicklink": {
+    "message": "Назовите быструю ссылку…"
+  },
+  "new_split_view": {
+    "message": "Открыть разделённый экран"
+  },
+  "new_tab": {
+    "message": "Новая вкладка"
+  },
+  "new_browser_window": {
+    "message": "Новое окно браузера"
+  },
+  "new_group": {
+    "message": "Новая группа"
+  },
+  "new_group_name": {
+    "message": "Новое имя группы…"
+  },
+  "new_note": {
+    "message": "Новая заметка"
+  },
+  "new_space": {
+    "message": "Новое пространство"
+  },
+  "no_actions_yet": {
+    "message": "Действий пока нет"
+  },
+  "no_matching_bookmarks_in_writable_folders": {
+    "message": "В доступных для записи папках нет совпадающих закладок"
+  },
+  "no_matching_tabs": {
+    "message": "Подходящих вкладок нет."
+  },
+  "no_matching_writable_folders": {
+    "message": "Подходящих папок с правом записи нет"
+  },
+  "no_previous_tab_in_this_window": {
+    "message": "В этом окне нет предыдущей вкладки"
+  },
+  "no_search_urls_detected_yet_search_on_a_website_in_chrome_once_then_re_015c5ff0": {
+    "message": "Поисковые адреса пока не обнаружены. Выполните поиск на сайте в Chrome и откройте панель заново."
+  },
+  "no_web_links_in_this_selection": {
+    "message": "В выбранных результатах нет веб-ссылок"
+  },
+  "not_assigned": {
+    "message": "Не назначено"
+  },
+  "note": {
+    "message": "Заметка"
+  },
+  "note_copied": {
+    "message": "Заметка скопирована"
+  },
+  "note_deleted": {
+    "message": "Заметка удалена"
+  },
+  "note_editor": {
+    "message": "Редактор заметок"
+  },
+  "note_editor_only_saves_the_title_and_multiline_body_locally_plain_ente_5d824937": {
+    "message": "В редакторе сохраняет заголовок и текст заметки на устройстве. Enter в тексте добавляет новую строку."
+  },
+  "note_no_longer_exists": {
+    "message": "Заметки больше нет"
+  },
+  "note_saved": {
+    "message": "Заметка сохранена"
+  },
+  "note_text": {
+    "message": "Текст заметки"
+  },
+  "note_title": {
+    "message": "Заголовок заметки…"
+  },
+  "note_0": {
+    "message": "Заметка · {0}"
+  },
+  "notes": {
+    "message": "Заметки"
+  },
+  "on_device": {
+    "message": "На устройстве"
+  },
+  "on_startup": {
+    "message": "При запуске"
+  },
+  "only_web_pages_and_supported_chrome_sections_can_be_bookmarked": {
+    "message": "В закладки можно добавить веб-страницы и поддерживаемые разделы Chrome"
+  },
+  "open": {
+    "message": "Открыть"
+  },
+  "open_run": {
+    "message": "Открыть или выполнить"
+  },
+  "open_search": {
+    "message": "Открыть или найти"
+  },
+  "open_close_spotlight": {
+    "message": "Открыть или закрыть Spotlight"
+  },
+  "open_arc_search": {
+    "message": "Открыть поиск Arc"
+  },
+  "open_chrome_search_settings": {
+    "message": "Открыть настройки поиска Chrome"
+  },
+  "open_chrome_settings": {
+    "message": "Открыть настройки Chrome"
+  },
+  "open_spotlight_style_search": {
+    "message": "Открыть быстрый поиск"
+  },
+  "open_a_link_with_temporary_preview_first": {
+    "message": "Сначала откройте ссылку во временном предпросмотре"
+  },
+  "open_a_tab_in_a_group_first": {
+    "message": "Сначала откройте вкладку в группе"
+  },
+  "open_activity_history": {
+    "message": "Открыть историю действий"
+  },
+  "open_browser_commands": {
+    "message": "Открыть команды браузера"
+  },
+  "open_browser_history": {
+    "message": "Открыть историю браузера"
+  },
+  "open_downloads": {
+    "message": "Открыть загрузки"
+  },
+  "open_first_web_result_via_duckduckgo": {
+    "message": "Открыть первый результат DuckDuckGo"
+  },
+  "open_in_a_new_tab": {
+    "message": "Открыть в новой вкладке"
+  },
+  "open_in_background": {
+    "message": "Открыть в фоне"
+  },
+  "open_in_the_source_tab": {
+    "message": "Открыть в исходной вкладке"
+  },
+  "open_link": {
+    "message": "Открыть ссылку"
+  },
+  "open_pasted_address": {
+    "message": "Открыть вставленный адрес"
+  },
+  "open_sidebar": {
+    "message": "Открыть боковую панель"
+  },
+  "open_tab": {
+    "message": "Открытая вкладка"
+  },
+  "open_tabs": {
+    "message": "Открытые вкладки"
+  },
+  "open_tabs_unavailable": {
+    "message": "Открытые вкладки недоступны"
+  },
+  "open_temporary_preview": {
+    "message": "Открыть временный предпросмотр"
+  },
+  "open_the_command_catalog_slash_followed_by_space_also_opens_it_from_search": {
+    "message": "Открыть каталог команд. В поиске его также открывает косая черта с пробелом."
+  },
+  "open_0": {
+    "message": "Открыть {0}"
+  },
+  "optional_manual_overrides": {
+    "message": "Ручные настройки сайтов"
+  },
+  "orange": {
+    "message": "Оранжевый"
+  },
+  "password_manager": {
+    "message": "Менеджер паролей"
+  },
+  "paste_an_address_then_press_enter": {
+    "message": "Вставьте адрес и нажмите Enter…"
+  },
+  "paste_and_go": {
+    "message": "Вставить и открыть"
+  },
+  "performance": {
+    "message": "Производительность"
+  },
+  "pin_tab": {
+    "message": "Закрепить вкладку"
+  },
+  "pink": {
+    "message": "Розовый"
+  },
+  "position_0_1_2_3": {
+    "message": "Позиция {0}{1}{2} · {3}"
+  },
+  "previous_tab": {
+    "message": "Предыдущая вкладка"
+  },
+  "privacy_and_security": {
+    "message": "Конфиденциальность и безопасность"
+  },
+  "prompt_recovery_storage_is_unavailable": {
+    "message": "Хранилище сохранённых ИИ-запросов недоступно"
+  },
+  "purple": {
+    "message": "Фиолетовый"
+  },
+  "query_field_selected_url_completes_the_address_site_keyword_enters_sit_d74e96a7": {
+    "message": "В поле запроса дополняет выбранный адрес, открывает поиск по сокращению сайта или команды при пустом поле. В остальных случаях перемещает фокус."
+  },
+  "quicklink": {
+    "message": "Быстрая ссылка"
+  },
+  "quicklink_no_longer_exists": {
+    "message": "Быстрой ссылки больше нет"
+  },
+  "quicklink_removed": {
+    "message": "Быстрая ссылка удалена"
+  },
+  "quicklink_saved": {
+    "message": "Быстрая ссылка сохранена"
+  },
+  "quicklink_0": {
+    "message": "Быстрая ссылка · {0}"
+  },
+  "quicklinks": {
+    "message": "Быстрые ссылки"
+  },
+  "recent_action": {
+    "message": "Недавнее действие"
+  },
+  "recent_actions": {
+    "message": "Недавние действия"
+  },
+  "recently_closed_tabs": {
+    "message": "Недавно закрытые вкладки"
+  },
+  "recently_closed_enter_restore_esc_back": {
+    "message": "Недавно закрытые · Enter восстановить · Esc назад"
+  },
+  "record_actions": {
+    "message": "Записывать действия"
+  },
+  "recover_ai_prompt": {
+    "message": "Восстановить ИИ-запрос"
+  },
+  "recover_ai_prompts": {
+    "message": "Восстановить ИИ-запросы"
+  },
+  "recover_a_recent_ai_prompt": {
+    "message": "Восстановите недавний ИИ-запрос…"
+  },
+  "recover_an_ai_prompt": {
+    "message": "Восстановить ИИ-запрос"
+  },
+  "recover_prompt": {
+    "message": "Восстановить запрос"
+  },
+  "recover_prompt_this_browser_session": {
+    "message": "Восстановить запрос · текущий сеанс браузера"
+  },
+  "red": {
+    "message": "Красный"
+  },
+  "reload_current_page": {
+    "message": "Перезагрузить текущую страницу"
+  },
+  "remove": {
+    "message": "Удалить"
+  },
+  "remove_from_a_bookmark_folder": {
+    "message": "Удалить из папки закладок…"
+  },
+  "remove_from_tab_groups": {
+    "message": "Убрать из групп вкладок"
+  },
+  "remove_quicklink": {
+    "message": "Удалить быструю ссылку"
+  },
+  "remove_selected_bookmarks_from_a_folder": {
+    "message": "Удалить выбранные закладки из папки"
+  },
+  "remove_selected_tabs_from_groups": {
+    "message": "Убрать выбранные вкладки из групп"
+  },
+  "remove_0": {
+    "message": "Удалить: {0}"
+  },
+  "remove_0_matching_bookmark_s_here_other_folders_stay_unchanged": {
+    "message": "Удалить совпадающие закладки в этой папке ({0})"
+  },
+  "removed": {
+    "message": "Удалено"
+  },
+  "rename": {
+    "message": "Переименовать"
+  },
+  "rename_group": {
+    "message": "Переименовать группу"
+  },
+  "rename_group_to_0": {
+    "message": "Переименовать группу в «{0}»"
+  },
+  "rename_quicklink": {
+    "message": "Переименовать быструю ссылку…"
+  },
+  "reopen_last_closed_tab": {
+    "message": "Открыть последнюю закрытую вкладку"
+  },
+  "reset_spotlight_position_and_size": {
+    "message": "Сбросить положение и размер Spotlight"
+  },
+  "reset_spotlight_size": {
+    "message": "Сбросить размер Spotlight"
+  },
+  "resize_spotlight": {
+    "message": "Изменить размер Spotlight"
+  },
+  "resize_handle_focused_restores_the_automatic_size_without_resetting_a__db588bcd": {
+    "message": "Когда уголок в фокусе, восстанавливает автоматический размер и сохраняет положение."
+  },
+  "resize_handle_focused_arrows_change_size_by_16_pixels_shift_gives_64_p_28ec6451": {
+    "message": "Когда уголок в фокусе, стрелки меняют размер на 16 пикселей, а с Shift — на 64. Enter сбрасывает размер."
+  },
+  "restore": {
+    "message": "Восстановить"
+  },
+  "restore_closed_tab": {
+    "message": "Восстановить закрытую вкладку"
+  },
+  "restore_hidden_suggestions": {
+    "message": "Восстановить скрытые подсказки"
+  },
+  "restore_session": {
+    "message": "Восстановление сеанса"
+  },
+  "return_to_results": {
+    "message": "Вернуться к результатам"
+  },
+  "return_to_the_last_used_tab_in_this_window": {
+    "message": "Вернуться к последней использованной вкладке этого окна."
+  },
+  "review_spotlight_actions_set_retention_count_limits_disable_recording__01e9165c": {
+    "message": "Просматривайте действия Spotlight, настраивайте срок и число записей, отключайте запись или очищайте историю. Текст запросов по умолчанию не сохраняется."
+  },
+  "route_domain_to_group": {
+    "message": "Направить домен в группу"
+  },
+  "route_this_domain_to_a_group": {
+    "message": "Направлять этот домен в группу"
+  },
+  "run": {
+    "message": "Выполнить"
+  },
+  "save": {
+    "message": "Сохранить"
+  },
+  "save_as_quicklink": {
+    "message": "Сохранить как быструю ссылку…"
+  },
+  "save_changes": {
+    "message": "Сохранить изменения"
+  },
+  "save_in_a_bookmark_folder": {
+    "message": "Сохранить в папку закладок…"
+  },
+  "save_language": {
+    "message": "Сохранить язык"
+  },
+  "save_limits": {
+    "message": "Сохранить настройки"
+  },
+  "save_note": {
+    "message": "Сохранить заметку"
+  },
+  "save_route": {
+    "message": "Сохранить маршрут"
+  },
+  "save_selected_page_as_quicklink": {
+    "message": "Сохранить страницу как быструю ссылку"
+  },
+  "save_0_page_s_here_1_already_saved": {
+    "message": "Сохранить страницы в этой папке ({0}) · уже сохранено: {1}"
+  },
+  "save_0": {
+    "message": "Сохранить «{0}»"
+  },
+  "saved": {
+    "message": "Сохранено"
+  },
+  "saved_ai_prompt": {
+    "message": "Сохранённый ИИ-запрос"
+  },
+  "saved_ai_prompts_enter_recover_edit_shortcut_to_redirect_esc_back": {
+    "message": "Сохранённые ИИ-запросы · Enter восстановить · Esc назад"
+  },
+  "saved_prompt_is_no_longer_available": {
+    "message": "Сохранённый запрос больше недоступен"
+  },
+  "saved_reopen_search_to_use_these_sites": {
+    "message": "Сохранено. Откройте поиск заново, чтобы использовать эти сайты."
+  },
+  "search": {
+    "message": "Найти"
+  },
+  "search_manage_notes": {
+    "message": "Поиск и управление заметками"
+  },
+  "search_url": {
+    "message": "Поисковый адрес"
+  },
+  "search_url_needs_exactly_one_s_placeholder": {
+    "message": "Поисковый адрес должен содержать ровно один заполнитель %s"
+  },
+  "search_could_not_open_0": {
+    "message": "Не удалось открыть поиск: {0}"
+  },
+  "search_current_query_with": {
+    "message": "Перенаправить запрос через…"
+  },
+  "search_engines": {
+    "message": "Поисковые системы"
+  },
+  "search_history": {
+    "message": "Поиск по истории"
+  },
+  "search_local_notes": {
+    "message": "Поиск локальных заметок"
+  },
+  "search_note_titles_and_text": {
+    "message": "Поиск по заголовкам и тексту заметок…"
+  },
+  "search_or_arrange_with_an_open_tab_selected_horizontal_and_vertical_ke_c2bc1d3b": {
+    "message": "В поиске и режиме порядка вкладок выберите открытую вкладку. Стрелки передвигают её в пределах группы и области закрепления."
+  },
+  "search_or_arrange_with_an_open_tab_selected_same_pin_group_boundaries": {
+    "message": "В поиске и режиме порядка вкладок перемещает выбранную вкладку в пределах группы и области закрепления."
+  },
+  "search_or_arrange_collect_tabs_across_queries_for_group_and_bookmark_a_32013236": {
+    "message": "В поиске и режиме порядка вкладок. Можно отметить до 100 вкладок для группировки или работы с закладками."
+  },
+  "search_or_arrange_moves_within_the_same_pin_group_section_alt_home_alt_end_also_work": {
+    "message": "Перемещает вкладку в пределах группы и области закрепления. Также работают Alt+Home и Alt+End."
+  },
+  "search_settings": {
+    "message": "Настройки поиска"
+  },
+  "search_shortcuts": {
+    "message": "Сокращения для поиска"
+  },
+  "search_site_is_no_longer_available": {
+    "message": "Сайт для поиска больше недоступен"
+  },
+  "search_tabs_in_this_group_or_enter_a_url": {
+    "message": "Найдите вкладку в группе или введите адрес…"
+  },
+  "search_tabs_or_enter_a_url": {
+    "message": "Найдите вкладку или введите адрес"
+  },
+  "search_tabs_or_enter_a_url_2": {
+    "message": "Найдите вкладку или введите адрес…"
+  },
+  "search_tabs_or_the_web": {
+    "message": "Поиск по вкладкам или в интернете"
+  },
+  "search_the_web_for_0": {
+    "message": "Искать «{0}» в интернете"
+  },
+  "search_this_query_with": {
+    "message": "Поиск этого запроса через…"
+  },
+  "search_with": {
+    "message": "Поиск через"
+  },
+  "search_with_0": {
+    "message": "Поиск через… · {0}"
+  },
+  "search_0": {
+    "message": "Поиск через {0}"
+  },
+  "search_0_enter_search_esc_back": {
+    "message": "Поиск через {0} · Enter искать · Esc назад"
+  },
+  "search_0_enter_send_query_tab_enter_scope_other_results": {
+    "message": "Поиск через {0} · Enter отправить запрос · Tab перейти к поиску по сайту · ↓ другие результаты"
+  },
+  "search_0_1": {
+    "message": "Поиск через {0}: {1}"
+  },
+  "select_1_100_distinct_open_tabs": {
+    "message": "Выберите от 1 до 100 разных открытых вкладок"
+  },
+  "select_at_most_100_tabs": {
+    "message": "Выберите до 100 вкладок"
+  },
+  "select_tab_shift_space": {
+    "message": "Отметить вкладку · Shift+Space"
+  },
+  "selected_folder": {
+    "message": "Выбранная папка"
+  },
+  "selected_tab": {
+    "message": "Выбранная вкладка"
+  },
+  "service_action_or_saved_text": {
+    "message": "Сервис, действие или сохранённый текст…"
+  },
+  "set_a_keyword_and_type_keyword_query_or_press_tab_after_the_keyword_us_adb28432": {
+    "message": "Задайте ключевое слово. Введите его и запрос или нажмите Tab после ключевого слова. В каждом поисковом адресе используйте %s один раз на месте запроса."
+  },
+  "settings": {
+    "message": "Настройки"
+  },
+  "shared_shortcut_choose_site_enter_default_search": {
+    "message": "Общее сокращение · ↓ выбрать сайт · Enter искать обычным способом"
+  },
+  "shortcut": {
+    "message": "Сочетание клавиш"
+  },
+  "shortcut_copied": {
+    "message": "Сочетание клавиш скопировано"
+  },
+  "site_keywords_must_be_unique_letters_digits_or_hyphens": {
+    "message": "Ключевые слова должны быть уникальными и состоять из букв, цифр или дефисов"
+  },
+  "site_names_must_be_1_40_characters": {
+    "message": "Название сайта должно содержать от 1 до 40 символов"
+  },
+  "site_search": {
+    "message": "Поиск по сайту"
+  },
+  "site_search_tab_to_search": {
+    "message": "Поиск по сайту · нажмите Tab"
+  },
+  "site_settings": {
+    "message": "Настройки сайтов"
+  },
+  "skipped_0": {
+    "message": "Пропущено: {0}"
+  },
+  "source_tab_is_unavailable": {
+    "message": "Исходная вкладка недоступна"
+  },
+  "source_tab_moved_to_another_window": {
+    "message": "Исходная вкладка перемещена в другое окно"
+  },
+  "source_unavailable": {
+    "message": "Источник недоступен"
+  },
+  "split_view_commands_require_chrome_155_or_later": {
+    "message": "Для команд разделённого экрана нужен Chrome 155 или новее"
+  },
+  "split_view_requires_chrome_155_or_later": {
+    "message": "Для разделённого экрана нужен Chrome 155 или новее"
+  },
+  "split_requires_an_unpinned_ungrouped_source_tab": {
+    "message": "Для разделённого экрана выберите незакреплённую вкладку вне группы"
+  },
+  "spotlight_activity_history": {
+    "message": "История действий Spotlight"
+  },
+  "spotlight_style_search_for_open_tabs_bookmarks_history_and_the_web": {
+    "message": "Быстрый поиск по открытым вкладкам, закладкам, истории и интернету."
+  },
+  "status_describes_the_chrome_operation_not_whether_the_destination_load_6526f091": {
+    "message": "Статус отражает выполнение операции Chrome. Загрузка страницы и ответ ИИ в нём не учитываются."
+  },
+  "suggested_from_your_local_choices": {
+    "message": "По вашим прошлым выборам"
+  },
+  "suggestions_unavailable": {
+    "message": "Подсказки недоступны"
+  },
+  "switch_group_window_search": {
+    "message": "Переключить поиск между группой и окном"
+  },
+  "switch_tab": {
+    "message": "Переключить вкладку"
+  },
+  "switch_to_a_space": {
+    "message": "Перейти к пространству"
+  },
+  "switch_to_group": {
+    "message": "Перейти в группу"
+  },
+  "switch_to_previous_tab": {
+    "message": "Перейти к предыдущей вкладке"
+  },
+  "tab_duplicated": {
+    "message": "Копия вкладки создана"
+  },
+  "tab_group": {
+    "message": "Группа вкладок"
+  },
+  "tab_group_0": {
+    "message": "Группа вкладок · {0}"
+  },
+  "tab_group_0_1_tabs": {
+    "message": "Группа вкладок · {0} · вкладок: {1}"
+  },
+  "tab_group_0_2": {
+    "message": "Группа вкладок: {0}"
+  },
+  "tab_is_no_longer_in_this_window": {
+    "message": "Вкладки больше нет в этом окне"
+  },
+  "tab_is_outside_this_window": {
+    "message": "Вкладка находится в другом окне"
+  },
+  "tab_moved_to_another_window": {
+    "message": "Вкладка перемещена в другое окно"
+  },
+  "tab_placement": {
+    "message": "Положение вкладки"
+  },
+  "tab_0": {
+    "message": "Вкладка · {0}"
+  },
+  "tabs": {
+    "message": "Вкладки"
+  },
+  "tabs_in_this_group": {
+    "message": "Вкладки этой группы"
+  },
+  "tabs_in_this_window": {
+    "message": "Вкладки этого окна"
+  },
+  "tabs_were_grouped_but_the_name_could_not_be_applied_use_manage_tab_groups_to_rename": {
+    "message": "Вкладки сгруппированы, но имя не применилось. Переименуйте группу через управление группами."
+  },
+  "text_recording_is_off_by_default_ai_recovery_copies_are_separate_and_t_fbbe2b6f": {
+    "message": "Запись текста по умолчанию выключена. Копии для восстановления ИИ-запросов временные и хранятся отдельно. Уже записанный текст остаётся до истечения срока или очистки истории."
+  },
+  "the_clipboard_does_not_contain_an_http_s_address": {
+    "message": "В буфере обмена нет адреса HTTP(S)"
+  },
+  "this_group_has_no_open_tabs": {
+    "message": "В этой группе нет открытых вкладок"
+  },
+  "this_note_changed_in_another_editor_reopen_it_before_saving_your_text_is_still_here": {
+    "message": "Заметка изменилась в другом редакторе. Откройте её заново перед сохранением. Введённый текст остался здесь."
+  },
+  "this_tab_is_already_in_split_view": {
+    "message": "Эта вкладка уже на разделённом экране"
+  },
+  "this_tab_is_not_in_split_view": {
+    "message": "Эта вкладка не находится на разделённом экране"
+  },
+  "this_version_of_chrome_cannot_perform_that_sidebar_action": {
+    "message": "Эта версия Chrome не поддерживает это действие с боковой панелью"
+  },
+  "type_a_new_group_name_or_choose_an_existing_group": {
+    "message": "Введите имя новой группы или выберите существующую…"
+  },
+  "type_a_query_first": {
+    "message": "Сначала введите запрос"
+  },
+  "url_search_result_replaces_the_source_page_instead_of_creating_another_tab": {
+    "message": "Открывает адрес или результат поиска в исходной вкладке."
+  },
+  "ungroup_keep_all_tabs_open": {
+    "message": "Разгруппировать и оставить все вкладки открытыми"
+  },
+  "ungrouped": {
+    "message": "Без группы"
+  },
+  "unknown_bookmark_action": {
+    "message": "Неизвестное действие с закладками"
+  },
+  "unknown_command": {
+    "message": "Неизвестная команда"
+  },
+  "unknown_group_action": {
+    "message": "Неизвестное действие с группой"
+  },
+  "unknown_note_operation": {
+    "message": "Неизвестное действие с заметкой"
+  },
+  "unknown_search_action": {
+    "message": "Неизвестное действие поиска"
+  },
+  "unknown_search_page": {
+    "message": "Неизвестная страница поиска"
+  },
+  "unknown_search_site": {
+    "message": "Неизвестный сайт для поиска"
+  },
+  "unknown_sender": {
+    "message": "Неизвестный отправитель"
+  },
+  "unmute_tab": {
+    "message": "Включить звук вкладки"
+  },
+  "unnamed_folder": {
+    "message": "Папка без названия"
+  },
+  "unpin_selected_tabs_in_chrome_before_grouping": {
+    "message": "Открепите выбранные вкладки в Chrome перед группировкой"
+  },
+  "unpin_tab": {
+    "message": "Открепить вкладку"
+  },
+  "unsaved_note": {
+    "message": "Несохранённая заметка"
+  },
+  "untitled_group": {
+    "message": "Группа без названия"
+  },
+  "untitled_tab": {
+    "message": "Вкладка без названия"
+  },
+  "use_chrome_language": {
+    "message": "Как в Chrome"
+  },
+  "use_a_group_name_of_1_80_characters": {
+    "message": "Имя группы должно содержать от 1 до 80 символов"
+  },
+  "use_a_quicklink_name_of_1_80_characters": {
+    "message": "Название быстрой ссылки должно содержать от 1 до 80 символов"
+  },
+  "use_a_title_up_to_80_characters_and_text_up_to_20_000_characters": {
+    "message": "Введите заголовок до 80 символов и текст до 20 000 символов"
+  },
+  "use_a_unique_group_name_for_domain_routing": {
+    "message": "Для маршрутизации домена нужно уникальное имя группы"
+  },
+  "use_a_web_url_without_credentials": {
+    "message": "Укажите веб-адрес без учётных данных"
+  },
+  "use_an_http_s_search_url_without_credentials": {
+    "message": "Укажите поисковый адрес HTTP(S) без учётных данных"
+  },
+  "use_at_most_20_search_sites": {
+    "message": "Можно настроить до 20 сайтов"
+  },
+  "use_at_most_20_sites": {
+    "message": "Можно настроить до 20 сайтов."
+  },
+  "use_this_tab": {
+    "message": "Открыть в этой вкладке"
+  },
+  "view_history": {
+    "message": "Открыть историю"
+  },
+  "view_history_0": {
+    "message": "Открыть историю · {0}"
+  },
+  "web_queries_use_the_search_engine_selected_in_chrome": {
+    "message": "Запросы в интернете отправляются в поисковую систему, выбранную в Chrome."
+  },
+  "web_search": {
+    "message": "Поиск в интернете"
+  },
+  "with_an_empty_scoped_query_returns_to_search_or_the_previous_provider_action_scope": {
+    "message": "При пустом поле возвращает к поиску или предыдущему меню."
+  },
+  "with_the_query_field_focused_changes_the_highlighted_result_without_navigating": {
+    "message": "В поле запроса перемещает выделение между результатами."
+  },
+  "write_your_note": {
+    "message": "Напишите заметку…"
+  },
+  "yellow": {
+    "message": "Жёлтый"
+  },
+  "add": {
+    "message": "добавить"
+  },
+  "before": {
+    "message": "перед"
+  },
+  "blue_2": {
+    "message": "Синий"
+  },
+  "bookmark_2": {
+    "message": "закладки"
+  },
+  "close_split": {
+    "message": "закрыть разделённый экран"
+  },
+  "closure": {
+    "message": "замыкания"
+  },
+  "code": {
+    "message": "программирование"
+  },
+  "color": {
+    "message": "изменить цвет"
+  },
+  "compare": {
+    "message": "сравнение"
+  },
+  "copy": {
+    "message": "копирование"
+  },
+  "cyan_2": {
+    "message": "Бирюзовый"
+  },
+  "debug": {
+    "message": "отладка"
+  },
+  "dissolve": {
+    "message": "разгруппировать"
+  },
+  "downloads_2": {
+    "message": "загрузки"
+  },
+  "duplicate": {
+    "message": "дублировать"
+  },
+  "email": {
+    "message": "письма"
+  },
+  "end": {
+    "message": "в конец"
+  },
+  "explain": {
+    "message": "объяснение"
+  },
+  "green_2": {
+    "message": "Зелёный"
+  },
+  "grey_2": {
+    "message": "Серый"
+  },
+  "history_2": {
+    "message": "история"
+  },
+  "image": {
+    "message": "изображения"
+  },
+  "math": {
+    "message": "математика"
+  },
+  "mute_tab_2": {
+    "message": "выключить звук"
+  },
+  "new_split": {
+    "message": "открыть разделённый экран"
+  },
+  "next": {
+    "message": "вперёд"
+  },
+  "orange_2": {
+    "message": "Оранжевый"
+  },
+  "pin_tab_2": {
+    "message": "закрепить"
+  },
+  "pink_2": {
+    "message": "Розовый"
+  },
+  "previous": {
+    "message": "назад"
+  },
+  "prompt": {
+    "message": "ИИ-запросы"
+  },
+  "purple_2": {
+    "message": "Фиолетовый"
+  },
+  "recipe": {
+    "message": "рецепты"
+  },
+  "red_2": {
+    "message": "Красный"
+  },
+  "reload": {
+    "message": "перезагрузка"
+  },
+  "remove_2": {
+    "message": "удалить"
+  },
+  "rename_2": {
+    "message": "переименовать"
+  },
+  "research": {
+    "message": "исследование"
+  },
+  "save_2": {
+    "message": "сохранить"
+  },
+  "search_2": {
+    "message": "поиск"
+  },
+  "settings_2": {
+    "message": "настройки"
+  },
+  "site": {
+    "message": "сайт"
+  },
+  "start": {
+    "message": "в начало"
+  },
+  "summarize": {
+    "message": "краткое изложение"
+  },
+  "switch": {
+    "message": "переключить"
+  },
+  "tab": {
+    "message": "вкладки"
+  },
+  "toggle_collapse": {
+    "message": "изменить состояние свёртывания"
+  },
+  "translate": {
+    "message": "перевод"
+  },
+  "travel": {
+    "message": "путешествия"
+  },
+  "unmute_tab_2": {
+    "message": "включить звук"
+  },
+  "unpin_tab_2": {
+    "message": "открепить"
+  },
+  "window": {
+    "message": "окна"
+  },
+  "write": {
+    "message": "написание текста"
+  },
+  "yellow_2": {
+    "message": "Жёлтый"
+  },
+  "0_bookmarks_for_1_tab_s_enter_choose_folder_esc_back": {
+    "message": "{0} закладки для выбранных вкладок ({1}) · Enter выбрать папку · Esc назад"
+  },
+  "0_marked": {
+    "message": "Отмечено: {0}"
+  },
+  "0_marked_shift_space_mark_cmd_ctrl_g_group_esc_clear": {
+    "message": "Отмечено: {0} · Shift+Space отметить · Cmd/Ctrl+G сгруппировать · Esc снять отметки"
+  },
+  "0_marked_shift_space_select_cmd_ctrl_g_group_cmd_ctrl_shift_g_remove": {
+    "message": "Отмечено: {0} · Shift+Space выбрать · Cmd/Ctrl+G сгруппировать · Cmd/Ctrl+Shift+G убрать из группы"
+  },
+  "0_marked_shift_space_select_cmd_ctrl_g_group_esc_clear": {
+    "message": "Отмечено: {0} · Shift+Space выбрать · Cmd/Ctrl+G сгруппировать · Esc снять отметки"
+  },
+  "0_1_of_2_bookmarks_before_chrome_failed_refresh_the_folder_list_and_re_720c0db0": {
+    "message": "{0}: {1} из {2} закладок. Chrome прервал операцию. Обновите список папок и повторите попытку."
+  },
+  "0_1_2_3": {
+    "message": "{0}: {1}{2} · {3}"
+  },
+  "0_collapsed": {
+    "message": "{0} · Свёрнута"
+  },
+  "0_expanded": {
+    "message": "{0} · Развёрнута"
+  },
+  "select_alt_arrows_move_tab_commands_arrange_prompts": {
+    "message": "↑ ↓ выбрать · Alt+стрелки переместить · > команды · @ порядок · ? ИИ-запросы"
+  },
+  "select_shift_space_mark_cmd_ctrl_g_group_commands": {
+    "message": "↑ ↓ выбрать · Shift+Space отметить · Cmd/Ctrl+G сгруппировать · > команды"
+  },
+  "select_tab_complete_address_enter_open_esc_return": {
+    "message": "↑ ↓ выбор · Tab дополнить адрес · Enter открыть · Esc назад"
+  },
+  "t_opens_search_l_opens_the_current_url_for_editing_existing_chrome_ass_3cd075aa": {
+    "message": "⌘T открывает поиск. ⌘L открывает текущий адрес для изменения. Chrome может сохранить прежние назначения клавиш при обновлении."
+  }
+}

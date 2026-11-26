@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Arc Search settings</title>
+  <title data-message="Arc Search settings">Arc Search settings</title>
   <link rel="icon" href="icons/icon-32.png" />
   <link rel="stylesheet" href="design-tokens.css" />
   <link rel="stylesheet" href="page.css" />
@@ -16,64 +16,52 @@
     <header>
       <img src="icons/icon-48.png" width="48" height="48" alt="" />
       <div>
-        <h1>Arc Search</h1>
-        <p>Search settings</p>
+        <h1 data-message="Arc Search">Arc Search</h1>
+        <p data-message="Search settings">Search settings</p>
       </div>
     </header>
     <section>
-      <h2>Default search engine</h2>
-      <p>Web queries use the search engine selected in Chrome.</p>
-      <button id="provider">Open Chrome search settings</button>
+      <h2 data-message="Interface language">Interface language</h2>
+      <p data-message="Choose a language. Reopen Spotlight or refresh open extension pages to use it everywhere.">Choose a language. Reopen Spotlight or refresh open extension pages to use it everywhere.</p>
+      <form id="language-form">
+        <label for="language" data-message="Interface language">Interface language</label>
+        <select id="language" name="language" disabled></select>
+        <button type="submit" data-message="Save language" disabled>Save language</button>
+        <p id="language-status" role="status"></p>
+      </form>
     </section>
     <section>
-      <h2>Search shortcuts</h2>
-      <p>
-        Google, Yandex, ChatGPT, Google AI Mode (gem/gemini), Claude, Grok and
-        Perplexity are ready to use. Type a shortcut followed by your query
-        (for example, gem explain closures) and press Enter. Other sites are
-        detected locally from search URLs in tabs, bookmarks and history.
-        Shortcut + Tab also works.
-      </p>
+      <h2 data-message="Default search engine">Default search engine</h2>
+      <p data-message="Web queries use the search engine selected in Chrome.">Web queries use the search engine selected in Chrome.</p>
+      <button id="provider" data-message="Open Chrome search settings">Open Chrome search settings</button>
+    </section>
+    <section>
+      <h2 data-message="Search shortcuts">Search shortcuts</h2>
+      <p data-message="Google, Yandex, ChatGPT, Google AI Mode (gem/gemini), Claude, Grok and Perplexity are ready to use. Type a shortcut followed by your query (for example, gem explain closures) and press Enter. Other sites are detected locally from search URLs in tabs, bookmarks and history. Shortcut + Tab also works.">Google, Yandex, ChatGPT, Google AI Mode (gem/gemini), Claude, Grok and Perplexity are ready to use. Type a shortcut followed by your query (for example, gem explain closures) and press Enter. Other sites are detected locally from search URLs in tabs, bookmarks and history. Shortcut + Tab also works.</p>
       <ul id="detected"></ul>
-      <button id="forget" type="button">Clear learned shortcuts</button>
+      <button id="forget" type="button" data-message="Clear learned shortcuts">Clear learned shortcuts</button>
     </section>
     <section>
-      <h2>Optional manual overrides</h2>
-      <p>
-        Overrides are optional. Set a keyword and type keyword + query, or
-        press Tab after the keyword. Use <code>%s</code> once in each search
-        URL for the query.
-      </p>
+      <h2 data-message="Optional manual overrides">Optional manual overrides</h2>
+      <p data-message="Set a keyword and type keyword + query, or press Tab after the keyword. Use %s once in each search URL for the query.">Set a keyword and type keyword + query, or press Tab after the keyword. Use %s once in each search URL for the query.</p>
       <form id="sites-form">
         <div id="sites"></div>
         <div class="actions">
-          <button type="button" id="add">Add site</button><button type="button" id="reset">Clear
-            overrides</button><button type="submit" class="primary">Save changes</button>
+          <button type="button" id="add" data-message="Add site">Add site</button><button type="button" id="reset" data-message="Clear overrides">Clear overrides</button><button type="submit" class="primary" data-message="Save changes">Save changes</button>
         </div>
         <p id="status" role="status" aria-live="polite"></p>
       </form>
     </section>
     <section>
-      <h2>Activity history / История действий</h2>
-      <p>
-        Review Spotlight actions, set retention/count limits, disable
-        recording or clear history. Query text is excluded by default.
-      </p>
-      <button id="activity">Open activity history</button>
+      <h2 data-message="Activity history">Activity history</h2>
+      <p data-message="Review Spotlight actions, set retention/count limits, disable recording or clear history. Query text is excluded by default.">Review Spotlight actions, set retention/count limits, disable recording or clear history. Query text is excluded by default.</p>
+      <button id="activity" data-message="Open activity history">Open activity history</button>
     </section>
     <section>
-      <h2>Keyboard</h2>
-      <p>
-        ⌘T opens search. ⌘L opens the current URL for editing. Existing Chrome
-        assignments may be preserved after updates.
-      </p>
-      <button id="shortcuts">Customize shortcuts</button>
-      <p>
-        Inside search: empty Tab opens Commands; a site keyword + Tab enters
-        Site Search; Tab on a URL completes it. Enter opens, Shift+Enter opens
-        in background, Alt+Enter replaces the current page. In Edit mode,
-        Enter replaces the current page; ⌘/Ctrl+Enter opens a new tab.
-      </p>
+      <h2 data-message="Keyboard">Keyboard</h2>
+      <p data-message="⌘T opens search. ⌘L opens the current URL for editing. Existing Chrome assignments may be preserved after updates.">⌘T opens search. ⌘L opens the current URL for editing. Existing Chrome assignments may be preserved after updates.</p>
+      <button id="shortcuts" data-message="Customize shortcuts">Customize shortcuts</button>
+      <p data-message="Inside search: empty Tab opens Commands; a site keyword + Tab enters Site Search; Tab on a URL completes it. Enter opens, Shift+Enter opens in background, Alt+Enter replaces the current page. In Edit mode, Enter replaces the current page; ⌘/Ctrl+Enter opens a new tab.">Inside search: empty Tab opens Commands; a site keyword + Tab enters Site Search; Tab on a URL completes it. Enter opens, Shift+Enter opens in background, Alt+Enter replaces the current page. In Edit mode, Enter replaces the current page; ⌘/Ctrl+Enter opens a new tab.</p>
     </section>
   </main>
   <script type="module" src="options.js"></script>

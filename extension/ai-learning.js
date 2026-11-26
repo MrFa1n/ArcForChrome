@@ -1,3 +1,4 @@
+import { interfaceLocale, systemTranslator } from "./localization.js";
 import { activitySettings, listActivity } from "./activity-store.js";
 import { commandSuggestions } from "./command-catalog.js";
 import { embed, similarity, MIN_SIMILARITY } from "./ai-learning/embeddings.js";
@@ -36,7 +37,10 @@ export async function selectionSignal(api, context, message, status) {
     selectionIndex > 200
   )
     return;
-  const matching = commandSuggestions(selectionQuery);
+  const matching = commandSuggestions(
+    selectionQuery,
+    systemTranslator(await interfaceLocale(api)),
+  );
   if (!matching.some((row) => row.command === command)) return;
   const skipped =
     selectionIndex > 0 &&

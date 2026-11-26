@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.23.6",
-  "description": "Spotlight-style search for open tabs, bookmarks, history and the web.",
+  "version": "0.23.7",
+  "description": "__MSG_spotlight_style_search_for_open_tabs_bookmarks_history_and_the_web__",
   "minimum_chrome_version": "116",
   "permissions": [
     "tabs",
@@ -19,14 +19,18 @@
     "favicon",
     "sidePanel"
   ],
-  "chrome_url_overrides": { "newtab": "newtab.html" },
-  "side_panel": { "default_path": "sidebar.html" },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
   "background": {
     "service_worker": "worker.js",
     "type": "module"
   },
   "action": {
-    "default_title": "Open Arc Search",
+    "default_title": "__MSG_open_arc_search__",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",
@@ -40,25 +44,28 @@
         "default": "Alt+Shift+K",
         "mac": "Command+T"
       },
-      "description": "Open Spotlight-style search"
+      "description": "__MSG_open_spotlight_style_search__"
     },
     "open-commands": {
       "suggested_key": {
         "default": "Alt+Shift+E",
         "mac": "Command+E"
       },
-      "description": "Open browser commands"
+      "description": "__MSG_open_browser_commands__"
     },
     "previous-tab": {
-      "suggested_key": { "mac": "Option+Shift+Q", "default": "Alt+Shift+Q" },
-      "description": "Switch to previous tab"
+      "suggested_key": {
+        "mac": "Option+Shift+Q",
+        "default": "Alt+Shift+Q"
+      },
+      "description": "__MSG_switch_to_previous_tab__"
     },
     "edit-address": {
       "suggested_key": {
         "default": "Alt+Shift+L",
         "mac": "Command+L"
       },
-      "description": "Edit current URL in the command bar"
+      "description": "__MSG_edit_the_current_url_in_the_command_bar__"
     }
   },
   "content_security_policy": {
@@ -73,5 +80,6 @@
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
-  }
+  },
+  "default_locale": "en"
 }

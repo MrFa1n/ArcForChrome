@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Arc Search sidebar</title>
+  <title data-message="Arc Search sidebar">Arc Search sidebar</title>
   <link rel="stylesheet" href="design-tokens.css" />
   <link rel="stylesheet" href="page.css" />
   <link rel="stylesheet" href="sidebar.css" />
@@ -14,9 +14,9 @@
   <main>
     <header>
       <img src="icons/icon-32.png" width="32" height="32" alt="" />
-      <h1>Tabs</h1>
+      <h1 data-message="Tabs">Tabs</h1>
     </header>
-    <input id="filter" type="search" aria-label="Find an open tab" placeholder="Find an open tab" />
+    <input id="filter" type="search" aria-label="Find an open tab" data-message-aria-label="Find an open tab" placeholder="Find an open tab" data-message-placeholder="Find an open tab" />
     <div id="tabs"></div>
     <p id="status" role="status"></p>
   </main>

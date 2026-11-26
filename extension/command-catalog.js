@@ -218,15 +218,13 @@ export const COMMANDS = [
   ),
 ];
 
-export function commandSuggestions(query) {
+export function commandSuggestions(query, translateTitle = (title) => title) {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/);
-  return COMMANDS.filter((item) =>
-    terms.every((term) =>
-      `${item.title} ${item.command} ${item.aliases}`
-        .toLocaleLowerCase()
-        .includes(term),
-    ),
-  ).map(({ command, title }) => ({
+  return COMMANDS.filter((item) => {
+    const search =
+      `${item.title} ${translateTitle(item.title)} ${item.command} ${item.aliases}`.toLocaleLowerCase();
+    return terms.every((term) => search.includes(term));
+  }).map(({ command, title }) => ({
     kind: "command",
     command,
     title,

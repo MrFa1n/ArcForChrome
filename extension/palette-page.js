@@ -1,8 +1,16 @@
+import {
+  interfaceLocale,
+  pageTranslator,
+  systemTranslator,
+} from "./localization.js";
 import { loadDesignTokens } from "./design-tokens.js";
 import { launcherContext } from "./launcher-catalog.js";
 import { GROUP_COLORS } from "./tab-groups.js";
 import { mountPalette } from "./palette.js";
 import { loadSites } from "./site-search.js";
+const locale = await interfaceLocale(chrome);
+const t = pageTranslator(document, locale);
+const systemText = systemTranslator(locale);
 const params = new URL(location.href).searchParams;
 const actionPopup = ["action", "window"].includes(params.get("surface"));
 if (actionPopup) document.documentElement.classList.add("action-popup");
@@ -33,6 +41,7 @@ async function open() {
   const mode = params.get("mode");
   mountPalette(openTabs, !newTab, {
     ...launcher,
+    locale,
     designTokens,
     actionPopup,
     newTab,
@@ -48,5 +57,8 @@ async function open() {
 }
 
 open().catch((error) => {
-  document.body.textContent = `Search could not open: ${error.message}`;
+  document.body.textContent = t(
+    "Search could not open: {0}",
+    systemText(error.message),
+  );
 });

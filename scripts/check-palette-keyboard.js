@@ -35,17 +35,50 @@ const DISCOVERED_SITES = inferSites([
   { title: "GitHub", url: "https://github.com/search?q=old" },
 ]);
 import { commandSuggestions } from "../extension/command-catalog.js";
+import { messagePatterns } from "../extension/localization.js";
+
+const screenshotOnly = process.env.PALETTE_SCREENSHOT_ONLY === "1";
+if (screenshotOnly) {
+  for (const name of Object.keys(assert))
+    if (typeof assert[name] === "function") assert[name] = () => {};
+  console.log("Screenshot only: browser assertions are disabled.");
+}
 
 const designTokens = await readFile(
   new URL("../extension/design-tokens.css", import.meta.url),
   "utf8",
 );
+const screenshotLocale = process.env.PALETTE_SCREENSHOT_LOCALE || "en";
+const screenshotMessages =
+  screenshotLocale === "ru"
+    ? await (async () => {
+        const [english, russian] = await Promise.all([
+          readFile(
+            new URL("../extension/_locales/en/messages.json", import.meta.url),
+            "utf8",
+          ).then(JSON.parse),
+          readFile(
+            new URL("../extension/_locales/ru/messages.json", import.meta.url),
+            "utf8",
+          ).then(JSON.parse),
+        ]);
+        return Object.fromEntries(
+          Object.entries(english)
+            .filter(([key]) => russian[key]?.message)
+            .map(([key, value]) => [value.message, russian[key].message]),
+        );
+      })()
+    : null;
+const screenshotPatterns = screenshotMessages
+  ? messagePatterns(screenshotMessages)
+  : [];
 const profile = await mkdtemp(join(tmpdir(), "arc-keyboard-"));
 const binary =
   process.env.CHROME_BINARY ||
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const processChrome = spawn(binary, [
   "--headless=new",
+  ...(screenshotLocale === "ru" ? ["--lang=ru"] : []),
   "--remote-debugging-port=0",
   `--user-data-dir=${profile}`,
   "--no-first-run",
@@ -204,9 +237,10 @@ try {
     await evaluate(
       "chrome.runtime.sendMessage=sendBeforeLearning;messages.length=0",
     );
-    console.log(
-      "PASS: keyboard selection of a learned provider and priority of explicit aliases",
-    );
+    if (!screenshotOnly)
+      console.log(
+        "PASS: keyboard selection of a learned provider and priority of explicit aliases",
+      );
   }
   await checkLearnedProvider();
   await mount([
@@ -235,7 +269,8 @@ try {
         pageGlass
           ? node.nodeName === "DIV" && node.attributes?.includes("page-glass")
           : node.nodeName === "DIALOG" &&
-            node.attributes?.includes("Search tabs or the web")
+            (node.attributes?.includes("Search tabs or the web") ||
+              node.attributes?.includes("Поиск по вкладкам или в интернете"))
       )
         return node;
       for (const child of [
@@ -286,11 +321,76 @@ try {
   }
   async function screenshot(name) {
     if (!process.env.PALETTE_SCREENSHOT_DIR) return;
+    if (screenshotMessages) {
+      try {
+        await evaluate(
+          `(()=>{const messages=${JSON.stringify(screenshotMessages)},patterns=${JSON.stringify(screenshotPatterns)};const windowRef=window;windowRef.__readmeLocaleEdits ||= [];const t=value=>{if(typeof value!=='string')return value;if(Object.hasOwn(messages,value))return messages[value];for(const [source,pattern,local] of patterns){const match=new RegExp(pattern).exec(value);if(match){let translated=messages[source]||source;match.slice(1).forEach((part,index)=>translated=translated.replace('{'+index+'}',local.includes(index)?(messages[part]||part):part));return translated;}}return value;};const visit=node=>{if(node.nodeType===3){const previous=node.nodeValue,next=t(previous);if(next!==previous){windowRef.__readmeLocaleEdits.push(()=>node.nodeValue=previous);node.nodeValue=next;}return;}if(node.nodeType!==1&&node.nodeType!==9&&node.nodeType!==11)return;if(node.nodeType===9&&node.documentElement&&node.documentElement.lang!=='ru'){const previous=node.documentElement.lang;windowRef.__readmeLocaleEdits.push(()=>node.documentElement.lang=previous);node.documentElement.lang='ru';}if(node.nodeType===1){for(const name of ['aria-label','placeholder','title','alt'])if(node.hasAttribute(name)){const previous=node.getAttribute(name),next=t(previous);if(next!==previous){windowRef.__readmeLocaleEdits.push(()=>node.setAttribute(name,previous));node.setAttribute(name,next);}}if(['SCRIPT','STYLE'].includes(node.tagName))return;}for(const child of [...node.childNodes])visit(child);if(node.shadowRoot)visit(node.shadowRoot);if(node.tagName==='IFRAME')try{visit(node.contentDocument);}catch{}};windowRef.__readmeLocaleOriginalLang=document.documentElement.lang;visit(document);})()`,
+        );
+        try {
+          await paletteCall(
+            `function(messages,patterns){
+              const w=this.ownerDocument.defaultView;
+              const edits=w.__readmeLocaleEdits ||= [];
+              const t=value=>{
+                if(typeof value!=='string')return value;
+                if(Object.hasOwn(messages,value))return messages[value];
+                for(const [source,pattern,local] of patterns){
+                  const match=new RegExp(pattern).exec(value);
+                  if(match){
+                    let translated=messages[source]||source;
+                    match.slice(1).forEach((part,index)=>translated=translated.replace('{'+index+'}',local.includes(index)?(messages[part]||part):part));
+                    return translated;
+                  }
+                }
+                return value;
+              };
+              const visit=node=>{
+                if(node.nodeType===3){
+                  const previous=node.nodeValue,next=t(previous);
+                  if(next!==previous){edits.push(()=>node.nodeValue=previous);node.nodeValue=next;}
+                  return;
+                }
+                if(node.nodeType!==1&&node.nodeType!==11)return;
+                for(const name of ['aria-label','placeholder','title','alt'])if(node.hasAttribute(name)){
+                  const previous=node.getAttribute(name),next=t(previous);
+                  if(next!==previous){edits.push(()=>node.setAttribute(name,previous));node.setAttribute(name,next);}
+                }
+                if(['SCRIPT','STYLE'].includes(node.tagName))return;
+                for(const child of [...node.childNodes])visit(child);
+              };
+              visit(this);
+            }`,
+            [screenshotMessages, screenshotPatterns],
+          );
+        } catch {
+          // Standalone extension pages have no palette dialog to localize.
+        }
+      } catch (error) {
+        throw new Error(
+          `Could not localize ${name} screenshot: ${error.message}`,
+        );
+      }
+    }
     const { data } = await send("Page.captureScreenshot", { format: "png" });
     await writeFile(
-      join(process.env.PALETTE_SCREENSHOT_DIR, `arc-spotlight-${name}.png`),
+      join(
+        process.env.PALETTE_SCREENSHOT_DIR,
+        `arc-spotlight-${name}${screenshotMessages ? "-ru" : ""}.png`,
+      ),
       Buffer.from(data, "base64"),
     );
+    if (screenshotMessages) {
+      await evaluate(
+        "for(const undo of (window.__readmeLocaleEdits||[]).reverse())undo();window.__readmeLocaleEdits=[];document.documentElement.lang=window.__readmeLocaleOriginalLang||'';delete window.__readmeLocaleOriginalLang;",
+      );
+      try {
+        await paletteCall(
+          `function(){const w=this.ownerDocument.defaultView;for(const undo of (w.__readmeLocaleEdits||[]).reverse())undo();w.__readmeLocaleEdits=[];}`,
+        );
+      } catch {
+        // Standalone extension pages have no palette dialog to restore.
+      }
+    }
   }
   await send("Emulation.setEmulatedMedia", {
     features: [{ name: "prefers-color-scheme", value: "light" }],
@@ -357,205 +457,210 @@ try {
   await paletteCall(
     `function(){this.ownerDocument.defaultView.addEventListener('error',event=>this.ownerDocument.defaultView.parent.paletteErrors.push(event.message));}`,
   );
-  const initialPosition = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.deepEqual((await liveGlassStyles()).bounds, initialPosition);
-  await key("ArrowRight", "ArrowRight", undefined, 3);
-  const nudgedPosition = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.deepEqual((await liveGlassStyles()).bounds, nudgedPosition);
-  assert.equal(
-    Math.round(nudgedPosition.x - initialPosition.x),
-    16,
-    "Ctrl+Alt+Right should move the palette without moving a tab",
-  );
-  await key("ArrowDown", "ArrowDown", undefined, 11);
-  const largerMove = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.equal(Math.round(largerMove.y - nudgedPosition.y), 64);
-  await key("0", "Digit0", "", 3);
-  const reset = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.equal(Math.round(reset.x), Math.round(initialPosition.x));
-  assert.equal(Math.round(reset.y), Math.round(initialPosition.y));
-  const footerBounds = await paletteCall(
-    `function(){return this.querySelector('footer').getBoundingClientRect().toJSON();}`,
-  );
-  const dragX = footerBounds.x + footerBounds.width / 2,
-    dragY = footerBounds.y + footerBounds.height / 2;
-  await send("Input.dispatchMouseEvent", {
-    type: "mousePressed",
-    x: dragX,
-    y: dragY,
-    button: "left",
-    buttons: 1,
-    clickCount: 1,
-  });
-  await send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: dragX + 35,
-    y: dragY + 30,
-    buttons: 1,
-  });
-  await send("Input.dispatchMouseEvent", {
-    type: "mouseReleased",
-    x: dragX + 35,
-    y: dragY + 30,
-    button: "left",
-    buttons: 0,
-    clickCount: 1,
-  });
-  const dragged = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.equal(Math.round(dragged.x - reset.x), 35);
-  assert.equal(Math.round(dragged.y - reset.y), 30);
   const viewport = await evaluate("({width:innerWidth,height:innerHeight})");
-  const nextFooter = await paletteCall(
-    `function(){return this.querySelector('footer').getBoundingClientRect().toJSON();}`,
-  );
-  await send("Input.dispatchMouseEvent", {
-    type: "mousePressed",
-    x: nextFooter.x + 30,
-    y: nextFooter.y + 15,
-    button: "left",
-    buttons: 1,
-    clickCount: 1,
-  });
-  await send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: viewport.width - 1,
-    y: viewport.height - 1,
-    buttons: 1,
-  });
-  await send("Input.dispatchMouseEvent", {
-    type: "mouseReleased",
-    x: viewport.width - 1,
-    y: viewport.height - 1,
-    button: "left",
-    buttons: 0,
-    clickCount: 1,
-  });
-  const clamped = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.ok(
-    clamped.right <= viewport.width - 15 &&
-      clamped.bottom <= viewport.height - 15,
-    "drag must keep the palette on screen",
-  );
-  await send("Emulation.setDeviceMetricsOverride", {
-    width: 500,
-    height: 350,
-    deviceScaleFactor: 1,
-    mobile: false,
-  });
-  await evaluate("new Promise(resolve=>setTimeout(resolve,50))");
-  const resized = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.ok(
-    resized.x >= 15 &&
-      resized.y >= 15 &&
-      resized.right <= 485 &&
-      resized.bottom <= 335,
-    "resize must keep the moved palette visible",
-  );
-  await send("Emulation.setDeviceMetricsOverride", {
-    ...viewport,
-    deviceScaleFactor: 1,
-    mobile: false,
-  });
-  await key("0", "Digit0", "", 3);
-  assert.deepEqual(
-    await evaluate("messages"),
-    [],
-    "moving the palette must not navigate or reorder tabs",
-  );
-  const resizeRect = await paletteCall(
-    `function(){return this.querySelector('#resize').getBoundingClientRect().toJSON();}`,
-  );
-  const beforeResize = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  const rx = resizeRect.x + resizeRect.width / 2,
-    ry = resizeRect.y + resizeRect.height / 2;
-  await send("Input.dispatchMouseEvent", {
-    type: "mousePressed",
-    x: rx,
-    y: ry,
-    button: "left",
-    buttons: 1,
-    clickCount: 1,
-  });
-  await send("Input.dispatchMouseEvent", {
-    type: "mouseMoved",
-    x: rx + 40,
-    y: ry + 40,
-    buttons: 1,
-  });
-  await send("Input.dispatchMouseEvent", {
-    type: "mouseReleased",
-    x: rx + 40,
-    y: ry + 40,
-    button: "left",
-    buttons: 0,
-    clickCount: 1,
-  });
-  const afterResize = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.equal(Math.round(afterResize.width - beforeResize.width), 40);
-  assert.ok(
-    afterResize.height >= beforeResize.height + 39,
-    "corner drag should resize height",
-  );
-  await key("Tab", "Tab", undefined, 8);
-  assert.equal(
-    await paletteCall(
-      `function(){return this.getRootNode().activeElement.id;}`,
-    ),
-    "resize",
-  );
-  for (let index = 0; index < 15; index++)
-    await key("ArrowLeft", "ArrowLeft", undefined, 8);
-  for (let index = 0; index < 15; index++)
-    await key("ArrowUp", "ArrowUp", undefined, 8);
-  const minimumSize = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.equal(Math.round(minimumSize.width), 360);
-  assert.equal(Math.round(minimumSize.height), 220);
-  for (let index = 0; index < 20; index++)
-    await key("ArrowRight", "ArrowRight", undefined, 8);
-  for (let index = 0; index < 20; index++)
-    await key("ArrowDown", "ArrowDown", undefined, 8);
-  const maximumSize = await paletteCall(
-    `function(){return this.getBoundingClientRect().toJSON();}`,
-  );
-  assert.ok(
-    maximumSize.width <= Math.min(1000, viewport.width - 32) + 1 &&
-      maximumSize.height <= Math.min(800, viewport.height - 32) + 1,
-  );
-  // Popup-like viewport changes while an explicit size is active used to feed geometry back into ResizeObserver.
-  for (const dimensions of [
-    { width: 680, height: 560 },
-    { width: 500, height: 350 },
-    viewport,
-  ]) {
+  if (!screenshotOnly) {
+    const initialPosition = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.deepEqual((await liveGlassStyles()).bounds, initialPosition);
+    await key("ArrowRight", "ArrowRight", undefined, 3);
+    const nudgedPosition = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.deepEqual((await liveGlassStyles()).bounds, nudgedPosition);
+    assert.equal(
+      Math.round(nudgedPosition.x - initialPosition.x),
+      16,
+      "Ctrl+Alt+Right should move the palette without moving a tab",
+    );
+    await key("ArrowDown", "ArrowDown", undefined, 11);
+    const largerMove = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.equal(Math.round(largerMove.y - nudgedPosition.y), 64);
+    await key("0", "Digit0", "", 3);
+    const reset = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.equal(Math.round(reset.x), Math.round(initialPosition.x));
+    assert.equal(Math.round(reset.y), Math.round(initialPosition.y));
+    const footerBounds = await paletteCall(
+      `function(){return this.querySelector('footer').getBoundingClientRect().toJSON();}`,
+    );
+    const dragX = footerBounds.x + footerBounds.width / 2,
+      dragY = footerBounds.y + footerBounds.height / 2;
+    await send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: dragX,
+      y: dragY,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: dragX + 35,
+      y: dragY + 30,
+      buttons: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: dragX + 35,
+      y: dragY + 30,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+    });
+    const dragged = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.equal(Math.round(dragged.x - reset.x), 35);
+    assert.equal(Math.round(dragged.y - reset.y), 30);
+    const nextFooter = await paletteCall(
+      `function(){return this.querySelector('footer').getBoundingClientRect().toJSON();}`,
+    );
+    await send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: nextFooter.x + 30,
+      y: nextFooter.y + 15,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: viewport.width - 1,
+      y: viewport.height - 1,
+      buttons: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: viewport.width - 1,
+      y: viewport.height - 1,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+    });
+    const clamped = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.ok(
+      clamped.right <= viewport.width - 15 &&
+        clamped.bottom <= viewport.height - 15,
+      "drag must keep the palette on screen",
+    );
     await send("Emulation.setDeviceMetricsOverride", {
-      ...dimensions,
+      width: 500,
+      height: 350,
       deviceScaleFactor: 1,
       mobile: false,
     });
-    await evaluate("new Promise(resolve=>setTimeout(resolve,70))");
-  }
+    await evaluate("new Promise(resolve=>setTimeout(resolve,50))");
+    const resized = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.ok(
+      resized.x >= 15 &&
+        resized.y >= 15 &&
+        resized.right <= 485 &&
+        resized.bottom <= 335,
+      "resize must keep the moved palette visible",
+    );
+    await send("Emulation.setDeviceMetricsOverride", {
+      ...viewport,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    await key("0", "Digit0", "", 3);
+    assert.deepEqual(
+      await evaluate("messages"),
+      [],
+      "moving the palette must not navigate or reorder tabs",
+    );
+    const resizeRect = await paletteCall(
+      `function(){return this.querySelector('#resize').getBoundingClientRect().toJSON();}`,
+    );
+    const beforeResize = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    const rx = resizeRect.x + resizeRect.width / 2,
+      ry = resizeRect.y + resizeRect.height / 2;
+    await send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: rx,
+      y: ry,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: rx + 40,
+      y: ry + 40,
+      buttons: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: rx + 40,
+      y: ry + 40,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+    });
+    const afterResize = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.equal(Math.round(afterResize.width - beforeResize.width), 40);
+    assert.ok(
+      afterResize.height >= beforeResize.height + 39,
+      "corner drag should resize height",
+    );
+    await key("Tab", "Tab", undefined, 8);
+    assert.equal(
+      await paletteCall(
+        `function(){return this.getRootNode().activeElement.id;}`,
+      ),
+      "resize",
+    );
+    for (let index = 0; index < 15; index++)
+      await key("ArrowLeft", "ArrowLeft", undefined, 8);
+    for (let index = 0; index < 15; index++)
+      await key("ArrowUp", "ArrowUp", undefined, 8);
+    const minimumSize = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.equal(Math.round(minimumSize.width), 360);
+    assert.equal(Math.round(minimumSize.height), 220);
+    for (let index = 0; index < 20; index++)
+      await key("ArrowRight", "ArrowRight", undefined, 8);
+    for (let index = 0; index < 20; index++)
+      await key("ArrowDown", "ArrowDown", undefined, 8);
+    const maximumSize = await paletteCall(
+      `function(){return this.getBoundingClientRect().toJSON();}`,
+    );
+    assert.ok(
+      maximumSize.width <= Math.min(1000, viewport.width - 32) + 1 &&
+        maximumSize.height <= Math.min(800, viewport.height - 32) + 1,
+    );
+    // Popup-like viewport changes while an explicit size is active used to feed geometry back into ResizeObserver.
+    for (const dimensions of [
+      { width: 680, height: 560 },
+      { width: 500, height: 350 },
+      viewport,
+    ]) {
+      await send("Emulation.setDeviceMetricsOverride", {
+        ...dimensions,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+      await evaluate("new Promise(resolve=>setTimeout(resolve,70))");
+    }
 
-  await key("0", "Digit0", "", 3);
+    await key("0", "Digit0", "", 3);
+  } else {
+    // Screenshot capture does not exercise viewport-dependent drag and resize assertions.
+    await key("0", "Digit0", "", 3);
+  }
   await key("Tab", "Tab", undefined, 8);
   await key("Tab", "Tab", undefined, 8);
   await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
@@ -1901,6 +2006,10 @@ try {
     });
     await evaluate(`document.body.innerHTML='<main><small>DEMO WORKSPACE</small><h1>A little more focus.</h1><p>Your page stays right here while you find your next destination.</p><section><article>Reading list<br><span>Ideas worth coming back to</span></article><article>Current project<br><span>One good thing at a time</span></article></section></main>';document.body.style.cssText='margin:0;background:#edf1f7;color:#243048;font:16px system-ui';const style=document.createElement('style');style.textContent='main{max-width:900px;margin:80px auto}small{letter-spacing:.18em;color:#687892}h1{font-size:48px;letter-spacing:-2px;margin:18px 0}p{color:#687892}section{display:flex;gap:20px;margin-top:60px}article{background:#ffffffaa;border:1px solid #dbe2ed;border-radius:18px;padding:28px;width:40%;font-weight:600}article span{display:block;color:#7b879b;font-size:14px;font-weight:400;margin-top:12px}';document.head.append(style);
       globalThis.chrome.runtime.sendMessage=async message=>{if(message.type!=='palette:suggest')return {ok:true};if(message.mode==='commands')return {ok:true,suggestions:commandRows,warnings:[]};return {ok:true,suggestions:(mockTabs||[]).filter(tab=>(tab.title+' '+tab.url).toLowerCase().includes(message.query.toLowerCase())).map(tab=>({...tab,kind:'tab',sources:['tab']})),warnings:[]};};`);
+    if (screenshotMessages)
+      await evaluate(
+        "const copy=['РАБОЧЕЕ ПРОСТРАНСТВО','Немного больше ясности.','Страница остаётся перед вами, пока вы ищете следующий пункт назначения.','Список для чтения','Идеи, к которым хочется вернуться','Текущий проект','По одному хорошему делу за раз'];document.querySelectorAll('main small,main h1,main p,main article,main article span').forEach((node,index)=>node.textContent=copy[index]);",
+      );
     const demoContext = {
       ...context,
       sites: [...BUILTIN_SITES, ...(context.sites || [])],
@@ -2042,6 +2151,9 @@ try {
     "activity.js",
     "activity.css",
     "activity-store.js",
+    "localization.js",
+    "_locales/en/messages.json",
+    "_locales/ru/messages.json",
     "design-tokens.css",
     "page.css",
     "ai-learning/embeddings.js",
@@ -2098,7 +2210,7 @@ try {
   );
   await evaluate("document.querySelector('#add').click()");
   await evaluate(
-    `const row=document.querySelector('.site');row.querySelector('[name=name]').value='My docs';row.querySelector('[name=key]').value='docs';row.querySelector('[name=template]').value='https://docs.example/?q=%s';document.querySelector('[type=submit]').click();`,
+    `const row=document.querySelector('.site');row.querySelector('[name=name]').value='My docs';row.querySelector('[name=key]').value='docs';row.querySelector('[name=template]').value='https://docs.example/?q=%s';document.querySelector('#sites-form [type=submit]').click();`,
   );
   await evaluate("new Promise(resolve=>setTimeout(resolve,20))");
   assert.deepEqual((await evaluate("savedSites"))[0], {
@@ -2107,7 +2219,7 @@ try {
     template: "https://docs.example/?q=%s",
   });
   await evaluate(
-    `document.querySelector('[name=template]').value='javascript:%s';document.querySelector('[type=submit]').click();`,
+    `document.querySelector('[name=template]').value='javascript:%s';document.querySelector('#sites-form [type=submit]').click();`,
   );
   await evaluate("new Promise(resolve=>setTimeout(resolve,20))");
   assert.match(
@@ -2127,7 +2239,7 @@ try {
     source: `globalThis.activityData={
     'activity:entry:first':{time:Date.now()-60000,action:'command',label:'Open Extensions',status:'ok'},
     'activity:entry:second':{time:Date.now(),action:'site',label:'Search Gemini',status:'error'}};
-    globalThis.chrome={storage:{local:{get:async()=>({...activityData}),set:async rows=>Object.assign(activityData,rows),remove:async keys=>keys.forEach(key=>delete activityData[key])},onChanged:{addListener:()=>{}}}};`,
+    globalThis.chrome={i18n:{getUILanguage:()=>"${screenshotLocale}"},storage:{local:{get:async()=>({...activityData}),set:async rows=>Object.assign(activityData,rows),remove:async keys=>keys.forEach(key=>delete activityData[key])},onChanged:{addListener:()=>{}}}};`,
   });
   const activityLoaded = new Promise((resolve) => {
     const listener = (event) => {
@@ -2187,7 +2299,9 @@ try {
     0,
   );
   console.log(
-    "PASS: local notes multiline create/edit/copy/delete and save retry, complete scoped shortcut reference and configured global bindings; contextual action selection/return, provider redirect/cancel, quicklink save/rename/remove, calculator copy and favicon rendering; real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, folder-scoped bookmark save/removal, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.",
+    screenshotOnly
+      ? "Captured English and localized README interface states."
+      : "PASS: local notes multiline create/edit/copy/delete and save retry, complete scoped shortcut reference and configured global bindings; contextual action selection/return, provider redirect/cancel, quicklink save/rename/remove, calculator copy and favicon rendering; real Chrome capture listeners isolated; palette dragging/position keys/clamping, text, Space, arrows, Escape, Enter focus restoration, suggestion selection, stale replies, Tab completion, homepage navigation, live theme changes and font scaling, command mode, Chrome section search, tab ordering, native tab-group marking/create/add/manage, folder-scoped bookmark save/removal, inline provider prompts, prompt recovery, activity-history form, site search, URL editing, modifiers session restoration and real settings-form validation verified.",
   );
 } finally {
   if (server) {
