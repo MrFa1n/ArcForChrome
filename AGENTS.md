@@ -5,4 +5,4 @@
 
 # Commits and releases
 
-For every requested commit in this repository, follow the [Arc release commit skill](.agents/skills/arc-release-commit/SKILL.md). Keep the package and extension versions in sync, update both READMEs, and create a local version tag on the resulting commit.
+For every requested commit in this repository, follow the [Arc release commit skill](.agents/skills/arc-release-commit/SKILL.md). Ordinary commits do not bump versions or receive tags. For a significant release, keep both version fields and both READMEs in sync, then tag the release commit.

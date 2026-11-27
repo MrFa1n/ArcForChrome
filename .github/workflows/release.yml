@@ -1,0 +1,66 @@
+name: GitHub Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Verify release version
+        run: |
+          node --input-type=commonjs <<'NODE'
+          const pkg = require("./package.json");
+          const manifest = require("./extension/manifest.json");
+          const tag = process.env.GITHUB_REF_NAME;
+          if (!/^v[0-9]+\.[0-9]+\.[0-9]+$/.test(tag) ||
+              tag !== `v${pkg.version}` || pkg.version !== manifest.version) {
+            throw new Error(`Release tag ${tag} must match package (${pkg.version}) and manifest (${manifest.version})`);
+          }
+          NODE
+
+      - name: Check extension
+        run: npm run check
+
+      - name: Package tracked extension files
+        run: git archive --format=zip --output="arc-for-chrome-${GITHUB_REF_NAME}.zip" HEAD:extension
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --json isDraft --jq 'select(.isDraft == false) | .isDraft' | grep -qx false; then
+            exit 0
+          fi
+          notes=$(cat <<'MARKDOWN'
+          ## Install · Установка
+
+          1. Download and extract **Arc for Chrome — extension ZIP**.
+          2. Open `chrome://extensions`, turn on **Developer mode**, and choose **Load unpacked**.
+          3. Select the extracted folder containing `manifest.json`.
+
+          Скачайте и распакуйте архив. В `chrome://extensions` включите **Режим разработчика**, нажмите **Загрузить распакованное расширение** и выберите папку с `manifest.json`.
+          MARKDOWN
+          )
+          gh release create "$GITHUB_REF_NAME" "arc-for-chrome-${GITHUB_REF_NAME}.zip#Arc for Chrome — extension ZIP" \
+            --verify-tag --title "Arc for Chrome $GITHUB_REF_NAME" \
+            --generate-notes --notes "$notes"

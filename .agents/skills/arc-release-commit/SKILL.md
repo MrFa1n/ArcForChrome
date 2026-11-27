@@ -1,12 +1,12 @@
 ---
 name: arc-release-commit
-description: Prepare a versioned Arc for Chrome commit with matching English and Russian READMEs and a local Git tag. Use for every requested commit in this repository, including «закоммить», «коммить», «тегни», and version bumps.
+description: Apply Arc for Chrome's commit and release policy when asked to commit, bump a version, tag, or prepare a release. Use for every requested repository commit, including «закоммить».
 ---
 
-# Arc for Chrome release commit
+# Arc for Chrome commits and releases
 
-1. Inspect the worktree, index, HEAD and local tags. Determine which files belong to the requested change. If the feature is already committed and still untagged, prepare a follow-up release commit. Keep unrelated staged and untracked files outside the commit.
-2. Use the requested version if provided. Otherwise increment the patch of the current release and choose a version whose `vX.Y.Z` tag is unused. Set the same version in `package.json` and `extension/manifest.json`.
-3. Update `README.md` and `README.ru.md` together. Describe the actual user-facing changes and how to use them. If the change has no user-facing effect, update the current version reference in both files. Format the touched Markdown and JSON with Prettier.
-4. Check the release diff for whitespace errors and verify that both version fields match. Commit only the release paths. Respect any explicit exclusions and omit AI attribution from commit messages.
-5. Create the local tag `vX.Y.Z` on the new commit. Verify the tag points at that commit and report the version, tag and short hash. Push only when requested.
+1. Inspect HEAD, the worktree, the index and local tags. Commit only the requested files and omit AI attribution. Keep unrelated staged and untracked changes outside the commit.
+2. For ordinary commits, including small fixes, copy changes, refactors and CI maintenance, leave versions and tags alone. Update both READMEs if instructions or user-facing behavior changed.
+3. Prepare a release when expressly requested or when a requested commit completes a significant feature, breaking change, or critical fix. A series of small changes can ship together as an intentional release. If significance is unclear, make an ordinary commit. Use the requested version, or choose an unused SemVer version appropriate to the changes. Synchronize `package.json` and `extension/manifest.json`, and update the current version and relevant usage notes in both READMEs.
+4. Check the scoped diff and, for a release, verify the matching version fields. Commit the intended paths and create the local tag `vX.Y.Z` on the release commit only. Verify the tag target.
+5. Push only when requested. Pushing a version tag to GitHub triggers the release workflow, which checks the extension, packages the ZIP and publishes a release with generated notes.
