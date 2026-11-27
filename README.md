@@ -306,6 +306,8 @@ On a web page, press **Option+Shift+V** on macOS or **Alt+Shift+V** on Windows o
 
 - **j / k** scroll down or up, and **h / l** scroll sideways.
 - **d / u** scroll half a screen down or up, **Home** or **gg** jumps to the top, and **End** or **Shift+G** jumps to the bottom.
+- **[ / ]**, **Page Up / Page Down**, or **Ctrl+B / Ctrl+F** scroll one screen. **Ctrl+U / Ctrl+D** scroll half a screen. Chrome or the operating system may intercept some Ctrl combinations.
+- **{ / }** jump to the previous or next heading. **0 / $** jump to the left or right edge of horizontally scrollable content.
 - **Esc** or the same shortcut exits. Leaving the page also exits. Typing in editable fields keeps normal behavior. Chrome restricts script injection on protected pages.
 
 ### Control tabs, windows and profiles
