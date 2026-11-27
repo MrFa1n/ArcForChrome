@@ -12,7 +12,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-34A853?style=flat-square" alt="MIT license"></a>
 </p>
 
-**Current version: 0.24.2.** Adds more Chrome tab and window commands and optional Vim-style page navigation with an entry shortcut, full-screen scrolling and heading jumps.
+**Current version: 0.24.3.** Adds more Chrome tab and window commands and optional Vim-style page navigation with an entry shortcut, full-screen scrolling and heading jumps.
 
 <p align="center">
   <a href="#see-it-in-action">Demo</a> · <a href="#get-started">Install</a> · <a href="#make-it-muscle-memory">Shortcuts</a> · <a href="#built-for-your-browser">Privacy</a> · <a href="#build-with-us">Contribute</a>
