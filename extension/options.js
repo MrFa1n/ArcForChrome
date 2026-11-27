@@ -1,3 +1,4 @@
+import { activitySettings, saveActivitySettings } from "./activity-store.js";
 import {
   availableLanguages,
   interfaceLocale,
@@ -161,5 +162,53 @@ languageForm.addEventListener("submit", async (event) => {
       "Cannot save the interface language.",
     );
     languageSave.disabled = false;
+  }
+});
+
+const spotlightForm = document.querySelector("#spotlight-preferences");
+const spotlightStatus = document.querySelector("#spotlight-preferences-status");
+const spotlightSave = spotlightForm.querySelector("button");
+try {
+  const [activity, appearance] = await Promise.all([
+    activitySettings(chrome),
+    chrome.storage.local.get("dense-glass"),
+  ]);
+  spotlightForm.elements.learn.checked = activity.learn;
+  spotlightForm.elements.dense.checked = appearance["dense-glass"] === true;
+  spotlightForm.elements.learn.disabled = false;
+  spotlightForm.elements.dense.disabled = false;
+  spotlightSave.disabled = false;
+} catch (error) {
+  spotlightStatus.textContent = systemText(error.message);
+}
+spotlightForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  spotlightSave.disabled = true;
+  try {
+    const activity = await activitySettings(chrome);
+    if (activity.learn !== spotlightForm.elements.learn.checked)
+      await saveActivitySettings(chrome, {
+        ...activity,
+        learn: spotlightForm.elements.learn.checked,
+      });
+    await chrome.storage.local.set({
+      "dense-glass": spotlightForm.elements.dense.checked,
+    });
+    spotlightStatus.textContent = t("Saved");
+  } catch (error) {
+    spotlightStatus.textContent = systemText(error.message);
+  } finally {
+    spotlightSave.disabled = false;
+  }
+});
+
+document.querySelector("#replay-tour").addEventListener("click", async () => {
+  try {
+    await chrome.storage.local.remove("spotlight-tour-complete");
+    spotlightStatus.textContent = t(
+      "The introduction will appear the next time you open Spotlight.",
+    );
+  } catch (error) {
+    spotlightStatus.textContent = systemText(error.message);
   }
 });

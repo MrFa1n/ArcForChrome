@@ -20,7 +20,10 @@ import {
   manageGroupSuggestions,
   groupActionSuggestions,
   changeGroup,
+  groupMetadata,
+  decorateGroup,
 } from "./tab-groups.js";
+import { undoTabs, withTabUndo } from "./tab-undo.js";
 import { recordActivity } from "./activity-store.js";
 import { BUILTIN_SITES } from "./search-providers.js";
 import {
@@ -53,17 +56,23 @@ import {
 export async function openPalette(api, mount, mode = "search") {
   const [tab] = await api.tabs.query({ active: true, currentWindow: true });
   if (!tab) return;
-  const [tabs, sites, launcher, designTokens, locale] = await Promise.all([
-    api.tabs.query({ windowId: tab.windowId }),
-    loadSites(api, tab.windowId),
-    launcherContext(api),
-    loadDesignTokens(),
-    interfaceLocale(api),
-  ]);
+  const [tabs, sites, launcher, designTokens, appearance, locale] =
+    await Promise.all([
+      api.tabs.query({ windowId: tab.windowId }),
+      loadSites(api, tab.windowId),
+      launcherContext(api),
+      loadDesignTokens(),
+      api.storage?.local
+        ?.get(["dense-glass", "spotlight-tour-complete"])
+        .catch(() => ({})),
+      interfaceLocale(api),
+    ]);
   const context = {
     ...launcher,
     locale,
     designTokens,
+    denseGlass: appearance?.["dense-glass"],
+    showTour: Boolean(appearance && !appearance["spotlight-tour-complete"]),
     mode,
     sourceUrl: tab.url || "",
     sourceTabId: tab.id,
@@ -382,11 +391,65 @@ async function performAction(api, message, context, publish, onAiLaunch) {
     }
     throw new Error("Unknown search action");
   }
+  if (message.type === "palette:finish-tour") {
+    await api.storage.local.set({ "spotlight-tour-complete": true });
+    return;
+  }
   if (message.type === "palette:icons")
     return { images: await faviconImages(api, message.urls) };
   if (message.type === "palette:suggest") {
     if (typeof message.query !== "string" || message.query.length > 8192)
       throw new Error("Invalid query");
+    if (message.mode === "windows") {
+      const tabs = (await api.tabs.query({})).filter(
+        (tab) => Boolean(tab.incognito) === Boolean(context.incognito),
+      );
+      const windows = [...new Set(tabs.map((tab) => tab.windowId))].sort(
+        (a, b) => a - b,
+      );
+      const terms = message.query.trim().toLocaleLowerCase().split(/\s+/);
+      const metadata = new Map(
+        await Promise.all(
+          windows.map(async (id) => [id, await groupMetadata(api, id)]),
+        ),
+      );
+      return {
+        suggestions: tabs
+          .filter(
+            (tab) => tab.id !== (context.newTab ? context.tabId : undefined),
+          )
+          .filter((tab) =>
+            terms.every((term) =>
+              `${tab.title || ""} ${tab.url || ""}`
+                .toLocaleLowerCase()
+                .includes(term),
+            ),
+          )
+          .sort(
+            (a, b) =>
+              Number(b.windowId === context.windowId) -
+                Number(a.windowId === context.windowId) ||
+              (b.lastAccessed || 0) - (a.lastAccessed || 0),
+          )
+          .slice(0, 30)
+          .map((tab) =>
+            decorateGroup(
+              {
+                kind: "tab",
+                id: tab.id,
+                title: tab.title,
+                url: tab.url,
+                sources: ["tab"],
+                windowNumber: windows.indexOf(tab.windowId) + 1,
+              },
+              tab.groupId,
+              metadata.get(tab.windowId),
+            ),
+          ),
+        domains: [],
+        warnings: [],
+      };
+    }
     if (message.mode === "notes")
       return {
         suggestions: await noteSuggestions(api, message.query),
@@ -718,19 +781,39 @@ async function performAction(api, message, context, publish, onAiLaunch) {
   }
   if (message.type === "palette:bookmark")
     return changeBookmarks(api, context.windowId, message);
-  if (message.type === "palette:group")
-    return changeGroup(api, context.windowId, message);
+  if (message.type === "palette:undo")
+    return undoTabs(api, context.windowId, message.undoKey);
+  if (message.type === "palette:group") {
+    const run = () => changeGroup(api, context.windowId, message);
+    return message.action === "add" && Array.isArray(message.tabIds)
+      ? withTabUndo(api, context.windowId, "group", message.tabIds, run)
+      : run();
+  }
   if (message.type === "palette:move") {
-    await moveTab(api, context.windowId, message);
-    return { suggestions: await orderSuggestions(api, context.windowId, "") };
+    return withTabUndo(
+      api,
+      context.windowId,
+      "move",
+      [message.tabId],
+      async () => {
+        await moveTab(api, context.windowId, message);
+        return {
+          suggestions: await orderSuggestions(api, context.windowId, ""),
+        };
+      },
+    );
   }
   if (message.type === "palette:activate") {
     if (!Number.isInteger(message.tabId)) throw new Error("Invalid tab");
     const tab = await api.tabs.get(message.tabId);
-    if (tab.windowId !== context.windowId)
+    if (
+      tab.windowId !== context.windowId &&
+      (message.allWindows !== true ||
+        Boolean(tab.incognito) !== Boolean(context.incognito))
+    )
       throw new Error("Tab is outside this window");
     await api.tabs.update(tab.id, { active: true });
-    await api.windows.update(context.windowId, { focused: true });
+    await api.windows.update(tab.windowId, { focused: true });
     await rememberTabChoice(api, message.selectionQuery, tab.url);
     if (tab.id !== context.tabId) await removeSearchTab(api, context);
     return;
@@ -852,9 +935,12 @@ export async function paletteAction(api, message, sender, publish) {
   };
   const logged =
     !(message.type === "palette:note" && message.operation === "get") &&
-    !["palette:suggest", "palette:icons", "palette:remember-site"].includes(
-      message.type,
-    ) &&
+    ![
+      "palette:suggest",
+      "palette:icons",
+      "palette:remember-site",
+      "palette:finish-tour",
+    ].includes(message.type) &&
     message.command !== "activity";
   try {
     const result = await performAction(api, message, context, publish, () => {

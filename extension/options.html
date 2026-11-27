@@ -53,6 +53,17 @@
       </form>
     </section>
     <section>
+      <h2 data-message="Spotlight preferences">Spotlight preferences</h2>
+      <form id="spotlight-preferences">
+        <p><label><input type="checkbox" name="dense" disabled> <span data-message="Use denser glass">Use denser glass</span></label></p>
+        <p><label><input type="checkbox" name="learn" disabled> <span data-message="Learn from my selections">Learn from my selections</span></label></p>
+        <p data-message="Learning uses local activity history to improve suggestions.">Learning uses local activity history to improve suggestions.</p>
+        <button type="submit" disabled data-message="Save changes">Save changes</button>
+        <button type="button" id="replay-tour" data-message="Show introduction again">Show introduction again</button>
+        <p id="spotlight-preferences-status" role="status"></p>
+      </form>
+    </section>
+    <section>
       <h2 data-message="Activity history">Activity history</h2>
       <p data-message="Review Spotlight actions, set retention/count limits, disable recording or clear history. Query text is excluded by default.">Review Spotlight actions, set retention/count limits, disable recording or clear history. Query text is excluded by default.</p>
       <button id="activity" data-message="Open activity history">Open activity history</button>

@@ -23,11 +23,14 @@ async function open() {
   const windowId = newTab ? tab?.windowId : Number(params.get("window"));
   if (!tab || tab.windowId !== windowId)
     throw new Error("Source tab is unavailable");
-  const [tabs, sites, launcher, designTokens] = await Promise.all([
+  const [tabs, sites, launcher, designTokens, appearance] = await Promise.all([
     chrome.tabs.query({ windowId }),
     loadSites(chrome, windowId),
     launcherContext(chrome),
     loadDesignTokens(),
+    chrome.storage?.local
+      ?.get(["dense-glass", "spotlight-tour-complete"])
+      .catch(() => ({})),
   ]);
   const openTabs = tabs.filter((row) => !newTab || row.id !== tab.id);
   const actionTabId = newTab
@@ -43,6 +46,8 @@ async function open() {
     ...launcher,
     locale,
     designTokens,
+    denseGlass: appearance?.["dense-glass"],
+    showTour: Boolean(appearance && !appearance["spotlight-tour-complete"]),
     actionPopup,
     newTab,
     sites,

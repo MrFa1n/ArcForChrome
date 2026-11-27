@@ -72,6 +72,8 @@ export function registerSearch(api, mount) {
         "palette:restore",
         "palette:remember-site",
         "palette:move",
+        "palette:undo",
+        "palette:finish-tour",
         "palette:recover",
         "palette:group",
         "palette:bookmark",

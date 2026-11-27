@@ -290,6 +290,16 @@ Saving checks the chosen folder and skips existing URLs without overwriting thei
 
 Root/managed destinations cannot be modified. Web pages and known Chrome sections are supported; creating folders is outside this mode. Native bookmark changes can sync through Chrome. No new permission: the existing bookmarks grant now also supports these explicit edits. If a browser intercepts a chord, use the prefix or commands.
 
+When you first open Spotlight, you can try a short interactive introduction. Practice finding a tab, opening commands and using `/all`. To replay it, choose **Search settings → Spotlight preferences → Show introduction again** and reopen Spotlight.
+
+### Search across windows and undo tab changes
+
+Type **`/all`** in ordinary Search to find open tabs across windows in the same browsing context. The result shows the window and, when applicable, its group. Press Enter to switch to it. Ordinary Search keeps its current window behavior.
+
+After moving a tab in Spotlight or adding tabs to an existing group, use the **Undo** button in the palette. The latest action can be undone for up to a minute while the background worker retains it and the tab strip stays unchanged. If an original group has disappeared, undo is unavailable.
+
+In **Search settings → Spotlight preferences**, enable **Use denser glass** for an opaque palette, or change **Learn from my selections**. Learning requires activity recording to be enabled.
+
 ### Live glass in both themes
 
 Spotlight follows Chrome’s effective light or dark appearance. Light mode uses warm pearl and dark mode uses graphite. On ordinary web pages, Chrome blurs the page inside the palette’s outline. The translucent panel and result list let the page’s colors show through as you move the palette; the search field and selected row use denser fills to keep text readable.

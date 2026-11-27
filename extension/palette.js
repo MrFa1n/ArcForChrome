@@ -109,8 +109,12 @@ export function mountPalette(tabs, floating = false, context = {}) {
   shell.setAttribute("aria-label", t("Arc command bar"));
   shell.style.cssText =
     "border:0;padding:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;overflow:hidden;";
+  const denseGlass = context.denseGlass === true;
   const liveGlass =
-    !actionPopup && !newTab && CSS.supports("backdrop-filter", "blur(1px)")
+    !denseGlass &&
+    !actionPopup &&
+    !newTab &&
+    CSS.supports("backdrop-filter", "blur(1px)")
       ? document.createElement("div")
       : null;
   const backdropStyle = document.createElement("style");
@@ -182,6 +186,45 @@ export function mountPalette(tabs, floating = false, context = {}) {
       height:min(420px,calc(100vh - 32px));max-height:calc(100vh - 32px);margin:auto;background:var(--arc-lens,none) var(--bg);color:var(--fg);box-shadow:var(--arc-panel-shadow,0 20px 64px #0006);backdrop-filter:var(--arc-frost,none);
       display:flex;flex-direction:column;
       font:.875rem/1.45 var(--arc-font,system-ui);overflow:hidden}
+      dialog[data-dense-glass]{--bg:var(--arc-surface,Canvas);backdrop-filter:none}
+      dialog[data-dense-glass] input,dialog[data-dense-glass] #results,dialog[data-dense-glass] #spotlight-tour,dialog[data-dense-glass] #tour-practice{background:var(--arc-field,Canvas)}
+      #undo-tab-action{flex-shrink:0;align-self:start;border:1px solid var(--line);border-radius:var(--arc-radius-control,.625rem);padding:4px 8px;color:var(--fg);background:var(--arc-field,Canvas)}
+      dialog[data-tour]>:not(#spotlight-tour){display:none}
+      #spotlight-tour{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;padding:clamp(.875rem,4vw,1.75rem);border:1px solid var(--arc-divider,var(--line));border-radius:var(--arc-radius-panel,1.375rem);background:var(--arc-lens,none) var(--arc-live-results,var(--arc-field,Canvas));box-shadow:var(--arc-control-shadow,none)}
+      #tour-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-block-end:.75rem}
+      #tour-mark{display:grid;place-items:center;flex:none;width:2.75rem;height:2.75rem;border-radius:.95rem;border:1px solid var(--arc-divider,var(--line));background:var(--arc-lens,none) var(--arc-field,Canvas);box-shadow:var(--arc-control-shadow,none),0 6px 14px rgb(0 0 0 / 12%);font-size:1.3rem;font-weight:600}
+      #spotlight-tour h2{font-size:clamp(1.3rem,5vw,2rem);line-height:1.14;letter-spacing:-.035em;margin:0 0 .4rem}
+      #spotlight-tour p{margin:0}
+      #tour-description{max-inline-size:42ch;color:var(--muted);line-height:1.5}
+      #tour-progress{display:grid;gap:.4rem;color:var(--muted);font-size:.75rem;text-align:end;white-space:nowrap}
+      #tour-track{display:flex;gap:3px;justify-content:flex-end}
+      #tour-track span{inline-size:clamp(.5rem,3vw,1.125rem);block-size:3px;background:var(--line);border-radius:999px}
+      #tour-track [data-reached]{background:var(--arc-focus,Highlight)}
+      #tour-practice{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-block:.75rem .25rem;padding:.55rem;border:1px solid var(--arc-divider,var(--line));border-radius:var(--arc-radius-results,1rem);background:var(--arc-live-field,var(--arc-field,Canvas))}
+      #spotlight-tour input{flex:1 1 9rem;min-inline-size:0;font-size:1rem;margin:0;padding:.45rem .7rem}
+      #tour-feedback{flex-basis:100%;font-size:.8rem;color:var(--arc-danger,CanvasText)}
+      #tour-feedback:empty{display:none}
+      #tour-controls{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-block-start:auto;padding-block-start:.75rem}
+      #spotlight-tour button{border:1px solid var(--arc-divider,var(--line));background:var(--arc-field,Canvas);border-radius:var(--arc-radius-pill,999px);padding:.42rem .8rem}
+      #spotlight-tour button:hover{box-shadow:var(--arc-control-shadow,none)}
+      #spotlight-tour button[data-primary]{background:var(--arc-focus,Highlight);color:var(--arc-focus-text,HighlightText)}
+      #tour-controls button[data-primary]{margin-inline-start:auto}
+      #spotlight-tour{--tour-focus:#43328b}
+      @media(prefers-color-scheme:dark){
+        #spotlight-tour{--tour-focus:#d1c5ff}
+      }
+      #spotlight-tour :is(button,input):focus-visible{outline:2px solid var(--tour-focus);outline-offset:3px}
+      @media(prefers-contrast:more){
+        #spotlight-tour{--tour-focus:CanvasText}
+      }
+      @media(forced-colors:active){
+        #spotlight-tour{--tour-focus:Highlight}
+      }
+      @media(prefers-reduced-motion:no-preference){
+        #spotlight-tour h2,#tour-practice{animation:tour-reveal 180ms ease-out both}
+        @keyframes tour-reveal{from{opacity:0;transform:translateY(4px)}}
+      }
+      #search-scope{font-size:.75rem;color:var(--muted);padding-inline:var(--inset)}
       dialog[data-live-glass]{--bg:var(--arc-live-glass,var(--arc-glass,Canvas));backdrop-filter:none}
       dialog[data-live-glass] input{background:var(--arc-live-field,var(--arc-field,Canvas))}
       dialog[data-live-glass] #results{background:var(--arc-live-results,var(--arc-field,Canvas))}
@@ -355,8 +398,47 @@ export function mountPalette(tabs, floating = false, context = {}) {
       "Drag to move · Ctrl+Alt+arrows move · Shift for larger steps · Ctrl+Alt+0 reset",
     );
     footer.id = "hints";
-    input.setAttribute("aria-describedby", "hints");
-    dialog.append(input, noteBody, results, error, footer);
+    input.setAttribute("aria-describedby", "search-scope hints");
+    const scopeLabel = document.createElement("div");
+    scopeLabel.id = "search-scope";
+    const undoButton = document.createElement("button");
+    undoButton.type = "button";
+    undoButton.id = "undo-tab-action";
+    undoButton.hidden = true;
+    let undoKey;
+    function offerUndo(key, label) {
+      undoKey = key;
+      undoButton.hidden = !key;
+      undoButton.textContent = label;
+    }
+    undoButton.addEventListener("click", async () => {
+      undoButton.disabled = true;
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: "palette:undo",
+          undoKey,
+        });
+        if (!response?.ok)
+          throw new Error(response?.error || t("Undo is no longer available"));
+        updateSuggestions();
+        error.textContent = t("Action undone");
+      } catch (failure) {
+        error.textContent = systemText(failure.message);
+      } finally {
+        offerUndo(null, "");
+        undoButton.disabled = false;
+        input.focus();
+      }
+    });
+    dialog.append(
+      scopeLabel,
+      input,
+      noteBody,
+      results,
+      error,
+      undoButton,
+      footer,
+    );
     if (!actionPopup) dialog.append(resizeHandle);
     root.append(dialog);
     document.documentElement.append(host);
@@ -1257,7 +1339,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
       markedTabs.clear();
       groupTargetIds = [];
       if (message.action === "switch") close();
-      else setMode("search");
+      else {
+        setMode("search");
+        offerUndo(response.undoKey, t("Added to group · Undo"));
+      }
     }
     function setMode(
       next,
@@ -1272,8 +1357,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       if (
         mode === "search" &&
-        !["search", "edit"].includes(next) &&
-        !">@<?$#*:".includes(input.value[0] || "\0")
+        !["search", "edit", "windows"].includes(next) &&
+        !">@<?$#*:/".includes(input.value[0] || "\0")
       )
         lastSearchQuery = input.value;
       orderTabId = next === "order" ? tabId : undefined;
@@ -1388,6 +1473,13 @@ export function mountPalette(tabs, floating = false, context = {}) {
         let choice = choices[selected];
         let fromActions = false;
         if (!choice) return;
+        if (selectionChanged) {
+          selectionChanged = false;
+          error.textContent = t(
+            "Selection changed. Check the highlighted result.",
+          );
+          return;
+        }
         if (choice.kind === "result-action") {
           if (!["open", "new", "background"].includes(choice.actionId)) {
             await runAction(choice.actionId);
@@ -1723,6 +1815,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           message = {
             type: "palette:activate",
             tabId: choice.id,
+            ...(mode === "windows" ? { allWindows: true } : {}),
             ...(mode === "search" ? { selectionQuery: input.value } : {}),
           };
         else
@@ -1743,6 +1836,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
             })
             .catch(() => {});
         if (response.copyText !== undefined) await copyText(response.copyText);
+        if (message.type === "palette:move" && response.undoKey) {
+          setMode("order", "", undefined, message.tabId);
+          offerUndo(response.undoKey, t("Tab moved · Undo"));
+          return;
+        }
         close();
       } catch (failure) {
         error.textContent = systemText(failure.message);
@@ -1865,6 +1963,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       } else input.removeAttribute("aria-activedescendant");
       paintFooter();
     }
+    let selectionChanged = false;
     function render(preferredId) {
       const oldPositions = new Map(
         [...results.children].map((row) => [
@@ -1874,6 +1973,20 @@ export function mountPalette(tabs, floating = false, context = {}) {
       );
       const previous = choices[selected];
       const previousKey = choiceKey(previous);
+      scopeLabel.textContent = mode.startsWith("site:")
+        ? sites.find((site) => `site:${site.key}` === mode)?.name ||
+          t("Site search")
+        : t(
+            {
+              search: input.value
+                ? "Search"
+                : "Search · Tab opens Commands · /all searches all windows",
+              commands: "Commands",
+              notes: "Notes",
+              windows: "All windows",
+            }[mode] || "",
+          );
+      scopeLabel.hidden = !scopeLabel.textContent;
       const homepage = mode === "search" ? domains[0] : undefined;
       choices = [
         ...suggestions,
@@ -1900,7 +2013,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         mode.startsWith("group")
       )
         choices = suggestions;
-      else if (mode === "paste-url") choices = suggestions;
+      else if (["paste-url", "windows"].includes(mode)) choices = suggestions;
       else if (mode.startsWith("site:"))
         choices = query
           ? [
@@ -2131,6 +2244,16 @@ export function mountPalette(tabs, floating = false, context = {}) {
         selectionMoved = true;
         returnKey = null;
       }
+      if (selectionMoved && previousKey && retained < 0 && choices.length) {
+        selectionChanged = true;
+        error.textContent = t(
+          "Selection changed. Check the highlighted result.",
+        );
+      } else if (selectionChanged && choices.length) {
+        error.textContent = t(
+          "Selection changed. Check the highlighted result.",
+        );
+      }
       const preferred =
         preferredId === undefined
           ? -1
@@ -2195,7 +2318,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
           title.textContent = resultTitle(choice);
           const url = document.createElement("span");
           url.className = "url";
-          const detail = resultDetail(choice);
+          const detail = choice.windowNumber
+            ? `${t("Window {0}", choice.windowNumber)} · ${resultDetail(choice)}`
+            : resultDetail(choice);
           url.textContent =
             choice.kind === "command" && !choice.description
               ? ""
@@ -2286,6 +2411,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           }
           row.addEventListener("click", (event) => {
             if (busy) return;
+            selectionChanged = false;
             selected = index;
             selectionMoved = true;
             activate(event);
@@ -2354,6 +2480,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
           return;
         }
       }
+      if (mode === "search" && /^\/all(?:\s|$)/iu.test(input.value)) {
+        setMode("windows", input.value.slice(4).trimStart());
+        return;
+      }
       const prefixMode = {
         ">": "commands",
         "@": "order",
@@ -2397,6 +2527,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       const terms = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
       suggestions =
         [
+          "windows",
           "commands",
           "closed",
           "order",
@@ -2434,6 +2565,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       choices = [];
       selected = 0;
       selectionMoved = false;
+      selectionChanged = false;
       error.textContent = "";
       render(preferredId);
       if (mode === "actions") {
@@ -2590,6 +2722,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             query,
             scope,
             ...([
+              "windows",
               "commands",
               "closed",
               "order",
@@ -2680,6 +2813,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
               snapshot?.error || t("Could not refresh tab order"),
             );
           setMode("order", filter, undefined, next.tabId, true);
+          offerUndo(response.undoKey, t("Tab moved · Undo"));
           const terms = filter.toLocaleLowerCase().split(/\s+/).filter(Boolean);
           suggestions = snapshot.suggestions.filter((row) =>
             terms.every((term) =>
@@ -2719,7 +2853,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         updateSuggestions();
         return;
       }
-      if (mode === "search" && !">@<?$#*:".includes(input.value[0] || "\0"))
+      if (mode === "search" && !">@<?$#*:/".includes(input.value[0] || "\0"))
         lastSearchQuery = input.value;
       updateSuggestions();
     });
@@ -2752,6 +2886,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         event.preventDefault();
         event.stopPropagation();
         if (mode === "actions") leaveActions();
+        else if (mode === "windows") setMode("search");
         else if (mode === "note-editor") {
           noteDraft = null;
           noteDirty = false;
@@ -2778,6 +2913,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
           setMode("group-actions");
         else if (mode === "group-actions") setMode("group-manage");
         else if (mode === "order" && orderTabId !== undefined) setMode("order");
+        else if (mode.startsWith("site:")) setMode("search", lastSearchQuery);
         else if (mode !== "search") setMode("search");
         else if (markedTabs.size) {
           markedTabs.clear();
@@ -2816,6 +2952,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
             noteBody,
             footer.querySelector("#save-note"),
             footer.querySelector("#actions"),
+            ...(undoButton.hidden ? [] : [undoButton]),
             ...(actionPopup ? [] : [resizeHandle]),
           ];
           controls[
@@ -2961,12 +3098,13 @@ export function mountPalette(tabs, floating = false, context = {}) {
       ) {
         event.preventDefault();
         selectionMoved = true;
+        selectionChanged = false;
         selected =
           (selected + (event.key === "ArrowDown" ? 1 : -1) + choices.length) %
           choices.length;
         highlight();
       }
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && event.target !== undoButton) {
         event.preventDefault();
         if (event.target === footer.querySelector("#actions")) openActions();
         else activate(event);
@@ -3067,10 +3205,208 @@ export function mountPalette(tabs, floating = false, context = {}) {
     dialog.addEventListener("click", (event) => {
       if (event.target === dialog) close();
     });
+    function startTour() {
+      // Use practice controls so the tutorial cannot run a real browser action.
+      const steps = [
+        {
+          title: t("Welcome to Spotlight"),
+          description: t(
+            "Find tabs, run commands, and search websites from one panel. Try three short exercises using your keyboard or mouse.",
+          ),
+        },
+        {
+          title: t("Find an open tab"),
+          description: t(
+            "Type Atlas, then press Enter or choose Project Atlas. This is a practice tab.",
+          ),
+          hint: "Atlas",
+          label: t("Practice search"),
+          result: t("Project Atlas"),
+          matches: (value) => value.trim().toLowerCase().includes("atlas"),
+        },
+        {
+          title: t("Open the command list"),
+          description: t(
+            "Press Tab with the practice search empty, or choose Show commands. In Spotlight, this opens the browser command list.",
+          ),
+          hint: t("Leave the field empty"),
+          label: t("Practice commands"),
+          result: t("Show commands"),
+        },
+        {
+          title: t("Search all windows"),
+          description: t(
+            "Type /all and press Enter to try All windows mode. Use it when you remember the tab but not which window it is in.",
+          ),
+          hint: "/all",
+          label: t("Practice window search"),
+          result: t("Try /all"),
+          matches: (value) => value.trim().toLowerCase() === "/all",
+          fillOnClick: true,
+        },
+        {
+          title: t("Ready to search"),
+          description: t(
+            "Use the arrow keys to pick a result, Enter to open it, and Escape to return. You can show this introduction again in Search settings.",
+          ),
+        },
+      ];
+      let index = 0;
+      const tour = document.createElement("section");
+      tour.id = "spotlight-tour";
+      tour.setAttribute("aria-labelledby", "tour-title");
+      const mainControls = [...dialog.children];
+      for (const control of mainControls) control.inert = true;
+      dialog.dataset.tour = "";
+      dialog.append(tour);
+
+      function finish() {
+        delete dialog.dataset.tour;
+        tour.remove();
+        for (const control of mainControls) control.inert = false;
+        setMode(mode, mode === "edit" ? context.sourceUrl || "" : "");
+        chrome.runtime
+          .sendMessage({ type: "palette:finish-tour" })
+          .then((response) => {
+            if (!response?.ok)
+              error.textContent = t("Could not save introduction progress.");
+          })
+          .catch(() => {
+            error.textContent = t("Could not save introduction progress.");
+          });
+      }
+
+      function renderStep() {
+        const step = steps[index];
+        const progress = document.createElement("p");
+        progress.id = "tour-progress";
+        progress.textContent = t("Step {0} of {1}", index + 1, steps.length);
+        const heading = document.createElement("h2");
+        heading.id = "tour-title";
+        heading.textContent = step.title;
+        const description = document.createElement("p");
+        description.id = "tour-description";
+        description.textContent = step.description;
+        const controls = document.createElement("div");
+        controls.id = "tour-controls";
+        function button(label, action, primary = false) {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.textContent = label;
+          if (primary) item.dataset.primary = "";
+          item.addEventListener("click", action);
+          return item;
+        }
+        const advance = () => {
+          if (index === steps.length - 1) finish();
+          else {
+            index++;
+            renderStep();
+          }
+        };
+        const header = document.createElement("div");
+        header.id = "tour-header";
+        const mark = document.createElement("span");
+        mark.id = "tour-mark";
+        mark.setAttribute("aria-hidden", "true");
+        mark.textContent = ["✦", "⌕", "⌘", "▣", "✓"][index];
+        const track = document.createElement("span");
+        track.id = "tour-track";
+        track.setAttribute("aria-hidden", "true");
+        for (const [position] of steps.entries()) {
+          const segment = document.createElement("span");
+          segment.toggleAttribute("data-reached", position <= index);
+          track.append(segment);
+        }
+        progress.append(track);
+        header.append(mark, progress);
+        tour.replaceChildren(header, heading, description);
+        if (step.result) {
+          const practice = document.createElement("input");
+          practice.placeholder = step.hint;
+          practice.setAttribute("aria-label", step.label);
+          practice.setAttribute("aria-describedby", "tour-description");
+          const feedback = document.createElement("p");
+          feedback.id = "tour-feedback";
+          feedback.setAttribute("role", "status");
+          const attempt = () => {
+            if (!step.matches || step.matches(practice.value)) advance();
+            else feedback.textContent = t("Try typing {0}.", step.hint);
+          };
+          const result = button(
+            step.result,
+            () => {
+              if (step.fillOnClick) practice.value = step.hint;
+              attempt();
+            },
+            true,
+          );
+          if (step.matches && !step.fillOnClick) {
+            result.hidden = true;
+            practice.addEventListener("input", () => {
+              feedback.textContent = "";
+              result.hidden = !step.matches(practice.value);
+            });
+          }
+          practice.addEventListener("keydown", (event) => {
+            if (event.isComposing) return;
+            if (
+              event.key === "Enter" ||
+              (event.key === "Tab" &&
+                !event.shiftKey &&
+                !practice.value &&
+                !step.matches)
+            ) {
+              event.preventDefault();
+              attempt();
+            } else if (event.key === "ArrowDown" && !result.hidden) {
+              event.preventDefault();
+              result.focus();
+            }
+          });
+          const practiceCard = document.createElement("div");
+          practiceCard.id = "tour-practice";
+          practiceCard.append(practice, result, feedback);
+          tour.append(practiceCard);
+        }
+        if (index > 0)
+          controls.append(
+            button(t("Back"), () => {
+              index--;
+              renderStep();
+            }),
+          );
+        controls.append(button(t("Skip introduction"), finish));
+        if (!step.result)
+          controls.append(
+            button(
+              index === 0 ? t("Start practice") : t("Open Spotlight"),
+              advance,
+              true,
+            ),
+          );
+        tour.append(controls);
+        const firstControl = tour.querySelector(
+          "input, #tour-controls [data-primary]",
+        );
+        firstControl.setAttribute("aria-describedby", "tour-description");
+        firstControl.focus();
+      }
+      tour.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+        if (event.key === "Escape") {
+          event.preventDefault();
+          finish();
+        }
+      });
+      renderStep();
+    }
     if (liveGlass) dialog.dataset.liveGlass = "";
+    if (denseGlass) dialog.dataset.denseGlass = "";
     dialog.showModal();
     syncGlass();
-    setMode(mode, mode === "edit" ? context.sourceUrl || "" : "");
+    if (context.showTour) startTour();
+    else setMode(mode, mode === "edit" ? context.sourceUrl || "" : "");
   }
   showPalette(frame.contentDocument);
 }

@@ -1768,5 +1768,116 @@
   },
   "t_opens_search_l_opens_the_current_url_for_editing_existing_chrome_ass_3cd075aa": {
     "message": "⌘T opens search. ⌘L opens the current URL for editing. Existing Chrome assignments may be preserved after updates."
+  },
+  "search_tab_opens_commands": {
+    "message": "Search · Tab opens Commands · /all searches all windows"
+  },
+  "all_windows": {
+    "message": "All windows"
+  },
+  "window_0": {
+    "message": "Window {0}"
+  },
+  "selection_changed_check_the_highlighted_result": {
+    "message": "Selection changed. Check the highlighted result."
+  },
+  "undo_is_no_longer_available": {
+    "message": "Undo is no longer available"
+  },
+  "tabs_changed_undo_is_no_longer_available": {
+    "message": "Tabs changed. Undo is no longer available."
+  },
+  "the_original_group_no_longer_exists": {
+    "message": "The original group no longer exists"
+  },
+  "action_undone": {
+    "message": "Action undone"
+  },
+  "added_to_group_undo": {
+    "message": "Added to group · Undo"
+  },
+  "tab_moved_undo": {
+    "message": "Tab moved · Undo"
+  },
+  "spotlight_preferences": {
+    "message": "Spotlight preferences"
+  },
+  "use_denser_glass": {
+    "message": "Use denser glass"
+  },
+  "learning_uses_local_activity_history_to_improve_suggestions": {
+    "message": "Learning uses local activity history to improve suggestions."
+  },
+  "tour_show_introduction_again": {
+    "message": "Show introduction again"
+  },
+  "tour_the_introduction_will_appear_the_next_time_you_open_spotlight": {
+    "message": "The introduction will appear the next time you open Spotlight."
+  },
+  "tour_welcome_to_spotlight": {
+    "message": "Welcome to Spotlight"
+  },
+  "tour_find_tabs_run_commands_and_search_websites_from_one_panel_try_three_short_e": {
+    "message": "Find tabs, run commands, and search websites from one panel. Try three short exercises using your keyboard or mouse."
+  },
+  "tour_type_atlas_then_press_enter_or_choose_project_atlas_this_is_a_practice_tab": {
+    "message": "Type Atlas, then press Enter or choose Project Atlas. This is a practice tab."
+  },
+  "tour_practice_search": {
+    "message": "Practice search"
+  },
+  "tour_project_atlas": {
+    "message": "Project Atlas"
+  },
+  "tour_open_the_command_list": {
+    "message": "Open the command list"
+  },
+  "tour_press_tab_with_the_practice_search_empty_or_choose_show_commands_in_spotlig": {
+    "message": "Press Tab with the practice search empty, or choose Show commands. In Spotlight, this opens the browser command list."
+  },
+  "tour_leave_the_field_empty": {
+    "message": "Leave the field empty"
+  },
+  "tour_practice_commands": {
+    "message": "Practice commands"
+  },
+  "tour_show_commands": {
+    "message": "Show commands"
+  },
+  "tour_search_all_windows": {
+    "message": "Search all windows"
+  },
+  "tour_type_all_to_enter_the_all_windows_mode_use_it_when_you_remember_the_tab_but": {
+    "message": "Type /all and press Enter to try All windows mode. Use it when you remember the tab but not which window it is in."
+  },
+  "tour_practice_window_search": {
+    "message": "Practice window search"
+  },
+  "tour_try_all": {
+    "message": "Try /all"
+  },
+  "tour_ready_to_search": {
+    "message": "Ready to search"
+  },
+  "tour_use_the_arrow_keys_to_pick_a_result_enter_to_open_it_and_escape_to_return_y": {
+    "message": "Use the arrow keys to pick a result, Enter to open it, and Escape to return. You can show this introduction again in Search settings."
+  },
+  "tour_could_not_save_introduction_progress": {
+    "message": "Could not save introduction progress."
+  },
+  "tour_step_0_of_1": {
+    "message": "Step {0} of {1}"
+  },
+  "tour_try_typing_0": {
+    "message": "Try typing {0}."
+  },
+  "tour_skip_introduction": {
+    "message": "Skip introduction"
+  },
+  "tour_start_practice": {
+    "message": "Start practice"
+  },
+  "tour_open_spotlight": {
+    "message": "Open Spotlight"
   }
 }

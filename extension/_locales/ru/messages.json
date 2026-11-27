@@ -1768,5 +1768,116 @@
   },
   "t_opens_search_l_opens_the_current_url_for_editing_existing_chrome_ass_3cd075aa": {
     "message": "⌘T открывает поиск. ⌘L открывает текущий адрес для изменения. Chrome может сохранить прежние назначения клавиш при обновлении."
+  },
+  "search_tab_opens_commands": {
+    "message": "Поиск · Tab открывает команды · /all ищет по всем окнам"
+  },
+  "all_windows": {
+    "message": "Все окна"
+  },
+  "window_0": {
+    "message": "Окно {0}"
+  },
+  "selection_changed_check_the_highlighted_result": {
+    "message": "Выбор изменился. Проверьте выделенный результат."
+  },
+  "undo_is_no_longer_available": {
+    "message": "Отмена больше недоступна"
+  },
+  "tabs_changed_undo_is_no_longer_available": {
+    "message": "Вкладки изменились. Отмена больше недоступна."
+  },
+  "the_original_group_no_longer_exists": {
+    "message": "Исходная группа больше не существует"
+  },
+  "action_undone": {
+    "message": "Действие отменено"
+  },
+  "added_to_group_undo": {
+    "message": "Добавлено в группу · Отменить"
+  },
+  "tab_moved_undo": {
+    "message": "Вкладка перемещена · Отменить"
+  },
+  "spotlight_preferences": {
+    "message": "Настройки Spotlight"
+  },
+  "use_denser_glass": {
+    "message": "Использовать плотное стекло"
+  },
+  "learning_uses_local_activity_history_to_improve_suggestions": {
+    "message": "Обучение использует локальную историю действий для улучшения подсказок."
+  },
+  "tour_show_introduction_again": {
+    "message": "Показать знакомство со Spotlight снова"
+  },
+  "tour_the_introduction_will_appear_the_next_time_you_open_spotlight": {
+    "message": "Знакомство появится при следующем открытии Spotlight."
+  },
+  "tour_welcome_to_spotlight": {
+    "message": "Знакомство со Spotlight"
+  },
+  "tour_find_tabs_run_commands_and_search_websites_from_one_panel_try_three_short_e": {
+    "message": "Находите вкладки, запускайте команды и ищите на сайтах из одной панели. Попробуйте три коротких упражнения с клавиатурой или мышью."
+  },
+  "tour_type_atlas_then_press_enter_or_choose_project_atlas_this_is_a_practice_tab": {
+    "message": "Введите Atlas, затем нажмите Enter или выберите «Проект Atlas». Это учебная вкладка."
+  },
+  "tour_practice_search": {
+    "message": "Учебный поиск"
+  },
+  "tour_project_atlas": {
+    "message": "Проект Atlas"
+  },
+  "tour_open_the_command_list": {
+    "message": "Откройте список команд"
+  },
+  "tour_press_tab_with_the_practice_search_empty_or_choose_show_commands_in_spotlig": {
+    "message": "Нажмите Tab в пустом поле или выберите «Показать команды». В Spotlight так открывается список команд браузера."
+  },
+  "tour_leave_the_field_empty": {
+    "message": "Оставьте поле пустым"
+  },
+  "tour_practice_commands": {
+    "message": "Учебный режим команд"
+  },
+  "tour_show_commands": {
+    "message": "Показать команды"
+  },
+  "tour_search_all_windows": {
+    "message": "Поиск по всем окнам"
+  },
+  "tour_type_all_to_enter_the_all_windows_mode_use_it_when_you_remember_the_tab_but": {
+    "message": "Введите /all и нажмите Enter, чтобы попробовать режим «Все окна». Он помогает найти вкладку, если вы не помните, в каком окне она открыта."
+  },
+  "tour_practice_window_search": {
+    "message": "Учебный поиск по окнам"
+  },
+  "tour_try_all": {
+    "message": "Попробовать /all"
+  },
+  "tour_ready_to_search": {
+    "message": "Всё готово к поиску"
+  },
+  "tour_use_the_arrow_keys_to_pick_a_result_enter_to_open_it_and_escape_to_return_y": {
+    "message": "Стрелками выберите результат, нажмите Enter, чтобы открыть его, или Esc, чтобы вернуться. Знакомство можно пройти снова в настройках поиска."
+  },
+  "tour_could_not_save_introduction_progress": {
+    "message": "Не удалось сохранить прохождение знакомства."
+  },
+  "tour_step_0_of_1": {
+    "message": "Шаг {0} из {1}"
+  },
+  "tour_try_typing_0": {
+    "message": "Попробуйте ввести {0}."
+  },
+  "tour_skip_introduction": {
+    "message": "Пропустить знакомство"
+  },
+  "tour_start_practice": {
+    "message": "Начать практику"
+  },
+  "tour_open_spotlight": {
+    "message": "Открыть Spotlight"
   }
 }
