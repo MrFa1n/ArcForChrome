@@ -12,6 +12,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-34A853?style=flat-square" alt="Лицензия MIT"></a>
 </p>
 
+<p align="center">
+  <a href="https://boosty.to/mrfa1n/donate"><img src="assets/badges/boosty.svg" alt="Поддержать Arc for Chrome на Boosty"></a>
+</p>
+
 **Текущая версия: 0.24.3.** Добавляет команды для вкладок и окон Chrome, а также режим Vim с хоткеем входа, прокруткой на экран и переходами по заголовкам.
 
 <p align="center">

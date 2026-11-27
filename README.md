@@ -12,6 +12,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-34A853?style=flat-square" alt="MIT license"></a>
 </p>
 
+<p align="center">
+  <a href="https://boosty.to/mrfa1n/donate"><img src="assets/badges/boosty.svg" alt="Support Arc for Chrome on Boosty"></a>
+</p>
+
 **Current version: 0.24.3.** Adds more Chrome tab and window commands and optional Vim-style page navigation with an entry shortcut, full-screen scrolling and heading jumps.
 
 <p align="center">
