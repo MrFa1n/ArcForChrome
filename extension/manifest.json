@@ -39,6 +39,13 @@
     }
   },
   "commands": {
+    "toggle-page-navigation": {
+      "suggested_key": {
+        "default": "Alt+Shift+V",
+        "mac": "Option+Shift+V"
+      },
+      "description": "__MSG_toggle_page_navigation__"
+    },
     "open-search": {
       "suggested_key": {
         "default": "Alt+Shift+K",
@@ -47,10 +54,6 @@
       "description": "__MSG_open_spotlight_style_search__"
     },
     "open-commands": {
-      "suggested_key": {
-        "default": "Alt+Shift+E",
-        "mac": "Command+E"
-      },
       "description": "__MSG_open_browser_commands__"
     },
     "previous-tab": {

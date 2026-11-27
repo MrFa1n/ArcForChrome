@@ -111,6 +111,14 @@ export const ACTIONS = [
 
 export const SHORTCUTS = [
   {
+    id: "global-page-navigation",
+    title: "Toggle page navigation mode",
+    global: "toggle-page-navigation",
+    description:
+      "Assign a shortcut in Chrome or run this command in Spotlight. Use Home or gg for the top, End or Shift+G for the bottom, and Esc to exit.",
+    aliases: "vim прокрутка навигация",
+  },
+  {
     id: "global-previous",
     title: "Switch to previous tab",
     global: "previous-tab",

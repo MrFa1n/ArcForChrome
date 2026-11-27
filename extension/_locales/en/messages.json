@@ -1972,5 +1972,17 @@
   },
   "browser_control_no_other_window": {
     "message": "No other Chrome window in this profile"
+  },
+  "toggle_page_navigation": {
+    "message": "Toggle page navigation mode"
+  },
+  "page_navigation_active": {
+    "message": "Navigation · Home / End · Esc to exit"
+  },
+  "page_navigation_unavailable": {
+    "message": "Page navigation is unavailable on this page"
+  },
+  "page_navigation_shortcuts": {
+    "message": "Assign a shortcut in Chrome or run this command in Spotlight. Use Home or gg for the top, End or Shift+G for the bottom, and Esc to exit."
   }
 }

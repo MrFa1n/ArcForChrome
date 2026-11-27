@@ -1,3 +1,4 @@
+import { togglePageNavigation } from "./page-navigation.js";
 import { openPalette, paletteAction } from "./palette-service.js";
 
 export function registerSearch(api, mount) {
@@ -17,6 +18,14 @@ export function registerSearch(api, mount) {
   });
   api.action.onClicked.addListener(() => open());
   api.commands.onCommand.addListener((command) => {
+    if (command === "toggle-page-navigation")
+      return api.tabs
+        .query({ active: true, currentWindow: true })
+        .then(
+          ([tab]) =>
+            Number.isInteger(tab?.id) && togglePageNavigation(api, tab.id),
+        )
+        .catch((error) => console.warn(error.message));
     if (command === "open-search") return open();
     if (command === "previous-tab") {
       return api.tabs

@@ -1,3 +1,4 @@
+import { togglePageNavigation } from "./page-navigation.js";
 import { settingsAction } from "./settings-service.js";
 import { interfaceLocale, systemTranslator } from "./localization.js";
 import {
@@ -395,6 +396,7 @@ async function executeAction(api, context, id) {
     await removeSearchTab(api, context);
     return;
   }
+  if (id === "toggle-page-navigation") return togglePageNavigation(api, tab.id);
   if (id === "detach-tab") return api.windows.create({ tabId: tab.id });
   if (id === "close-current-tab") return api.tabs.remove(tab.id);
   if (id === "page-back") return api.tabs.goBack(tab.id);

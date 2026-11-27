@@ -1972,5 +1972,17 @@
   },
   "browser_control_no_other_window": {
     "message": "В этом профиле нет другого окна Chrome"
+  },
+  "toggle_page_navigation": {
+    "message": "Переключить режим навигации по странице"
+  },
+  "page_navigation_active": {
+    "message": "Навигация · Home / End · Esc для выхода"
+  },
+  "page_navigation_unavailable": {
+    "message": "На этой странице навигация недоступна"
+  },
+  "page_navigation_shortcuts": {
+    "message": "Назначьте хоткей в Chrome или запустите команду из Spotlight. Home или gg — в начало, End или Shift+G — в конец, Esc — выход."
   }
 }

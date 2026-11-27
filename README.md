@@ -74,7 +74,7 @@ In **Search settings → Keyboard**, select an **Inside Spotlight** shortcut fie
 | Action                           | macOS           | Windows / Linux     |
 | -------------------------------- | --------------- | ------------------- |
 | Open Search                      | **⌘T**          | **Alt+Shift+K**     |
-| Open browser commands            | **⌘E**          | **Alt+Shift+E**     |
+| Toggle Vim page navigation       | **⌥⇧V**         | **Alt+Shift+V**     |
 | Edit the current URL             | **⌘L**          | **Alt+Shift+L**     |
 | Move selected tab left / right   | **⌥← / ⌥→**     | **Alt+← / Alt+→**   |
 | Move selected tab to start / end | **⌥⇧← / ⌥⇧→**   | **Alt+Shift+← / →** |
@@ -299,6 +299,14 @@ Type **`/all`** in ordinary Search to find open tabs across windows in the same 
 After moving a tab in Spotlight or adding tabs to an existing group, use the **Undo** button in the palette. The latest action can be undone for up to a minute while the background worker retains it and the tab strip stays unchanged. If an original group has disappeared, undo is unavailable.
 
 In **Search settings → Spotlight preferences**, enable **Use denser glass** for an opaque palette, or change **Learn from my selections**. Learning requires activity recording to be enabled.
+
+### Vim-style page navigation
+
+On a web page, press **Option+Shift+V** on macOS or **Alt+Shift+V** on Windows or Linux. If Chrome did not assign the shortcut, set **Toggle page navigation mode** under **Arc for Chrome** at `chrome://extensions/shortcuts`. The **Open browser commands** shortcut can also be assigned there. To enter immediately, type `> Toggle page navigation mode` in Spotlight and press Enter. The mode starts off and activates in the current web page only. A badge shows when it is active.
+
+- **j / k** scroll down or up, and **h / l** scroll sideways.
+- **d / u** scroll half a screen down or up, **Home** or **gg** jumps to the top, and **End** or **Shift+G** jumps to the bottom.
+- **Esc** or the same shortcut exits. Leaving the page also exits. Typing in editable fields keeps normal behavior. Chrome restricts script injection on protected pages.
 
 ### Control tabs, windows and profiles
 

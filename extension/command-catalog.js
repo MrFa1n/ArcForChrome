@@ -286,6 +286,12 @@ export const COMMANDS = [
     title: "Move current tab to a new window",
     aliases: "переместить текущую вкладку в новое окно отделить",
   },
+  {
+    command: "toggle-page-navigation",
+    title: "Toggle page navigation mode",
+    aliases:
+      "vim scroll keyboard навигация по странице прокрутка вим клавиатура",
+  },
   ...browserPageCommands().filter(
     (row) => row.command !== "browser:extensions",
   ),
