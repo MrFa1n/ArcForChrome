@@ -3,6 +3,12 @@ import { matchPage, queryVariants } from "./search-match.js";
 // Navigation only: this catalogue never reads settings or performs browser actions.
 const PAGES = [
   [
+    "manage-profile",
+    "Chrome profile settings",
+    "chrome://settings/manageProfile",
+    ["профиль", "настройки профиля", "chrome profile", "profile settings"],
+  ],
+  [
     "settings",
     "Settings",
     "chrome://settings/",

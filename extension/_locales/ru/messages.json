@@ -1912,5 +1912,65 @@
   },
   "settings_unavailable": {
     "message": "Настройки недоступны"
+  },
+  "browser_control_new_tab": {
+    "message": "Новая вкладка"
+  },
+  "browser_control_close_current_tab": {
+    "message": "Закрыть текущую вкладку"
+  },
+  "browser_control_next_tab": {
+    "message": "Следующая вкладка по порядку"
+  },
+  "browser_control_prior_tab_in_strip": {
+    "message": "Предыдущая вкладка по порядку"
+  },
+  "browser_control_page_back": {
+    "message": "Вернуться на предыдущую страницу"
+  },
+  "browser_control_page_forward": {
+    "message": "Перейти на следующую страницу"
+  },
+  "browser_control_reload_bypass_cache": {
+    "message": "Обновить без кэша"
+  },
+  "browser_control_zoom_in": {
+    "message": "Увеличить масштаб"
+  },
+  "browser_control_zoom_out": {
+    "message": "Уменьшить масштаб"
+  },
+  "browser_control_zoom_reset": {
+    "message": "Сбросить масштаб страницы"
+  },
+  "browser_control_new_incognito": {
+    "message": "Новое окно инкогнито"
+  },
+  "browser_control_next_window": {
+    "message": "Переключиться на следующее окно Chrome"
+  },
+  "browser_control_maximize_window": {
+    "message": "Развернуть текущее окно"
+  },
+  "browser_control_minimize_window": {
+    "message": "Свернуть текущее окно"
+  },
+  "browser_control_restore_window_size": {
+    "message": "Восстановить размер текущего окна"
+  },
+  "browser_control_fullscreen_window": {
+    "message": "Переключить полноэкранный режим окна"
+  },
+  "browser_control_manage_profile": {
+    "message": "Настройки текущего профиля Chrome"
+  },
+  "browser_control_open_manage_profile": {
+    "message": "Открыть настройки текущего профиля Chrome"
+  },
+  "browser_control_detach_tab": {
+    "message": "Переместить текущую вкладку в новое окно"
+  },
+  "browser_control_no_other_window": {
+    "message": "В этом профиле нет другого окна Chrome"
   }
 }

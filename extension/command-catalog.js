@@ -213,6 +213,79 @@ export const COMMANDS = [
     aliases: "site search настройки поиск",
   },
   { command: "new-window", title: "New browser window", aliases: "новое окно" },
+  { command: "new-tab", title: "New tab", aliases: "новая вкладка" },
+  {
+    command: "close-current-tab",
+    title: "Close current tab",
+    aliases: "закрыть текущую вкладку",
+  },
+  {
+    command: "next-tab",
+    title: "Next tab in tab strip",
+    aliases: "следующая вкладка по порядку",
+  },
+  {
+    command: "prior-tab-in-strip",
+    title: "Previous tab in tab strip",
+    aliases: "предыдущая вкладка по порядку",
+  },
+  {
+    command: "page-back",
+    title: "Go back one page",
+    aliases: "вернуться на предыдущую страницу",
+  },
+  {
+    command: "page-forward",
+    title: "Go forward one page",
+    aliases: "перейти на следующую страницу",
+  },
+  {
+    command: "reload-bypass-cache",
+    title: "Reload without cache",
+    aliases: "обновить без кэша",
+  },
+  { command: "zoom-in", title: "Zoom in", aliases: "увеличить масштаб" },
+  { command: "zoom-out", title: "Zoom out", aliases: "уменьшить масштаб" },
+  {
+    command: "zoom-reset",
+    title: "Reset page zoom",
+    aliases: "сбросить масштаб страницы",
+  },
+  {
+    command: "new-incognito",
+    title: "New incognito window",
+    aliases: "новое окно инкогнито",
+  },
+  {
+    command: "next-window",
+    title: "Switch to next Chrome window",
+    aliases: "переключиться на следующее окно chrome",
+  },
+  {
+    command: "maximize-window",
+    title: "Maximize current window",
+    aliases: "развернуть текущее окно",
+  },
+  {
+    command: "minimize-window",
+    title: "Minimize current window",
+    aliases: "свернуть текущее окно",
+  },
+  {
+    command: "restore-window-size",
+    title: "Restore current window size",
+    aliases: "восстановить размер текущего окна",
+  },
+  {
+    command: "fullscreen-window",
+    title: "Toggle window fullscreen",
+    aliases: "переключить полноэкранный режим окна",
+  },
+  {
+    command: "detach-tab",
+    title: "Move current tab to a new window",
+    aliases: "переместить текущую вкладку в новое окно отделить",
+  },
   ...browserPageCommands().filter(
     (row) => row.command !== "browser:extensions",
   ),

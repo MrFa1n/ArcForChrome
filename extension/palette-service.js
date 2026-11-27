@@ -338,7 +338,83 @@ async function executeAction(api, context, id) {
       windowId: context.windowId,
       url: `chrome://${id}/`,
     });
+  if (id === "new-tab") {
+    await api.tabs.create({ windowId: context.windowId });
+    return;
+  }
+  if (id === "new-incognito") {
+    await api.windows.create({ incognito: true, type: "normal" });
+    return;
+  }
+  if (id === "next-window") {
+    const windows = (await api.windows.getAll({ windowTypes: ["normal"] }))
+      .filter(
+        (window) =>
+          Number.isInteger(window.id) &&
+          Boolean(window.incognito) === Boolean(context.incognito),
+      )
+      .sort((a, b) => a.id - b.id);
+    const current = windows.findIndex(
+      (window) => window.id === context.windowId,
+    );
+    if (windows.length <= 1 || current < 0)
+      throw Error("No other Chrome window in this profile");
+    await api.windows.update(windows[(current + 1) % windows.length].id, {
+      focused: true,
+    });
+    return;
+  }
+  const windowState = {
+    "maximize-window": "maximized",
+    "minimize-window": "minimized",
+    "restore-window-size": "normal",
+  };
+  if (Object.hasOwn(windowState, id)) {
+    await api.windows.update(context.windowId, { state: windowState[id] });
+    return;
+  }
+  if (id === "fullscreen-window") {
+    const window = await api.windows.get(context.windowId);
+    await api.windows.update(context.windowId, {
+      state: window.state === "fullscreen" ? "normal" : "fullscreen",
+    });
+    return;
+  }
   const tab = await sourceTab(api, context);
+  if (id === "next-tab" || id === "prior-tab-in-strip") {
+    const tabs = (await api.tabs.query({ windowId: tab.windowId })).sort(
+      (a, b) => a.index - b.index,
+    );
+    const index = tabs.findIndex(({ id }) => id === tab.id);
+    if (index < 0 || tabs.length < 2) return;
+    const step = id === "next-tab" ? 1 : -1;
+    await api.tabs.update(tabs[(index + step + tabs.length) % tabs.length].id, {
+      active: true,
+    });
+    await api.windows.update(tab.windowId, { focused: true });
+    await removeSearchTab(api, context);
+    return;
+  }
+  if (id === "detach-tab") return api.windows.create({ tabId: tab.id });
+  if (id === "close-current-tab") return api.tabs.remove(tab.id);
+  if (id === "page-back") return api.tabs.goBack(tab.id);
+  if (id === "page-forward") return api.tabs.goForward(tab.id);
+  if (id === "reload-bypass-cache")
+    return api.tabs.reload(tab.id, { bypassCache: true });
+  if (id === "zoom-reset") return api.tabs.setZoom(tab.id, 0);
+  if (id === "zoom-in" || id === "zoom-out") {
+    const levels = [
+      0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3,
+      4, 5,
+    ];
+    const current = await api.tabs.getZoom(tab.id);
+    const next =
+      id === "zoom-in"
+        ? levels.find((level) => level > current + 0.001)
+        : levels.findLast((level) => level < current - 0.001);
+    if (next !== undefined) await api.tabs.setZoom(tab.id, next);
+    return;
+  }
   if (id === "reload") await api.tabs.reload(tab.id);
   if (id === "duplicate") await api.tabs.duplicate(tab.id);
   if (id === "copy-url") return { copyText: tab.url || "" };

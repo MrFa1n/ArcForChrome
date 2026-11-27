@@ -1912,5 +1912,65 @@
   },
   "settings_unavailable": {
     "message": "Settings unavailable"
+  },
+  "browser_control_new_tab": {
+    "message": "New tab"
+  },
+  "browser_control_close_current_tab": {
+    "message": "Close current tab"
+  },
+  "browser_control_next_tab": {
+    "message": "Next tab in tab strip"
+  },
+  "browser_control_prior_tab_in_strip": {
+    "message": "Previous tab in tab strip"
+  },
+  "browser_control_page_back": {
+    "message": "Go back one page"
+  },
+  "browser_control_page_forward": {
+    "message": "Go forward one page"
+  },
+  "browser_control_reload_bypass_cache": {
+    "message": "Reload without cache"
+  },
+  "browser_control_zoom_in": {
+    "message": "Zoom in"
+  },
+  "browser_control_zoom_out": {
+    "message": "Zoom out"
+  },
+  "browser_control_zoom_reset": {
+    "message": "Reset page zoom"
+  },
+  "browser_control_new_incognito": {
+    "message": "New incognito window"
+  },
+  "browser_control_next_window": {
+    "message": "Switch to next Chrome window"
+  },
+  "browser_control_maximize_window": {
+    "message": "Maximize current window"
+  },
+  "browser_control_minimize_window": {
+    "message": "Minimize current window"
+  },
+  "browser_control_restore_window_size": {
+    "message": "Restore current window size"
+  },
+  "browser_control_fullscreen_window": {
+    "message": "Toggle window fullscreen"
+  },
+  "browser_control_manage_profile": {
+    "message": "Chrome profile settings"
+  },
+  "browser_control_open_manage_profile": {
+    "message": "Open Chrome profile settings"
+  },
+  "browser_control_detach_tab": {
+    "message": "Move current tab to a new window"
+  },
+  "browser_control_no_other_window": {
+    "message": "No other Chrome window in this profile"
   }
 }

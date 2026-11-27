@@ -300,6 +300,12 @@ After moving a tab in Spotlight or adding tabs to an existing group, use the **U
 
 In **Search settings → Spotlight preferences**, enable **Use denser glass** for an opaque palette, or change **Learn from my selections**. Learning requires activity recording to be enabled.
 
+### Control tabs, windows and profiles
+
+Open Commands with `>` and search for an action. You can create or close the current tab, switch in tab-strip order, move a tab to a new window, navigate back or forward, reload without cache, or change page zoom. Window commands cycle through visible windows in your Chrome profile and control minimize, maximize and fullscreen. **New incognito window** opens Chrome’s private window if allowed by the browser.
+
+Search for **Chrome profile settings** to open the current profile’s settings. To switch to another Chrome profile, use Chrome’s profile menu beside the address bar. Spotlight’s **Next Chrome window** command stays within the current profile and browsing mode.
+
 ### Live glass in both themes
 
 Spotlight follows Chrome’s effective light or dark appearance. Light mode uses warm pearl and dark mode uses graphite. On ordinary web pages, Chrome blurs the page inside the palette’s outline. The translucent panel and result list let the page’s colors show through as you move the palette; the search field and selected row use denser fills to keep text readable.
