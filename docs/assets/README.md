@@ -24,4 +24,4 @@ Version 0.21 adds contextual Actions, provider redirection, quicklinks and calcu
 
 Version 0.22 adds fictional notes-list, multiline-editor and full-shortcut-directory captures. Global shortcut assignments in screenshots are test fixtures; the installed extension reads its actual Chrome assignments. No personal notes or clipboard are used.
 
-Version 0.23 refreshes the palette captures for the token-based interface and the current **⌘T** Search shortcut. PNGs and the README GIF were regenerated from the current `mountPalette` code with fictional tabs and stubbed browser APIs.
+Version 0.23.8 refreshes the palette captures for the more translucent live-glass interface and the current **⌘T** Search shortcut. All English and Russian PNGs and README GIFs were regenerated from the current `mountPalette` code with fictional tabs and stubbed browser APIs.

@@ -5,10 +5,10 @@
   --arc-text: CanvasText;
   --arc-muted: #504d47;
   --arc-surface: #f2efea;
-  --arc-glass: rgb(250 247 241 / 94%);
-  --arc-live-glass: rgb(250 247 241 / 75%);
-  --arc-live-field: rgb(250 247 241 / 88%);
-  --arc-live-results: rgb(250 247 241 / 67%);
+  --arc-glass: rgb(250 247 241 / 70%);
+  --arc-live-glass: rgb(250 247 241 / 40%);
+  --arc-live-field: rgb(250 247 241 / 54%);
+  --arc-live-results: rgb(250 247 241 / 32%);
   --arc-field: #faf7f1;
   --arc-border: #b9b3a9;
   --arc-divider: rgb(75 67 55 / 22%);
@@ -37,7 +37,7 @@
   --arc-card-shadow:
     inset 0 1px 0 var(--arc-highlight), 0 6px 24px rgb(48 40 31 / 9%);
   --arc-control-shadow: inset 0 1px 0 var(--arc-highlight);
-  --arc-frost: blur(18px) saturate(130%);
+  --arc-frost: blur(36px) saturate(180%);
   --arc-space-1: 0.25rem;
   --arc-space-2: 0.5rem;
   --arc-space-3: 0.75rem;
@@ -57,10 +57,10 @@
   :host {
     --arc-muted: #c4c4c4;
     --arc-surface: #1b1b1b;
-    --arc-glass: rgb(16 16 16 / 94%);
-    --arc-live-glass: rgb(14 14 14 / 76%);
-    --arc-live-field: rgb(23 23 23 / 88%);
-    --arc-live-results: rgb(26 26 26 / 60%);
+    --arc-glass: rgb(16 16 16 / 70%);
+    --arc-live-glass: rgb(14 14 14 / 42%);
+    --arc-live-field: rgb(23 23 23 / 56%);
+    --arc-live-results: rgb(26 26 26 / 34%);
     --arc-field: #252525;
     --arc-border: #555555;
     --arc-divider: rgb(206 206 206 / 24%);

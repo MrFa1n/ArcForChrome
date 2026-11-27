@@ -22,7 +22,7 @@ Find an open tab, revisit a bookmarked page, search a website or run a browser c
 
 ## See it in action
 
-Spotlight uses **live glass** over the current page, with a pill-shaped search field, a separate results surface and a compact footer for keyboard actions.
+Spotlight uses **live glass** over the current page, with a pill-shaped search field, a separate translucent results surface and a compact footer for keyboard actions. The panel lets the page’s colors show through while blur keeps text readable.
 
 | Light · warm pearl                                                                      | Dark · graphite                                                                            |
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
@@ -31,7 +31,7 @@ Spotlight uses **live glass** over the current page, with a pill-shaped search f
 _Screenshots of the current extension in Chrome with fictional tabs._
 
 <details>
-<summary>Keyboard workflow demo in the previous design</summary>
+<summary>Keyboard workflow demo in the current design</summary>
 
 ![Search for an open tab, scope a search to YouTube, then open browser commands](docs/assets/spotlight-demo.gif)
 
@@ -292,7 +292,7 @@ Root/managed destinations cannot be modified. Web pages and known Chrome section
 
 ### Live glass in both themes
 
-Spotlight follows Chrome’s effective light or dark appearance. Light mode uses warm pearl and dark mode uses graphite. On ordinary web pages, Chrome blurs the page inside the palette’s outline. The glass picks up color as the content underneath changes or as you move the palette. The result list lets some color through, while the search field and selected row use denser fills for readability.
+Spotlight follows Chrome’s effective light or dark appearance. Light mode uses warm pearl and dark mode uses graphite. On ordinary web pages, Chrome blurs the page inside the palette’s outline. The translucent panel and result list let the page’s colors show through as you move the palette; the search field and selected row use denser fills to keep text readable.
 
 The new-tab page and the separate search window for protected pages use the extension’s own background. When Chrome reports reduced transparency, increased contrast or forced colors, Spotlight uses opaque system surfaces. [Design system and tokens](docs/DESIGN_SYSTEM.md)
 
