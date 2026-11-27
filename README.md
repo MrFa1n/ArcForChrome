@@ -185,9 +185,11 @@ The current page stays open beneath the overlay. Page and video shortcuts are is
 
 Search on a website once, then reopen the command bar. If its search URL is recognized in your tabs, recent bookmarks or recent history, the site becomes available as a search scope. Type its name or abbreviation, press **Tab**, enter your query, then **Enter**.
 
-For example, an observed YouTube search can offer **`yt` → Tab → `minimal interface design` → Enter**. Names and aliases depend on the observed data. When you confirm a typed shortcut, the extension saves that association locally and prioritizes it next time.
+Built-in shortcuts work on first use. For example, type **`yt` → Tab → `minimal interface design` → Enter** to open YouTube search results. Other examples include `rutube`, `kinopoisk`, `imdb`, `steam`, `wiki`, `github`, `npm`, `mdn`, `reddit`, `ozon`, `avito`, `gmaps` and `hh`. Find the complete list in **Search settings → Search shortcuts**. When you confirm a typed shortcut, the extension saves that association locally and prioritizes it next time.
 
 Open `> Search settings` to view detected sites or add manual URL templates. To remove manual templates, click **Clear overrides**, then **Save changes**. Detection is conservative: it uses a bounded recent sample and recognized query formats; it does not invent endpoints or read Chrome’s internal Site Search settings.
+
+Music shortcuts include **`yandex music`**, **`youtube music`**, `spotify`, `soundcloud`, `apple music`, `bandcamp`, `deezer` and `last.fm`. Type the shortcut, press Tab, enter an artist or track, then press Enter.
 
 ### Shortcut + query, including AI
 
@@ -203,7 +205,7 @@ Type a shortcut, a space and your request, then press Enter—no Tab needed:
 | `grok explain this topic`               | Grok                      |
 | `pplx compare the options`              | Perplexity                |
 
-These providers are built in. Other exact known/learned site shortcuts work too, for example `yt design` after YouTube is discovered. The top result names the destination; unknown shortcuts remain ordinary searches. Equal-priority shared aliases require choosing a site with ↓. Shortcut + Tab still works. Manual overrides can replace built-in destinations or take ownership of their shortcuts.
+These providers are built in. Other exact known/learned site shortcuts work too, for example `yt design` for YouTube. The top result names the destination; unknown shortcuts remain ordinary searches. Equal-priority shared aliases require choosing a site with ↓. Shortcut + Tab still works. Manual overrides can replace built-in destinations or take ownership of their shortcuts.
 
 AI requests are handed to the provider’s web URL, without API keys, model selection, extra helpers or scripts injected into the chat. Sign-in, prefill and final submission depend on the provider. Claude/Grok web-link behavior and authenticated prompt delivery need installed-profile verification; this is not a guarantee of auto-send.
 

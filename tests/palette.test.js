@@ -179,14 +179,14 @@ test("site search navigates with the configured encoded template", async () => {
   const api = browser();
   api.history = {
     search: async () => [
-      { title: "GitHub", url: "https://github.com/search?q=old" },
+      { title: "Example Docs", url: "https://docs.example.com/search?q=old" },
     ],
   };
   await paletteAction(
     api,
     {
       type: "palette:site",
-      site: "auto:https://github.com",
+      site: "auto:https://docs.example.com",
       query: "my project",
     },
     sender,
@@ -197,7 +197,7 @@ test("site search navigates with the configured encoded template", async () => {
       {
         windowId: 2,
         active: true,
-        url: "https://github.com/search?q=my%20project",
+        url: "https://docs.example.com/search?q=my%20project",
       },
     ],
   ]);

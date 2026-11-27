@@ -717,7 +717,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
     }
     function startProviders(query = input.value) {
-      const inline = query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/su);
+      const inline = inlineSiteQuery(query);
       providerQuery = (
         inline && siteMatches(inline[1], true).length ? inline[2] : query
       ).trim();
@@ -1250,8 +1250,9 @@ export function mountPalette(tabs, floating = false, context = {}) {
     });
     requestClose = close;
     function siteMatches(value, exact = false) {
-      const query = value.trim().toLocaleLowerCase();
-      if (!/^[\p{L}\d.-]{1,32}$/u.test(query)) return [];
+      const query = value.trim().toLocaleLowerCase().replace(/\s+/gu, " ");
+      if (query.length > 32 || !/^[\p{L}\d.-]+(?: [\p{L}\d.-]+)*$/u.test(query))
+        return [];
       return sites
         .map((site) => {
           const aliases = [site.key, ...(site.aliases || [])].map((alias) =>
@@ -1279,6 +1280,11 @@ export function mountPalette(tabs, floating = false, context = {}) {
         )
         .sort((a, b) => b.score - a.score)
         .slice(0, 3);
+    }
+    function inlineSiteQuery(query) {
+      // A complete site name takes priority over a single-word shortcut.
+      if (/\s/u.test(query) && siteMatches(query, true).length) return null;
+      return query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/su);
     }
     function enterSite(site, alias = input.value, value = "") {
       // Remember only an explicitly chosen site association, not browsing activity or search queries.
@@ -2148,7 +2154,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
       }
       const inline =
         mode === "search" && completedAddress !== query
-          ? query.match(/^([\p{L}\d.-]{1,32})\s+(.+)$/su)
+          ? inlineSiteQuery(query)
           : null;
       const inlineSites = inline ? siteMatches(inline[1], true) : [];
       const uniqueInline =
