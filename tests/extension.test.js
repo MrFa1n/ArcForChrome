@@ -23,18 +23,24 @@ test("command-bar manifest declares required permissions and entry points", asyn
   ]);
   assert.equal(manifest.side_panel.default_path, "sidebar.html");
   assert.equal(manifest.host_permissions, undefined);
-  assert.deepEqual(Object.keys(manifest.commands), [
-    "open-search",
-    "open-commands",
-    "previous-tab",
+  assert.deepEqual(Object.keys(manifest.commands).sort(), [
     "edit-address",
+    "open-commands",
+    "open-search",
+    "previous-tab",
+    "toggle-page-navigation",
   ]);
   assert.equal(manifest.commands["open-search"].suggested_key.mac, "Command+T");
+  assert.equal(
+    manifest.commands["toggle-page-navigation"].suggested_key.default,
+    "Alt+Shift+V",
+  );
+  assert.equal(manifest.options_ui, undefined);
   await Promise.all(
     [
       manifest.background.service_worker,
       "palette.html",
-      manifest.options_ui.page,
+      "settings-panel.html",
     ].map((path) => access(new URL(path, root))),
   );
 });
