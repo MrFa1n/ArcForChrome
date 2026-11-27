@@ -2141,9 +2141,7 @@ try {
   }
   // Serve the actual settings files; only Chrome APIs are stubbed, not form logic.
   const allowed = new Set([
-    "options.html",
-    "options.js",
-    "options.css",
+    "settings-panel.html",
     "site-search.js",
     "site-discovery.js",
     "search-providers.js",
@@ -2186,9 +2184,6 @@ try {
     }
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  await send("Page.addScriptToEvaluateOnNewDocument", {
-    source: `globalThis.chrome={storage:{local:{get:async()=>({}),set:async value=>{globalThis.savedSites=value.sites;}}},tabs:{create:async()=>{}}};`,
-  });
   await send("Page.enable");
   const loaded = new Promise((resolve) => {
     const listener = (event) => {
@@ -2200,32 +2195,53 @@ try {
     socket.addEventListener("message", listener);
   });
   await send("Page.navigate", {
-    url: `http://127.0.0.1:${server.address().port}/options.html`,
+    url: `http://127.0.0.1:${server.address().port}/settings-panel.html`,
   });
   await loaded;
+  await evaluate(`(async () => {
+    const markup = await (await fetch("/settings-panel.html")).text();
+    const { parseSites } = await import("/site-search.js");
+    document.body.replaceChildren();
+    globalThis.chrome = { runtime: { sendMessage: async (message) => {
+      if (message.type === "palette:suggest") return { ok: true, suggestions: [
+        { kind: "command", command: "settings", title: "Search settings" },
+      ] };
+      if (message.operation === "load") return { ok: true, markup, languages: [],
+        customSites: [], sites: [], bindings: [], defaults: [], learn: true, dense: false };
+      if (message.operation === "sites") {
+        try { globalThis.savedSites = parseSites(message.value); }
+        catch (error) { return { ok: false, error: error.message }; }
+      }
+      return { ok: true };
+    } } };
+  })()`);
+  await mount([], { mode: "commands" });
+  await key("Enter", "Enter", "\r");
+  const settingsCall = (body) =>
+    paletteCall(`function() {
+    const panel = this.querySelector("#spotlight-settings");
+    ${body}
+  }`);
   assert.equal(
-    await evaluate("document.querySelectorAll('.site').length"),
+    await settingsCall("return panel.querySelectorAll('.site').length"),
     0,
-    "manual setup is optional and starts empty",
   );
-  await evaluate("document.querySelector('#add').click()");
-  await evaluate(
-    `const row=document.querySelector('.site');row.querySelector('[name=name]').value='My docs';row.querySelector('[name=key]').value='docs';row.querySelector('[name=template]').value='https://docs.example/?q=%s';document.querySelector('#sites-form [type=submit]').click();`,
-  );
-  await evaluate("new Promise(resolve=>setTimeout(resolve,20))");
+  await settingsCall(`panel.querySelector("#add").click();
+    const row = panel.querySelector(".site");
+    row.querySelector("[name=name]").value = "My docs";
+    row.querySelector("[name=key]").value = "docs";
+    row.querySelector("[name=template]").value = "https://docs.example/?q=%s";
+    panel.querySelector("#sites-form [type=submit]").click();`);
   assert.deepEqual((await evaluate("savedSites"))[0], {
     key: "docs",
     name: "My docs",
     template: "https://docs.example/?q=%s",
   });
-  await evaluate(
-    `document.querySelector('[name=template]').value='javascript:%s';document.querySelector('#sites-form [type=submit]').click();`,
-  );
-  await evaluate("new Promise(resolve=>setTimeout(resolve,20))");
+  await settingsCall(`panel.querySelector("[name=template]").value = "javascript:%s";
+    panel.querySelector("#sites-form [type=submit]").click();`);
   assert.match(
-    await evaluate("document.querySelector('#status').textContent"),
+    await settingsCall("return panel.querySelector('#status').textContent"),
     /HTTP/,
-    "settings reject unsafe templates",
   );
   await send("Emulation.setDeviceMetricsOverride", {
     width: 900,

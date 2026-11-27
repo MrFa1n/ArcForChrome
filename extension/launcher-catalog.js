@@ -1,3 +1,8 @@
+import {
+  KEYBOARD_SHORTCUTS_SETTING,
+  shortcutText,
+  validShortcut,
+} from "./keyboard-shortcuts.js";
 import { COMMANDS, TARGET_COMMANDS } from "./command-catalog.js";
 // Shared by injected and protected-page palettes; data only, no remote code.
 export const ACTIONS = [
@@ -357,6 +362,23 @@ export const SHORTCUTS = [
   },
 ];
 
+export const EDITABLE_SHORTCUTS = [
+  { id: "actions", title: "Actions for selected result", key: "k" },
+  ...ACTIONS.filter(({ key }) => key),
+].map((binding) => ({ shift: false, alt: false, ...binding }));
+
+export function resolveShortcuts(overrides) {
+  const bindings = EDITABLE_SHORTCUTS.map((binding) => {
+    const override = overrides?.[binding.id];
+    if (!validShortcut(override)) return binding;
+    const { key, shift, alt } = override;
+    return { ...binding, key, shift, alt };
+  });
+  return new Set(bindings.map(shortcutText)).size === bindings.length
+    ? bindings
+    : EDITABLE_SHORTCUTS;
+}
+
 export async function launcherContext(api) {
   let commands = null;
   try {
@@ -364,8 +386,24 @@ export async function launcherContext(api) {
   } catch {
     /* Show an explicit unknown binding rather than guess. */
   }
+  const settings = await api.storage?.local
+    ?.get?.(KEYBOARD_SHORTCUTS_SETTING)
+    .catch(() => ({}));
+  const bindings = new Map(
+    resolveShortcuts(settings?.[KEYBOARD_SHORTCUTS_SETTING]).map((binding) => [
+      binding.id,
+      binding,
+    ]),
+  );
+  const withShortcut = (row) => {
+    const binding = bindings.get(row.id);
+    return binding
+      ? { ...row, ...binding, shortcut: shortcutText(binding) }
+      : row;
+  };
   return {
-    actions: ACTIONS,
+    actionsBinding: bindings.get("actions"),
+    actions: ACTIONS.map(withShortcut),
     targetCommands: TARGET_COMMANDS,
     commands: COMMANDS.filter(
       (row) =>
@@ -374,7 +412,7 @@ export async function launcherContext(api) {
     ),
     shortcuts: SHORTCUTS.map((row) =>
       !row.global
-        ? row
+        ? withShortcut(row)
         : {
             ...row,
             shortcut: commands

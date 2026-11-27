@@ -189,7 +189,19 @@ export function mountPalette(tabs, floating = false, context = {}) {
       dialog[data-dense-glass]{--bg:var(--arc-surface,Canvas);backdrop-filter:none}
       dialog[data-dense-glass] input,dialog[data-dense-glass] #results,dialog[data-dense-glass] #spotlight-tour,dialog[data-dense-glass] #tour-practice{background:var(--arc-field,Canvas)}
       #undo-tab-action{flex-shrink:0;align-self:start;border:1px solid var(--line);border-radius:var(--arc-radius-control,.625rem);padding:4px 8px;color:var(--fg);background:var(--arc-field,Canvas)}
-      dialog[data-tour]>:not(#spotlight-tour){display:none}
+      dialog[data-tour]>:not(#spotlight-tour),dialog[data-settings]>:not(#spotlight-settings){display:none}
+      #spotlight-settings{flex:1;min-height:0;overflow:auto;padding:var(--inset);border-radius:var(--arc-radius-panel);background:var(--arc-live-results,var(--arc-field,Canvas))}
+      #spotlight-settings input[type=search]{display:block;width:100%;margin:.75rem 0}
+      #spotlight-settings h2{margin:.25rem 0;font-size:1.15rem}
+      #spotlight-settings section{margin-block:.75rem;padding:.75rem;border:1px solid var(--line);border-radius:var(--arc-radius-results)}
+      #spotlight-settings :is(input,select,button){font:inherit;color:inherit}
+      #spotlight-settings input{width:auto;max-width:100%;margin:.25rem;padding:.35rem .55rem}
+      #spotlight-settings :is(button,select){background:var(--arc-field,Canvas);border:1px solid var(--line);border-radius:var(--arc-radius-control);padding:.35rem .55rem}
+      #spotlight-settings label{display:inline-flex;align-items:center;flex-wrap:wrap;gap:.3rem}
+      #spotlight-settings :is(.actions,.keyboard-binding,.site){display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+      #spotlight-settings .keyboard-binding{justify-content:space-between}
+      #spotlight-settings .keyboard-binding input{width:8rem;text-align:center}
+      #spotlight-settings [role=status]:empty{display:none}
       #spotlight-tour{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;padding:clamp(.875rem,4vw,1.75rem);border:1px solid var(--arc-divider,var(--line));border-radius:var(--arc-radius-panel,1.375rem);background:var(--arc-lens,none) var(--arc-live-results,var(--arc-field,Canvas));box-shadow:var(--arc-control-shadow,none)}
       #tour-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-block-end:.75rem}
       #tour-mark{display:grid;place-items:center;flex:none;width:2.75rem;height:2.75rem;border-radius:.95rem;border:1px solid var(--arc-divider,var(--line));background:var(--arc-lens,none) var(--arc-field,Canvas);box-shadow:var(--arc-control-shadow,none),0 6px 14px rgb(0 0 0 / 12%);font-size:1.3rem;font-weight:600}
@@ -667,6 +679,19 @@ export function mountPalette(tabs, floating = false, context = {}) {
         .replaceAll("⌘/Ctrl", modifierLabel)
         .replaceAll("Alt", modifierLabel === "⌘" ? "⌥" : "Alt");
     }
+    const actionsBinding = context.actionsBinding || {
+      key: "k",
+      shift: false,
+      alt: false,
+    };
+    const matchesBinding = (event, binding) =>
+      (event.metaKey || event.ctrlKey) &&
+      binding.key ===
+        (event.altKey && /^(Key[A-Z]|Digit[0-9])$/.test(event.code)
+          ? event.code.at(-1).toLowerCase()
+          : event.key.toLowerCase()) &&
+      Boolean(binding.shift) === event.shiftKey &&
+      Boolean(binding.alt) === event.altKey;
     const actionDefinitions = Array.isArray(context.actions)
       ? context.actions
       : [];
@@ -1541,6 +1566,10 @@ export function mountPalette(tabs, floating = false, context = {}) {
           setMode("notes");
           return;
         }
+        if (choice.command === "settings") {
+          await openSettings();
+          return;
+        }
         if (choice.command === "shortcuts") {
           await runAction("shortcuts");
           return;
@@ -1935,7 +1964,16 @@ export function mountPalette(tabs, floating = false, context = {}) {
       );
       action.textContent = mode === "actions" ? t("Back") : t("Actions");
       const shortcut = document.createElement("kbd");
-      shortcut.textContent = `${modifierLabel} K`;
+      shortcut.textContent = shortcutLabel(
+        [
+          "⌘/Ctrl",
+          actionsBinding.alt ? "Alt" : "",
+          actionsBinding.shift ? "⇧" : "",
+          actionsBinding.key.toUpperCase(),
+        ]
+          .filter(Boolean)
+          .join(" "),
+      );
       action.append(shortcut);
       action.disabled = false;
       action.addEventListener("click", (event) => {
@@ -2921,11 +2959,7 @@ export function mountPalette(tabs, floating = false, context = {}) {
         } else close();
         return;
       }
-      if (
-        (event.metaKey || event.ctrlKey) &&
-        !event.altKey &&
-        event.key.toLocaleLowerCase() === "k"
-      ) {
+      if (matchesBinding(event, actionsBinding)) {
         event.preventDefault();
         openActions();
         return;
@@ -2973,11 +3007,8 @@ export function mountPalette(tabs, floating = false, context = {}) {
         }
       }
       if (event.metaKey || event.ctrlKey) {
-        const action = actionDefinitions.find(
-          (action) =>
-            action.key === event.key.toLocaleLowerCase() &&
-            Boolean(action.shift) === event.shiftKey &&
-            Boolean(action.alt) === event.altKey,
+        const action = actionDefinitions.find((action) =>
+          matchesBinding(event, action),
         );
         if (action) {
           event.preventDefault();
@@ -3203,8 +3234,415 @@ export function mountPalette(tabs, floating = false, context = {}) {
       close();
     });
     dialog.addEventListener("click", (event) => {
-      if (event.target === dialog) close();
+      if (event.target === dialog && !settingsPanel) close();
     });
+    let settingsPanel;
+    async function openSettings() {
+      if (settingsPanel) return;
+      const previous = root.activeElement;
+      const panel = document.createElement("section");
+      settingsPanel = panel;
+      panel.id = "spotlight-settings";
+      panel.setAttribute("aria-labelledby", "settings-heading");
+      const controls = [...dialog.children];
+      for (const control of controls) control.inert = true;
+      dialog.dataset.settings = "";
+      dialog.append(panel);
+      function leave() {
+        panel.remove();
+        delete dialog.dataset.settings;
+        settingsPanel = null;
+        for (const control of controls) control.inert = false;
+        (previous?.isConnected ? previous : input).focus();
+      }
+      panel.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+        if (event.key === "Escape" && !event.isComposing) {
+          event.preventDefault();
+          leave();
+        }
+      });
+      const heading = document.createElement("h2");
+      heading.id = "settings-heading";
+      heading.textContent = t("Search settings");
+      const back = document.createElement("button");
+      back.type = "button";
+      back.textContent = t("Back");
+      back.addEventListener("click", leave);
+      panel.append(heading, back);
+      back.focus();
+      async function request(operation, value) {
+        const response = await chrome.runtime.sendMessage({
+          type: "palette:settings",
+          operation,
+          value,
+        });
+        if (!response?.ok)
+          throw new Error(response?.error || t("Settings unavailable"));
+        return response;
+      }
+      try {
+        const data = await request("load");
+        if (!panel.isConnected) return;
+        mountSettings(data);
+      } catch (failure) {
+        if (!panel.isConnected) return;
+        const status = document.createElement("p");
+        status.setAttribute("role", "status");
+        status.textContent = t("Settings unavailable");
+        panel.replaceChildren(heading, back, status);
+        back.focus();
+        console.error("Could not initialize Spotlight settings", failure);
+      }
+
+      function mountSettings(data) {
+        if (typeof data.markup !== "string")
+          throw new Error("Missing settings markup");
+        const markup = new view.DOMParser().parseFromString(
+          data.markup,
+          "text/html",
+        );
+        // The worker supplies only the packaged settings markup.
+        for (const element of markup.querySelectorAll("[data-message]"))
+          element.textContent = t(element.dataset.message);
+        const content = document.createDocumentFragment();
+        for (const section of markup.body.querySelectorAll(":scope > section"))
+          content.append(document.importNode(section, true));
+        const sections = [...content.children];
+        const controlsById = new Map(
+          [...content.querySelectorAll("[id]")].map((node) => [node.id, node]),
+        );
+        const control = (id) => {
+          const element = controlsById.get(id);
+          if (!element) throw new Error(`Missing settings control: ${id}`);
+          return element;
+        };
+        const filter = document.createElement("input");
+        filter.type = "search";
+        filter.placeholder = t("Find a setting…");
+        filter.setAttribute("aria-label", filter.placeholder);
+        const noMatches = document.createElement("p");
+        noMatches.setAttribute("role", "status");
+        noMatches.hidden = true;
+        noMatches.textContent = t("No matching settings");
+        filter.addEventListener("input", () => {
+          const terms = filter.value.trim().toLocaleLowerCase().split(/\s+/);
+          for (const section of sections) {
+            const text = section.textContent.toLocaleLowerCase();
+            section.hidden = !terms.every((term) => text.includes(term));
+          }
+          noMatches.hidden = sections.some((section) => !section.hidden);
+        });
+        panel.append(filter, noMatches, content);
+        if (root.activeElement === back) filter.focus();
+        const shortcutChord = ({ key, alt, shift }) =>
+          [alt ? "Alt" : "", shift ? "⇧" : "", key.toUpperCase()]
+            .filter(Boolean)
+            .join(" ");
+        const container = control("sites");
+        const status = control("status");
+        function addRow(site = { name: "", key: "", template: "" }) {
+          const row = document.createElement("div");
+          row.className = "site";
+          for (const [field, label] of [
+            ["name", t("Name")],
+            ["key", t("Keyword")],
+            ["template", t("Search URL")],
+          ]) {
+            const wrapper = document.createElement("label");
+            wrapper.textContent = label;
+            wrapper.className = field;
+            const input = document.createElement("input");
+            input.name = field;
+            input.value = site[field];
+            input.required = true;
+            input.maxLength =
+              field === "template" ? 2048 : field === "name" ? 40 : 16;
+            wrapper.append(input);
+            row.append(wrapper);
+          }
+          const remove = document.createElement("button");
+          remove.type = "button";
+          remove.textContent = t("Remove");
+          remove.setAttribute(
+            "aria-label",
+            t("Remove {0}", site.name || t("site")),
+          );
+          remove.addEventListener("click", () => row.remove());
+          row.insertBefore(remove, row.lastElementChild);
+          container.append(row);
+        }
+        function render(sites) {
+          container.replaceChildren();
+          sites.forEach(addRow);
+        }
+        control("add").addEventListener("click", () => {
+          if (container.children.length < 20) addRow();
+          else status.textContent = t("Use at most 20 sites.");
+        });
+        control("reset").addEventListener("click", () => {
+          render([]);
+          status.textContent = t(
+            "Manual overrides cleared in this form. Save to use built-in and detected shortcuts.",
+          );
+        });
+        document
+          .querySelector("#sites-form")
+          .addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const submit =
+              event.submitter ||
+              control("sites-form").querySelector("button[type=submit]");
+            submit.disabled = true;
+            try {
+              const sites = [...container.children].map((row) =>
+                Object.fromEntries(
+                  [...row.querySelectorAll("input")].map((input) => [
+                    input.name,
+                    input.value,
+                  ]),
+                ),
+              );
+              await request("sites", sites);
+              status.textContent = t(
+                "Saved. Reopen search to use these sites.",
+              );
+            } catch (error) {
+              status.textContent = systemText(error.message);
+            } finally {
+              submit.disabled = false;
+            }
+          });
+        for (const [id, url] of [
+          ["provider", "chrome://settings/searchEngines"],
+          ["shortcuts", "chrome://extensions/shortcuts"],
+        ]) {
+          control(id).addEventListener("click", () =>
+            request("open", url).catch((error) => {
+              status.textContent = systemText(error.message);
+            }),
+          );
+        }
+        Promise.resolve(data.customSites)
+          .then(render)
+          .catch((error) => {
+            status.textContent = systemText(error.message);
+          });
+        Promise.resolve(data.sites)
+          .then((sites) => {
+            const list = control("detected");
+            for (const site of sites.filter(
+              (site) => site.detected || site.builtin,
+            )) {
+              const item = document.createElement("li");
+              item.textContent = `${site.name} · ${site.aliases.join(", ")} · ${site.builtin ? t("Built-in") : t("Detected")}`;
+              list.append(item);
+            }
+            if (!list.children.length)
+              list.textContent = t(
+                "No search URLs detected yet. Search on a website in Chrome once, then reopen the palette.",
+              );
+          })
+          .catch(() => {});
+        control("forget").addEventListener("click", async () => {
+          try {
+            await request("forget");
+            status.textContent = t(
+              "Learned shortcuts cleared. Reopen search to refresh.",
+            );
+          } catch (error) {
+            status.textContent = systemText(error.message);
+          }
+        });
+
+        control("activity").addEventListener("click", () =>
+          request("open", "activity").catch((error) => {
+            status.textContent = systemText(error.message);
+          }),
+        );
+
+        const languageForm = control("language-form");
+        const languageSelect = languageForm.elements.language;
+        const languageSave = languageForm.querySelector("button");
+        const { languages, languagePreference } = data;
+        languageSelect.add(new view.Option(t("Use Chrome language"), ""));
+        for (const [code, name] of languages)
+          languageSelect.add(new view.Option(name, code));
+        languageSelect.value = languages.some(
+          ([code]) => code === languagePreference,
+        )
+          ? languagePreference
+          : "";
+        languageSelect.disabled = false;
+        languageSave.disabled = false;
+        languageForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          languageSave.disabled = true;
+          try {
+            await request("language", languageSelect.value);
+            control("language-status").textContent = t("Saved");
+            languageSave.disabled = false;
+          } catch {
+            control("language-status").textContent = t(
+              "Cannot save the interface language.",
+            );
+            languageSave.disabled = false;
+          }
+        });
+
+        const spotlightForm = control("spotlight-preferences");
+        const spotlightStatus = control("spotlight-preferences-status");
+        const spotlightSave = spotlightForm.querySelector("button");
+        try {
+          spotlightForm.elements.learn.checked = data.learn;
+          spotlightForm.elements.dense.checked = data.dense;
+          spotlightForm.elements.learn.disabled = false;
+          spotlightForm.elements.dense.disabled = false;
+          spotlightSave.disabled = false;
+        } catch (error) {
+          spotlightStatus.textContent = systemText(error.message);
+        }
+        spotlightForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          spotlightSave.disabled = true;
+          try {
+            await request("appearance", {
+              learn: spotlightForm.elements.learn.checked,
+              dense: spotlightForm.elements.dense.checked,
+            });
+            spotlightStatus.textContent = t("Saved");
+          } catch (error) {
+            spotlightStatus.textContent = systemText(error.message);
+          } finally {
+            spotlightSave.disabled = false;
+          }
+        });
+
+        control("replay-tour").addEventListener("click", async () => {
+          try {
+            await request("replay");
+            spotlightStatus.textContent = t(
+              "The introduction will appear the next time you open Spotlight.",
+            );
+          } catch (error) {
+            spotlightStatus.textContent = systemText(error.message);
+          }
+        });
+
+        const keyboardForm = control("keyboard-form");
+        const keyboardStatus = control("keyboard-status");
+        const keyboardSave = keyboardForm.querySelector('[type="submit"]');
+        const keyboardReset = control("keyboard-reset");
+        const shortcutRows = new Map();
+
+        function displayBinding(field, binding) {
+          const modifier = /Mac|iPhone|iPad/.test(navigator.platform)
+            ? "⌘"
+            : "Ctrl";
+          field.value = `${modifier} ${shortcutChord(binding)}`;
+        }
+
+        try {
+          for (const binding of data.bindings) {
+            const label = document.createElement("label");
+            label.className = "keyboard-binding";
+            const title = document.createElement("span");
+            title.textContent = t(binding.title);
+            const field = document.createElement("input");
+            field.type = "text";
+            field.readOnly = true;
+            const row = { field, binding };
+            shortcutRows.set(binding.id, row);
+            displayBinding(field, binding);
+            field.addEventListener("keydown", (event) => {
+              if (event.isComposing || ["Tab", "Escape"].includes(event.key))
+                return;
+              if (["Control", "Meta", "Shift", "Alt"].includes(event.key))
+                return;
+              event.preventDefault();
+              const key =
+                event.altKey && /^(Key[A-Z]|Digit[0-9])$/.test(event.code)
+                  ? event.code.at(-1).toLowerCase()
+                  : event.key.toLowerCase();
+              if (
+                !(event.ctrlKey || event.metaKey) ||
+                !/^[a-z0-9]$/.test(key)
+              ) {
+                keyboardStatus.textContent = t(
+                  "Use Ctrl or ⌘ with a letter or number.",
+                );
+                return;
+              }
+              const candidate = {
+                key,
+                shift: event.shiftKey,
+                alt: event.altKey,
+              };
+              const conflict = [...shortcutRows.values()].find(
+                (other) =>
+                  other !== row &&
+                  shortcutChord(other.binding) === shortcutChord(candidate),
+              );
+              if (conflict) {
+                keyboardStatus.textContent = t(
+                  "Already assigned to {0}.",
+                  t(conflict.binding.title),
+                );
+                return;
+              }
+              row.binding = { ...row.binding, ...candidate };
+              displayBinding(field, row.binding);
+              keyboardSave.disabled = false;
+              keyboardStatus.textContent = t(
+                "Save changes to apply your shortcuts.",
+              );
+            });
+            label.append(title, field);
+            control("keyboard-bindings").append(label);
+          }
+          keyboardReset.disabled = false;
+        } catch (error) {
+          keyboardStatus.textContent = systemText(error.message);
+        }
+
+        keyboardReset.addEventListener("click", () => {
+          for (const binding of data.defaults) {
+            const row = shortcutRows.get(binding.id);
+            row.binding = binding;
+            displayBinding(row.field, binding);
+          }
+          keyboardSave.disabled = false;
+          keyboardStatus.textContent = t(
+            "Save changes to apply your shortcuts.",
+          );
+        });
+
+        keyboardForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          keyboardSave.disabled = true;
+          try {
+            const changes = {};
+            for (const defaultBinding of data.defaults) {
+              const { key, shift, alt } = shortcutRows.get(
+                defaultBinding.id,
+              ).binding;
+              if (
+                shortcutChord({ key, shift, alt }) !==
+                shortcutChord(defaultBinding)
+              )
+                changes[defaultBinding.id] = { key, shift, alt };
+            }
+            await request("keyboard", changes);
+            keyboardStatus.textContent = t(
+              "Shortcuts saved. Reopen Spotlight to use them.",
+            );
+          } catch (error) {
+            keyboardStatus.textContent = systemText(error.message);
+            keyboardSave.disabled = false;
+          }
+        });
+      }
+    }
     function startTour() {
       // Use practice controls so the tutorial cannot run a real browser action.
       const steps = [

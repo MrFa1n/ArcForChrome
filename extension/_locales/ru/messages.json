@@ -1879,5 +1879,38 @@
   },
   "tour_open_spotlight": {
     "message": "Открыть Spotlight"
+  },
+  "keyboard_editor_0": {
+    "message": "Изменить глобальные сочетания в Chrome"
+  },
+  "keyboard_editor_1": {
+    "message": "Внутри Spotlight"
+  },
+  "keyboard_editor_2": {
+    "message": "Выберите поле и нажмите Ctrl или ⌘ вместе с латинской буквой или цифрой. Можно добавить Shift или Alt."
+  },
+  "keyboard_editor_3": {
+    "message": "Восстановить стандартные сочетания"
+  },
+  "keyboard_editor_4": {
+    "message": "Нажмите Ctrl или ⌘ вместе с латинской буквой или цифрой."
+  },
+  "keyboard_editor_5": {
+    "message": "Это сочетание уже назначено действию «{0}»."
+  },
+  "keyboard_editor_6": {
+    "message": "Сохраните изменения, чтобы применить сочетания."
+  },
+  "keyboard_editor_7": {
+    "message": "Сочетания сохранены. Откройте Spotlight заново, чтобы ими воспользоваться."
+  },
+  "find_a_setting": {
+    "message": "Найти настройку…"
+  },
+  "no_matching_settings": {
+    "message": "Подходящих настроек нет"
+  },
+  "settings_unavailable": {
+    "message": "Настройки недоступны"
   }
 }

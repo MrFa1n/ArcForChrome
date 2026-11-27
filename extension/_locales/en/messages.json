@@ -1879,5 +1879,38 @@
   },
   "tour_open_spotlight": {
     "message": "Open Spotlight"
+  },
+  "keyboard_editor_0": {
+    "message": "Edit global shortcuts in Chrome"
+  },
+  "keyboard_editor_1": {
+    "message": "Inside Spotlight"
+  },
+  "keyboard_editor_2": {
+    "message": "Choose a shortcut field and press Ctrl or ⌘ with a letter or number. Shift and Alt are optional."
+  },
+  "keyboard_editor_3": {
+    "message": "Restore default shortcuts"
+  },
+  "keyboard_editor_4": {
+    "message": "Use Ctrl or ⌘ with a letter or number."
+  },
+  "keyboard_editor_5": {
+    "message": "Already assigned to {0}."
+  },
+  "keyboard_editor_6": {
+    "message": "Save changes to apply your shortcuts."
+  },
+  "keyboard_editor_7": {
+    "message": "Shortcuts saved. Reopen Spotlight to use them."
+  },
+  "find_a_setting": {
+    "message": "Find a setting…"
+  },
+  "no_matching_settings": {
+    "message": "No matching settings"
+  },
+  "settings_unavailable": {
+    "message": "Settings unavailable"
   }
 }

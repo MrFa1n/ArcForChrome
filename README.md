@@ -65,7 +65,11 @@ Spotlight follows Chrome’s language by default, with English as the fallback. 
 
 To add a translation, copy `extension/_locales/en/messages.json` to `extension/_locales/<code>/messages.json` using a [locale supported by Chrome](https://developer.chrome.com/docs/extensions/reference/api/i18n#locales). Translate the `message` values, including `language_name`, and keep the keys and numbered placeholders such as `{0}` intact. Reload the extension and reopen settings. The new language appears in the selector, and missing messages fall back to English.
 
+Open **Search settings** from Spotlight to change preferences inside the palette. Use the settings search field to find a section. Press Esc to return to your results.
+
 ## Make it muscle memory
+
+In **Search settings → Keyboard**, select an **Inside Spotlight** shortcut field and press the new combination. Save and reopen Spotlight. The same section opens Chrome’s editor for global shortcuts. Chrome or the operating system may intercept reserved combinations.
 
 | Action                           | macOS           | Windows / Linux     |
 | -------------------------------- | --------------- | ------------------- |
@@ -215,11 +219,7 @@ History stays on this device in extension-local storage. A Chrome alarm expires 
 
 Learning is on by default while action recording is enabled.
 
-1. Click the extension’s toolbar icon to open Spotlight. Type `> Spotlight activity history`, select **Spotlight activity history**, and press Enter. Alternatively, run `> Search settings` and click **Open activity history**.
-2. Under **Automatic cleanup**, find **Learn from my selections** below **Include query and prompt text**.
-3. Clear the checkbox and click **Save limits**. To resume learning, check it again and save. To reset learned preferences, click **Clear history**. This deletes the entire activity journal.
-
-If the checkbox is missing, update the repository files, click **Reload** on the extension card at `chrome://extensions`, and reopen the journal. If Chrome is using an older unpacked copy, load the updated copy’s `extension` folder using the steps under “Get started”.
+Run **`> Search settings`**. Under **Spotlight preferences**, change **Learn from my selections** and click **Save changes**. To reset learned preferences, open **Spotlight activity history** and click **Clear history**. This deletes the entire journal.
 
 Spotlight uses recent choices to reorder matching commands in Commands mode and suggest an AI provider for similar prompts. For example, after choosing Claude for `claude explain closures`, `объясни замыкания` can show an optional Claude result. Explicit shortcuts keep priority. Prompt recovery can find related drafts across English and Russian and offer an alternate provider. Selecting a draft restores it for editing.
 

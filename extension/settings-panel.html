@@ -1,25 +1,3 @@
-<!doctype html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title data-message="Arc Search settings">Arc Search settings</title>
-  <link rel="icon" href="icons/icon-32.png" />
-  <link rel="stylesheet" href="design-tokens.css" />
-  <link rel="stylesheet" href="page.css" />
-  <link rel="stylesheet" href="options.css" />
-</head>
-
-<body>
-  <main>
-    <header>
-      <img src="icons/icon-48.png" width="48" height="48" alt="" />
-      <div>
-        <h1 data-message="Arc Search">Arc Search</h1>
-        <p data-message="Search settings">Search settings</p>
-      </div>
-    </header>
     <section>
       <h2 data-message="Interface language">Interface language</h2>
       <p data-message="Choose a language. Reopen Spotlight or refresh open extension pages to use it everywhere.">Choose a language. Reopen Spotlight or refresh open extension pages to use it everywhere.</p>
@@ -71,11 +49,16 @@
     <section>
       <h2 data-message="Keyboard">Keyboard</h2>
       <p data-message="⌘T opens search. ⌘L opens the current URL for editing. Existing Chrome assignments may be preserved after updates.">⌘T opens search. ⌘L opens the current URL for editing. Existing Chrome assignments may be preserved after updates.</p>
-      <button id="shortcuts" data-message="Customize shortcuts">Customize shortcuts</button>
+      <button id="shortcuts" data-message="Edit global shortcuts in Chrome">Edit global shortcuts in Chrome</button>
+      <h3 data-message="Inside Spotlight">Inside Spotlight</h3>
+      <p data-message="Choose a shortcut field and press Ctrl or ⌘ with a letter or number. Shift and Alt are optional.">Choose a shortcut field and press Ctrl or ⌘ with a letter or number. Shift and Alt are optional.</p>
+      <form id="keyboard-form">
+        <div id="keyboard-bindings"></div>
+        <div class="actions">
+          <button type="submit" data-message="Save changes" disabled>Save changes</button>
+          <button type="button" id="keyboard-reset" data-message="Restore default shortcuts" disabled>Restore default shortcuts</button>
+        </div>
+        <p id="keyboard-status" role="status"></p>
+      </form>
       <p data-message="Inside search: empty Tab opens Commands; a site keyword + Tab enters Site Search; Tab on a URL completes it. Enter opens, Shift+Enter opens in background, Alt+Enter replaces the current page. In Edit mode, Enter replaces the current page; ⌘/Ctrl+Enter opens a new tab.">Inside search: empty Tab opens Commands; a site keyword + Tab enters Site Search; Tab on a URL completes it. Enter opens, Shift+Enter opens in background, Alt+Enter replaces the current page. In Edit mode, Enter replaces the current page; ⌘/Ctrl+Enter opens a new tab.</p>
     </section>
-  </main>
-  <script type="module" src="options.js"></script>
-</body>
-
-</html>

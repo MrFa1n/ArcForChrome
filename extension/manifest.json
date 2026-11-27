@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Arc for Chrome",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "description": "__MSG_spotlight_style_search_for_open_tabs_bookmarks_history_and_the_web__",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -76,10 +76,6 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
-  },
-  "options_ui": {
-    "page": "options.html",
-    "open_in_tab": true
   },
   "default_locale": "en"
 }

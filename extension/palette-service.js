@@ -1,3 +1,4 @@
+import { settingsAction } from "./settings-service.js";
 import { interfaceLocale, systemTranslator } from "./localization.js";
 import {
   learningEnabled,
@@ -330,7 +331,7 @@ async function executeAction(api, context, id) {
   )
     throw new Error("Choose this mode in the command bar");
   if (id === "reopen") return restore(api);
-  if (id === "settings") return api.runtime.openOptionsPage();
+  if (id === "settings") throw new Error("Choose this mode in the command bar");
   if (id === "new-window") return api.windows.create({ type: "normal" });
   if (id === "history" || id === "downloads")
     return api.tabs.create({
@@ -344,6 +345,8 @@ async function executeAction(api, context, id) {
 }
 
 async function performAction(api, message, context, publish, onAiLaunch) {
+  if (message.type === "palette:settings")
+    return settingsAction(api, context.windowId, message);
   if (message.type === "palette:extra") {
     if (message.action === "route")
       return saveDomainRoute(
@@ -941,7 +944,8 @@ export async function paletteAction(api, message, sender, publish) {
       "palette:remember-site",
       "palette:finish-tour",
     ].includes(message.type) &&
-    message.command !== "activity";
+    message.command !== "activity" &&
+    message.type !== "palette:settings";
   try {
     const result = await performAction(api, message, context, publish, () => {
       aiLaunch = true;
